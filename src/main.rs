@@ -213,17 +213,19 @@ fn butt_game(mut commands: Commands) {
 /// Construct the main menu UI
 fn setup_menu(mut commands: Commands, ass: Res<AssetServer>, mut mat: ResMut<Assets<ColorMaterial>>) {
     let butt_style = Style {
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
+        flex_direction: FlexDirection::Column,
+        justify_content: JustifyContent::Center, // Text in middle Top / down
+        align_items: AlignItems::Center, // Text in middle LR
         padding: UiRect::all(Val::Px(8.0)),
         margin: UiRect::all(Val::Px(4.0)),
-        flex_grow: 1.0,
+        flex_grow: 0.0,
+        
         ..Default::default()
     };
 
     let butt_textstyle = TextStyle {
         font: ass.load("JetBrainsMono/JetBrainsMono-ExtraBold.ttf"),
-        font_size: 24.0,
+        font_size: 32.0,
         color: Color::BLACK,
     };
 
@@ -238,10 +240,11 @@ fn setup_menu(mut commands: Commands, ass: Res<AssetServer>, mut mat: ResMut<Ass
             background_color: BackgroundColor(Color::rgb(0.5, 0.5, 0.5)),
             style: Style {
                 size: Size::new(Val::Auto, Val::Auto),
-                margin: UiRect::all(Val::Auto),
-                align_self: AlignSelf::Center,
+                margin: UiRect::all(Val::Px(2.0)),
+                align_items: AlignItems::FlexStart,
                 flex_direction: FlexDirection::Column,
                 justify_content: JustifyContent::Center,
+                align_self: AlignSelf::Center,
                 ..Default::default()
             },
             ..Default::default()
