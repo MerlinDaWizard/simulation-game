@@ -1,0 +1,18 @@
+---
+font:
+  name: JetBrains Mono
+  desc: Used throughout the game for text
+  path: assets/JetBrainsMono/
+  link: https://github.com/JetBrains/JetBrainsMono
+  credits:
+  - JetBrains <>
+  - Philipp Nurullin <philipp.nurullin@jetbrains.com>
+  - Konstantin Bulenkov <kb@jetbrains.com>
+  note: Very nice monospace font, thanks for open sourcing it. Credit to jetbrains who make cool IDEs!
+
+background_img:
+  name: Asia Neon City Lights Reflections
+  desc: Main menu background
+  path: background.jpg
+  credits: unknown
+
