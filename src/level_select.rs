@@ -27,7 +27,7 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
     };
 
     let text_style = TextStyle {
-        font: ass.load("JetBrainsMono/JetBrainsMono-ExtraBold.ttf"),
+        font: ass.load("Pixelboy.ttf"),
         font_size: 32.0,
         color: Color::BLACK,
     };
@@ -54,7 +54,7 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
     for x in 0..ROW_COUNT as usize {
         rows.push(commands.spawn(
             (NodeBundle {
-                background_color: BackgroundColor(Color::rgba (1.0*(x as f32/(ROW_COUNT as f32-1.0)),0.0,1.0,1.0)),
+                //background_color: BackgroundColor(Color::rgba (1.0*(x as f32/(ROW_COUNT as f32-1.0)),0.0,1.0,1.0)),
                 style: Style {
                     //flex_direction: FlexDirection::Row,
                     //align_items: AlignItems::FlexStart,
