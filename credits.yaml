@@ -1,14 +1,21 @@
 ---
-font:
+main_font:
   name: JetBrains Mono
   desc: Used throughout the game for text
-  path: assets/JetBrainsMono/
+  path: JetBrainsMono/
   link: https://github.com/JetBrains/JetBrainsMono
   credits:
   - JetBrains <>
   - Philipp Nurullin <philipp.nurullin@jetbrains.com>
   - Konstantin Bulenkov <kb@jetbrains.com>
   note: Very nice monospace font, thanks for open sourcing it. Credit to jetbrains who make cool IDEs!
+
+pixely_font:
+  name: Pixelboy
+  desc: Used in the main menu and some other places
+  path: Pixelboy.tff
+  link: https://www.fontspace.com/pixeboy-font-f43730
+  credits: AbasCreativeID
 
 background_img:
   name: Asia Neon City Lights Reflections
