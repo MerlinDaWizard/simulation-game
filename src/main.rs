@@ -23,6 +23,7 @@ use rand::prelude::*;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum GameState {
     MainMenu,
+    LevelsMenu,
     InGame,
 }
 
@@ -41,6 +42,7 @@ fn main() {
         .add_enter_system(GameState::MainMenu, setup_menu)
         // menu cleanup (state exit) systems
         .add_exit_system(GameState::MainMenu, despawn_with::<MainMenu>)
+        .add_exit_system(GameState::LevelsMenu, despawn_with::<LevelsMenu>)
         // game cleanup (state exit) systems
         .add_exit_system(GameState::InGame, despawn_with::<MySprite>)
         // menu stuff
@@ -85,6 +87,9 @@ struct MySprite;
 /// Marker for the main menu entity
 #[derive(Component)]
 struct MainMenu;
+
+#[derive(Component)]
+struct LevelsMenu;
 
 /// Marker for the main game camera entity
 #[derive(Component)]
@@ -172,13 +177,14 @@ fn butt_interact_visual(
     for (interaction, mut color) in query.iter_mut() {
         match interaction {
             Interaction::Clicked => {
-                *color = BackgroundColor(Color::rgb(0.75, 0.75, 0.75));
+                *color = BackgroundColor(Color::rgba(0.4, 0.4, 0.4,0.5));
             }
             Interaction::Hovered => {
-                *color = BackgroundColor(Color::rgb(0.8, 0.8, 0.8));
+                *color = BackgroundColor(Color::rgba(0.2, 0.2, 0.2,0.5));
+                
             }
             Interaction::None => {
-                *color = BackgroundColor(Color::rgb(1.0, 1.0, 1.0));
+                *color = BackgroundColor(Color::rgba(0.0, 0.0, 0.0,0.5));
             }
         }
     }
@@ -216,9 +222,10 @@ fn setup_menu(mut commands: Commands, ass: Res<AssetServer>, mut mat: ResMut<Ass
         flex_direction: FlexDirection::Column,
         justify_content: JustifyContent::Center, // Text in middle Top / down
         align_items: AlignItems::Center, // Text in middle LR
+        align_self: AlignSelf::Stretch,
         padding: UiRect::all(Val::Px(8.0)),
         margin: UiRect::all(Val::Px(4.0)),
-        flex_grow: 0.0,
+        flex_grow: 1.0,
         
         ..Default::default()
     };
@@ -226,7 +233,7 @@ fn setup_menu(mut commands: Commands, ass: Res<AssetServer>, mut mat: ResMut<Ass
     let butt_textstyle = TextStyle {
         font: ass.load("JetBrainsMono/JetBrainsMono-ExtraBold.ttf"),
         font_size: 32.0,
-        color: Color::BLACK,
+        color: Color::WHITE,
     };
 
     let background = commands.spawn((SpriteBundle {
@@ -237,14 +244,14 @@ fn setup_menu(mut commands: Commands, ass: Res<AssetServer>, mut mat: ResMut<Ass
 
     let menu = commands
         .spawn((NodeBundle {
-            background_color: BackgroundColor(Color::rgb(0.5, 0.5, 0.5)),
             style: Style {
-                size: Size::new(Val::Auto, Val::Auto),
+                size: Size::new(Val::Percent(25.0), Val::Percent(20.0)),
                 margin: UiRect::all(Val::Px(2.0)),
                 align_items: AlignItems::FlexStart,
                 flex_direction: FlexDirection::Column,
                 justify_content: JustifyContent::Center,
                 align_self: AlignSelf::Center,
+                
                 ..Default::default()
             },
             ..Default::default()
@@ -266,6 +273,7 @@ fn setup_menu(mut commands: Commands, ass: Res<AssetServer>, mut mat: ResMut<Ass
 
     let butt_exit = commands
         .spawn((ButtonBundle {
+            background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
             style: butt_style.clone(),
             ..Default::default()
         }, ExitButt))
