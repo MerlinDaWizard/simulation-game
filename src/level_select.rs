@@ -15,9 +15,11 @@ const LEVEL_COUNT: u16 = 35;
 const MAX_ROW_LENGTH: u16 = 10;
 const ROW_COUNT: u16 = LEVEL_COUNT / MAX_ROW_LENGTH + (LEVEL_COUNT % MAX_ROW_LENGTH != 0) as u16;
 
+/// Sets up level select screen using flexboxes and stuff
 pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
     let button_style = Style {
         align_items: AlignItems::Center,
+        flex_direction: FlexDirection::Row,
         //align_content: todo!(),
         justify_content: JustifyContent::Center,
         margin: UiRect::all(Val::Px(4.0)),
@@ -32,7 +34,39 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
         color: Color::BLACK,
     };
 
-    let outer_node = commands.spawn(
+    // Contains padding and button container, used to set flex direction into column, letting padding shift down instead of to the right
+    let whole = commands.spawn (
+        ( NodeBundle {
+            background_color: BackgroundColor(Color::NONE),
+            style: Style {
+                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                align_self: AlignSelf::Center,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                ..Default::default()
+            },
+            ..Default::default()
+        }, LevelsMenu)
+    ).id();
+
+    // Acts as padding to shift down the button container
+    let padding = commands.spawn (
+        ( NodeBundle {
+            background_color: BackgroundColor(Color::NONE),
+            style: Style {
+                
+                size: Size::new(Val::Percent(100.0), Val::Percent(40.0)),
+                align_self: AlignSelf::Center,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                ..Default::default()
+            },
+            ..Default::default()
+        }, LevelsMenu)
+    ).id();
+
+    // Contains all the buttons
+    let container = commands.spawn(
         (NodeBundle {
                 background_color: BackgroundColor(Color::CYAN),
                 style: Style {
@@ -52,8 +86,9 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
     //let mut rows: [Option<Entity>; ROW_COUNT as usize] = [None; ROW_COUNT as usize];
     let mut rows = Vec::<Entity>::with_capacity(ROW_COUNT as usize);
     for x in 0..ROW_COUNT as usize {
-        rows.push(commands.spawn(
+        rows.push(commands.spawn( 
             (NodeBundle {
+                background_color: BackgroundColor(Color::NONE),
                 //background_color: BackgroundColor(Color::rgba (1.0*(x as f32/(ROW_COUNT as f32-1.0)),0.0,1.0,1.0)),
                 style: Style {
                     //flex_direction: FlexDirection::Row,
@@ -69,7 +104,7 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
         let row_length = std::cmp::min(LEVEL_COUNT as usize - (x * MAX_ROW_LENGTH as usize), 10);
         let mut items = Vec::<Entity>::with_capacity(10);
         for y in 0..row_length {
-            let string_number = format!("{:02}",(x*MAX_ROW_LENGTH as usize+y+1));
+            let string_number = format!("{:02}",(x*MAX_ROW_LENGTH as usize+y+1)); // Change this +1 if you want to start from zero
             items.push(commands.spawn(( ButtonBundle {
                 style: button_style.clone(),
                 ..Default::default()
@@ -81,8 +116,8 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
                 });
             }).id());
         }
-
         commands.entity(rows[x]).push_children(&items);
-    }    
-    commands.entity(outer_node).push_children(&rows);
+    }
+    commands.entity(whole).push_children(&[padding, container]);
+    commands.entity(container).push_children(&rows);
 }
