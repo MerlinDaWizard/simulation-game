@@ -31,14 +31,16 @@ fn main() {
             // give it a label
             "my_fixed_update",
         )
+        .insert_resource(level_select::CurrentLevel(None))
         // menu setup (state enter) systems
         .add_enter_system(GameState::MainMenu, main_menu::setup_menu)
         .add_enter_system(GameState::LevelsMenu, level_select::setup)
+        .add_enter_system(GameState::InGame, game::setup_screen)
         // menu cleanup (state exit) systems
         .add_exit_system(GameState::MainMenu, despawn_with::<main_menu::MainMenu>)
         .add_exit_system(GameState::LevelsMenu, despawn_with::<level_select::LevelsMenu>)
         // game cleanup (state exit) systems
-        .add_exit_system(GameState::InGame, despawn_with::<game::MySprite>)
+        .add_exit_system(GameState::InGame, despawn_with::<game::GameRoot>)
         // menu stuff
         .add_system_set(
             ConditionSet::new()
@@ -56,8 +58,6 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::InGame)
                 .with_system(back_to_menu_on_esc)
-                .with_system(game::clear_on_del)
-                .with_system(game::spin_sprites.run_if_not(game::spacebar_pressed))
                 .into()
         )
         .add_system_set(
@@ -68,14 +68,6 @@ fn main() {
                 //.with_system(level_select::butt_levels.run_if(level_select::on_butt_interact::<level_select::LevelButton>))
                 .with_system(back_to_menu_on_esc)
                 .into()
-        )
-        .add_fixed_timestep_system(
-            "my_fixed_update", 0,
-            game::spawn_sprite
-                // only in-game!
-                .run_in_state(GameState::InGame)
-                // only while the spacebar is pressed
-                .run_if(game::spacebar_pressed)
         )
         // our other various systems:
         .add_system(debug_current_state)

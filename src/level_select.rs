@@ -15,8 +15,8 @@ pub struct LevelButton;
 #[derive(Component)]
 pub struct ButtonText;
 
-#[derive(Resource)]
-pub struct current_level(Option<u16>);
+#[derive(Resource)] // TODO: 
+pub struct CurrentLevel(pub Option<u16>);
 
 const LEVEL_COUNT: u16 = 35;
 const MAX_ROW_LENGTH: u16 = 10;
