@@ -1,6 +1,8 @@
 use bevy::{prelude::*, log::Level};
 use iyes_loopless::prelude::*;
 
+use crate::GameState;
+
 #[derive(Component)]
 pub struct LevelsMenu;
 
@@ -8,12 +10,72 @@ pub struct LevelsMenu;
 struct Row;
 
 #[derive(Component)]
-struct LevelButton;
+pub struct LevelButton;
 
-const BUTTON_COLOUR: Color = Color::rgba(0.0, 0.0, 0.0,0.5);
+#[derive(Component)]
+pub struct ButtonText;
+
+#[derive(Resource)]
+pub struct current_level(Option<u16>);
+
 const LEVEL_COUNT: u16 = 35;
 const MAX_ROW_LENGTH: u16 = 10;
 const ROW_COUNT: u16 = LEVEL_COUNT / MAX_ROW_LENGTH + (LEVEL_COUNT % MAX_ROW_LENGTH != 0) as u16;
+
+
+/// Change button color on interaction
+pub fn butt_interact_visual(
+    mut query: Query<(&Interaction, &mut BackgroundColor), (Changed<Interaction>, With<Button>)>,
+) {
+    
+    for (interaction, mut color) in query.iter_mut() {
+        match interaction {
+            Interaction::Clicked => {
+                *color = BackgroundColor(Color::rgba(0.2, 0.2, 0.2,1.0));
+            }
+            Interaction::Hovered => {
+                *color = BackgroundColor(Color::rgba(0.4, 0.4, 0.4,1.0));
+                
+            }
+            Interaction::None => {
+                *color = BackgroundColor(Color::rgba(0.5, 0.5, 0.5,1.0));
+            }
+        }
+    }
+}
+
+/// Condition to help with handling multiple buttons
+///
+/// We get which level it is working off from the text. We do this by queryi9ng the children of the buttons to get the text and then parsing it back to u16.
+pub fn on_butt_interact<B: Component>(
+    mut commands: Commands,
+    q_parent: Query<(&Children, &Interaction), (Changed<Interaction>, With<Button>, With<B>)>, // The buttons
+    q_child: Query<(&Text), (With<ButtonText>)> // Should be the text
+) {
+    for (children, interaction) in q_parent.iter() {
+        if *interaction == Interaction::Clicked {
+            let mut level_num: u16 = 0;
+            for &child in children.iter() {
+                let text = q_child.get(child);
+                match text {
+                    Err(e) => println!("{}",e),
+                    Ok(bevy_text) => {
+                        println!("Found text!");
+                        let text = bevy_text.sections[0].value.clone();
+                        level_num = text.parse().unwrap();
+
+                    },
+                }
+            }
+
+            println!("{}", level_num);
+        }
+    }
+}
+
+//pub fn butt_levels(mut commands: Commands) {
+//    commands.insert_resource(NextState(GameState::LevelsMenu));
+//}
 
 /// Sets up level select screen using flexboxes and stuff
 pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
@@ -110,10 +172,10 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
                 ..Default::default()
             }, LevelButton))
             .with_children(|btn| {
-                btn.spawn(TextBundle {
+                btn.spawn((TextBundle {
                     text: Text::from_section(string_number, text_style.clone()),
                     ..Default::default()
-                });
+                }, ButtonText));
             }).id());
         }
         commands.entity(rows[x]).push_children(&items);
