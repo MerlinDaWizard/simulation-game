@@ -3,44 +3,58 @@ use iyes_loopless::prelude::*;
 use rand::prelude::*;
 
 use crate::GameState;
+use crate::level_select::CurrentLevel;
+use Val::*;
 
-/// Marker for our in-game sprites
+/// Root component for this screen
 #[derive(Component)]
-pub struct MySprite;
+pub struct GameRoot;
 
-/// Reset the in-game state when pressing delete
-pub fn clear_on_del(mut commands: Commands, kbd: Res<Input<KeyCode>>) {
-    if kbd.just_pressed(KeyCode::Delete) || kbd.just_pressed(KeyCode::Back) {
-        commands.insert_resource(NextState(GameState::InGame));
-    }
-}
-
-/// Condition system for holding the space bar
-pub fn spacebar_pressed(kbd: Res<Input<KeyCode>>) -> bool {
-    kbd.pressed(KeyCode::Space)
-}
-
-/// Spawn a MySprite entity
-pub fn spawn_sprite(mut commands: Commands) {
-    let mut rng = thread_rng();
-    commands.spawn((SpriteBundle {
-        sprite: Sprite {
-            color: Color::rgba(rng.gen(), rng.gen(), rng.gen(), 0.5),
-            custom_size: Some(Vec2::new(64., 64.)),
+/// Sets up screen using flex boxies and loads components etc.
+pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<CurrentLevel>) { // At the moment `CurrentLevel` actually refers to the level to load
+    let root_bundle = commands
+        .spawn((NodeBundle {
+            style: Style {
+                size: Size::new(Percent(100.0),Percent(100.0)),
+                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::FlexStart,
+                ..Default::default()
+            },
             ..Default::default()
-        },
-        transform: Transform::from_xyz(
-            rng.gen_range(-420.0..420.0),
-            rng.gen_range(-420.0..420.0),
-            rng.gen_range(0.0..100.0),
-        ),
-        ..Default::default()
-    }, MySprite));
-}
+        }, GameRoot)).id();
+    
+    let component_panel = commands
+        .spawn( NodeBundle {
+            background_color: BackgroundColor(Color::RED),
+            style: Style {
+                size: Size::new(Percent(29.0),Percent(100.0)),
+                margin: UiRect::left(Percent(1.0)),
+                align_self: AlignSelf::FlexEnd,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::FlexStart,
+                ..Default::default()
+            },
+            ..Default::default()
+        }).id();
 
-/// Rotate all the sprites
-pub fn spin_sprites(mut q: Query<&mut Transform, With<MySprite>>, t: Res<Time>) {
-    for mut transform in q.iter_mut() {
-        transform.rotate(Quat::from_rotation_z(1.0 * t.delta_seconds()));
-    }
+    let main_side = commands
+        .spawn( NodeBundle {
+            background_color: BackgroundColor(Color::ORANGE_RED),
+            style: Style {
+                size: Size::new(Percent(70.0), Percent(100.0)),
+                align_self: AlignSelf::FlexStart,
+                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::FlexStart,
+                ..Default::default()
+
+            },
+            ..Default::default()
+        }).id();
+
+    commands
+        .entity(root_bundle)
+        .push_children(&[main_side,component_panel]);
 }
