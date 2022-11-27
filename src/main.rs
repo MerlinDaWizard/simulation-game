@@ -63,6 +63,9 @@ fn main() {
         .add_system_set(
             ConditionSet::new()
                 .run_in_state(GameState::LevelsMenu)
+                .with_system(level_select::butt_interact_visual)
+                .with_system(level_select::on_butt_interact::<level_select::LevelButton>)
+                //.with_system(level_select::butt_levels.run_if(level_select::on_butt_interact::<level_select::LevelButton>))
                 .with_system(back_to_menu_on_esc)
                 .into()
         )
