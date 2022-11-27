@@ -19,6 +19,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
                 align_items: AlignItems::FlexStart,
                 flex_direction: FlexDirection::Row,
                 justify_content: JustifyContent::FlexStart,
+                padding: UiRect::all(Px(0.0)),
                 ..Default::default()
             },
             ..Default::default()
@@ -28,8 +29,8 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
         .spawn( NodeBundle {
             background_color: BackgroundColor(Color::RED),
             style: Style {
-                size: Size::new(Percent(29.0),Percent(100.0)),
-                margin: UiRect::left(Percent(1.0)),
+                size: Size::new(Val::Percent(30.0),Percent(100.0)),
+                margin: UiRect::left(Px(8.0)),
                 align_self: AlignSelf::FlexEnd,
                 align_items: AlignItems::Center,
                 flex_direction: FlexDirection::Column,
