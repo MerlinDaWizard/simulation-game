@@ -124,7 +124,8 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
                 ..Default::default()
             },
             ..Default::default()
-        }, LevelsMenu)
+        })
+        //}, LevelsMenu)
     ).id();
 
     // Contains all the buttons
@@ -142,7 +143,8 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
                     ..Default::default()
                 },
                 ..Default::default()
-            }, LevelsMenu)
+            })
+            //}, LevelsMenu)
     ).id();
     
     //let mut rows: [Option<Entity>; ROW_COUNT as usize] = [None; ROW_COUNT as usize];
