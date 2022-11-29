@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
-use rand::prelude::*;
 
 use crate::GameState;
 use crate::level_select::CurrentLevel;
@@ -55,6 +54,52 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
             ..Default::default()
         }).id();
 
+        let top_bar = commands
+        .spawn( NodeBundle {
+            background_color: BackgroundColor(Color::PINK),
+            style: Style {
+                size: Size::new(Percent(100.0), Percent(10.0)),
+                align_self: AlignSelf::FlexStart,
+                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::Center,
+                ..Default::default()
+
+            },
+            ..Default::default()
+        }).id();
+
+        let middle_area = commands
+        .spawn( NodeBundle {
+            background_color: BackgroundColor(Color::INDIGO),
+            style: Style {
+                size: Size::new(Percent(100.0), Percent(70.0)),
+                align_self: AlignSelf::FlexStart,
+                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::Center,
+                ..Default::default()
+
+            },
+            ..Default::default()
+        }).id();
+
+        let bottom_bar = commands
+        .spawn( NodeBundle {
+            background_color: BackgroundColor(Color::PURPLE),
+            style: Style {
+                size: Size::new(Percent(100.0), Percent(20.0)),
+                align_self: AlignSelf::FlexStart,
+                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::Center,
+                ..Default::default()
+
+            },
+            ..Default::default()
+        }).id();
+
+    commands.entity(main_side).push_children(&[top_bar, middle_area, bottom_bar]);
     commands
         .entity(root_bundle)
         .push_children(&[main_side,component_panel]);
