@@ -99,6 +99,11 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
             ..Default::default()
         }).id();
 
+        let home_button = commands
+            .spawn( ButtonBundle {
+                
+            })
+
     commands.entity(main_side).push_children(&[top_bar, middle_area, bottom_bar]);
     commands
         .entity(root_bundle)
