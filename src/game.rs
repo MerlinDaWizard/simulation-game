@@ -99,13 +99,44 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
             ..Default::default()
         }).id();
 
-        let home_button = commands
-            .spawn( ButtonBundle {
-                
-            })
+        //let home_button = commands
+        //    .spawn( ButtonBundle {
+        //        
+        //    })
 
     commands.entity(main_side).push_children(&[top_bar, middle_area, bottom_bar]);
     commands
         .entity(root_bundle)
         .push_children(&[main_side,component_panel]);
+}
+
+#[derive(Debug)]
+struct wire {
+    test: u16,
+    id: usize,
+}
+
+fn main() {
+    let mut v = vec![vec![wire{test:1,id:1},wire{test:1,id:2},wire{test:1,id:2},wire{test:1,id:3}],vec![wire{test:2,id:1},wire{test:2,id:2},wire{test:2,id:2},wire{test:2,id:3}]];
+    for mut across in 0..v.len() {
+        for mut down in 0..v[across].len() {
+            let mut item = &v[across][down];
+            println!("=-=-=-=-=--=-=-=-=-=-=-=-=-=-=");
+            println!("{}",item.test);
+            let c = match v.get(across+1) {
+                None => {println!("Out of range, aborting"); continue;},
+                Some(c) => c,
+            };
+            
+            let c = match c.get(down) {
+                None => {println!("Out of range, aborting2"); continue;},
+                Some(c) => c,
+            };
+            //item.test = item.test+1;
+            //println!("{:?}",v.get(across+1).unwrap_or_else(|| {continue;}).get(down).unwrap_or_else(|| {continue;}));
+            println!("Has to the right");
+            
+        }
+    }
+    println!("Hello, world!");
 }
