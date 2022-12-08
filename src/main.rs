@@ -1,6 +1,7 @@
 mod main_menu;
 mod level_select;
 mod game;
+mod components;
 
 use bevy::prelude::*;
 use bevy::render::render_resource::Texture;

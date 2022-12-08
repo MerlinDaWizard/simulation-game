@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 use iyes_loopless::prelude::*;
 
+use crate::components;
 use crate::GameState;
+use crate::components::wires::ConnectionData;
+use crate::components::wires::GridPos;
 use crate::level_select::CurrentLevel;
 use Val::*;
 
@@ -26,7 +29,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
     
     let component_panel = commands
         .spawn( NodeBundle {
-            background_color: BackgroundColor(Color::RED),
+            //background_color: BackgroundColor(Color::RED),
             style: Style {
                 size: Size::new(Val::Percent(30.0),Percent(100.0)),
                 margin: UiRect::left(Px(8.0)),
@@ -41,7 +44,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
 
     let main_side = commands
         .spawn( NodeBundle {
-            background_color: BackgroundColor(Color::ORANGE_RED),
+            //background_color: BackgroundColor(Color::ORANGE_RED),
             style: Style {
                 size: Size::new(Percent(70.0), Percent(100.0)),
                 align_self: AlignSelf::FlexStart,
@@ -56,7 +59,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
 
         let top_bar = commands
         .spawn( NodeBundle {
-            background_color: BackgroundColor(Color::PINK),
+            //background_color: BackgroundColor(Color::PINK),
             style: Style {
                 size: Size::new(Percent(100.0), Percent(10.0)),
                 align_self: AlignSelf::FlexStart,
@@ -71,7 +74,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
 
         let middle_area = commands
         .spawn( NodeBundle {
-            background_color: BackgroundColor(Color::INDIGO),
+            //background_color: BackgroundColor(Color::INDIGO),
             style: Style {
                 size: Size::new(Percent(100.0), Percent(70.0)),
                 align_self: AlignSelf::FlexStart,
@@ -86,7 +89,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
 
         let bottom_bar = commands
         .spawn( NodeBundle {
-            background_color: BackgroundColor(Color::PURPLE),
+            //background_color: BackgroundColor(Color::PURPLE),
             style: Style {
                 size: Size::new(Percent(100.0), Percent(20.0)),
                 align_self: AlignSelf::FlexStart,
@@ -108,35 +111,50 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
     commands
         .entity(root_bundle)
         .push_children(&[main_side,component_panel]);
-}
 
-#[derive(Debug)]
-struct wire {
-    test: u16,
-    id: usize,
-}
-
-fn main() {
-    let mut v = vec![vec![wire{test:1,id:1},wire{test:1,id:2},wire{test:1,id:2},wire{test:1,id:3}],vec![wire{test:2,id:1},wire{test:2,id:2},wire{test:2,id:2},wire{test:2,id:3}]];
-    for mut across in 0..v.len() {
-        for mut down in 0..v[across].len() {
-            let mut item = &v[across][down];
-            println!("=-=-=-=-=--=-=-=-=-=-=-=-=-=-=");
-            println!("{}",item.test);
-            let c = match v.get(across+1) {
-                None => {println!("Out of range, aborting"); continue;},
-                Some(c) => c,
-            };
-            
-            let c = match c.get(down) {
-                None => {println!("Out of range, aborting2"); continue;},
-                Some(c) => c,
-            };
-            //item.test = item.test+1;
-            //println!("{:?}",v.get(across+1).unwrap_or_else(|| {continue;}).get(down).unwrap_or_else(|| {continue;}));
-            println!("Has to the right");
-            
+    commands.spawn(components::wires::WireBundle {
+        sprite: SpriteBundle {
+            sprite: Sprite {
+                ..Default::default()
+            },
+            transform: Transform {
+                translation: Vec3 { x: 50.0, y: 50.0, z: 1.0 },
+                scale: Vec3::ONE,
+                ..Default::default()
+            },
+            texture: ass.load("grid.png"),
+            ..Default::default()
+        },
+        grid_pos: GridPos(1,1),
+        connections: ConnectionData {
+            Up: true, Down: true, Left: true, Right: true,
         }
-    }
-    println!("Hello, world!");
+    });
+
+    
 }
+
+// fn main() {
+//     let mut v = vec![vec![wire{test:1,id:1},wire{test:1,id:2},wire{test:1,id:2},wire{test:1,id:3}],vec![wire{test:2,id:1},wire{test:2,id:2},wire{test:2,id:2},wire{test:2,id:3}]];
+//     for mut across in 0..v.len() {
+//         for mut down in 0..v[across].len() {
+//             let mut item = &v[across][down];
+//             println!("=-=-=-=-=--=-=-=-=-=-=-=-=-=-=");
+//             println!("{}",item.test);
+//             let c = match v.get(across+1) {
+//                 None => {println!("Out of range, aborting"); continue;},
+//                 Some(c) => c,
+//             };
+            
+//             let c = match c.get(down) {
+//                 None => {println!("Out of range, aborting2"); continue;},
+//                 Some(c) => c,
+//             };
+//             //item.test = item.test+1;
+//             //println!("{:?}",v.get(across+1).unwrap_or_else(|| {continue;}).get(down).unwrap_or_else(|| {continue;}));
+//             println!("Has to the right");
+            
+//         }
+//     }
+//     println!("Hello, world!");
+// }
