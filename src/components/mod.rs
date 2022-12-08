@@ -1,3 +1,1 @@
-mod wires;
-
-pub use wires;
+pub mod wires;

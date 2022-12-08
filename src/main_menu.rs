@@ -18,6 +18,10 @@ pub struct LevelsButt;
 #[derive(Component)]
 pub struct EnterButt;
 
+/// Marker for the "Enter Game" button
+#[derive(Component)]
+pub struct TestButt;
+
 /// Marker for the Background image
 #[derive(Component)]
 pub struct Background;
@@ -70,6 +74,11 @@ pub fn butt_game(mut commands: Commands) {
 
 pub fn butt_levels(mut commands: Commands) {
     commands.insert_resource(NextState(GameState::LevelsMenu));
+}
+
+
+pub fn butt_test() {
+    //crate::components::wires::t
 }
 
 /// Construct the main menu UI
@@ -152,7 +161,22 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
         })
         .id();
 
+    // button for testing small snippets
+    let butt_test = commands
+        .spawn((ButtonBundle {
+            background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
+            style: butt_style.clone(),
+            ..Default::default()
+        }, TestButt))
+        .with_children(|btn| {
+            btn.spawn(TextBundle {
+                text: Text::from_section("Test!", butt_textstyle.clone()),
+                ..Default::default()
+            });
+        })
+        .id();
+
     commands
         .entity(menu)
-        .push_children(&[butt_enter, butt_levels, butt_exit]);
+        .push_children(&[butt_enter, butt_levels, butt_exit, butt_test]);
 }

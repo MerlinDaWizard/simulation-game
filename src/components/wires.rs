@@ -1,21 +1,66 @@
+use std::num::NonZeroU8;
+
+use bevy::prelude::*;
+
 #[derive(Debug, Component)]
-struct GridPos(NonZeroU8,NonZeroU8);
+pub struct GridPos(pub u8,pub u8);
 
+/// Dummy wires
 #[derive(Bundle)]
-struct WireBundle {
-    sprite: SpriteBundle,
-    #[Bundle]
-    grid_pos: GridPos,
+pub struct WireBundle {
+    #[bundle]
+    pub(crate) sprite: SpriteBundle,
+    pub(crate) grid_pos: GridPos,
+    pub(crate) connections: ConnectionData
 }
 
-#[derive(Bundle)]
-struct GridBundle {
-    grid: Vec<Vec<Components>>
+/// Struct of bools corrisponding to connections. UP DOWN LEFT RIGHT
+/// Orginally used bitfields but moved away due to not needed
+#[derive(Component)]
+pub struct ConnectionData {
+    pub Up: bool,
+    pub Down: bool,
+    pub Left: bool,
+    pub Right: bool,
 }
+
+impl ConnectionData {
+    fn get_dir(&self, direction: &Direction) -> bool {
+        match direction {
+            Direction::Up => self.Up,
+            Direction::Down => self.Down,
+            Direction::Left => self.Left,
+            Direction::Right => self.Right,
+        }
+    }
+    /// Direction should be given with respect to self
+    pub fn check_link(&self, direction: &Direction, other_link: &ConnectionData) -> bool {
+        return self.get_dir(direction) && other_link.get_dir(&direction.reverse());
+    }
+}
+
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    pub fn reverse(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
+        }
+    }
+}
+
+
 
 #[derive(Component)]
 enum Components {
     Wires(WireBundle),
     // Other components eventually here aswell
 }
-
