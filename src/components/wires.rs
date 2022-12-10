@@ -1,5 +1,3 @@
-use std::num::NonZeroU8;
-
 use bevy::prelude::*;
 
 #[derive(Debug, Component)]
