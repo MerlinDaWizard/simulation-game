@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use bevy::sprite::Anchor;
+use bevy::text::Text2dSize;
 use iyes_loopless::prelude::*;
 
 use crate::components;
@@ -6,6 +8,7 @@ use crate::GameState;
 use crate::components::wires::ConnectionData;
 use crate::components::wires::GridPos;
 use crate::level_select::CurrentLevel;
+use crate::ui;
 use Val::*;
 
 /// Root component for this screen
@@ -112,7 +115,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
         .entity(root_bundle)
         .push_children(&[main_side,component_panel]);
 
-    commands.spawn(components::wires::WireBundle {
+    commands.spawn((components::wires::WireBundle {
         sprite: SpriteBundle {
             sprite: Sprite {
                 ..Default::default()
@@ -129,7 +132,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
         connections: ConnectionData {
             up: true, down: true, left: true, right: true,
         }
-    });
+    }, GameRoot));
 
     let cursor = commands.spawn( (SpriteBundle {
         sprite: Sprite {
@@ -141,7 +144,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
         },
         texture: ass.load("cursor.png"),
         ..Default::default()
-    }, Cursor)).id();
+    }, Cursor, GameRoot)).id();
 
     let cursor_inside = commands.spawn( (SpriteBundle {
         sprite: Sprite {
@@ -155,8 +158,11 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
         },
         texture: ass.load("cursor.png"),
         ..Default::default()
-    }, CursorInside)).id();
+    }, CursorInside, GameRoot)).id();
     commands.entity(cursor).add_child(cursor_inside);
+
+    ui::textbox::ProgramBox::new(commands, ass, "A2", GameRoot);
+
 }
 
 #[derive(Component)]
@@ -167,25 +173,36 @@ pub struct CursorInside;
 
 pub fn get_cursor_pos(
     windows: Res<Windows>,
+    kbd: Res<Input<KeyCode>>,
     mut main_query: Query<&mut Transform, (With<Cursor>, Without<CursorInside>)>,
     mut inside_cursor: Query<&mut Transform, (With<CursorInside>, Without<Cursor>)>
 ) {
-    let window = windows.get_primary().unwrap();
-    
-    if let Some(position) = window.cursor_position() {
-        println!("{:?}", position);
-        for mut transform in main_query.iter_mut() {
-            println!("{:?}", transform.translation);
-            transform.translation.x = position.x - (window.width()/2.0); // Mouse position is from bottom left
-            transform.translation.y = position.y - (window.height()/2.0); // Whereas entity position is from middle of screen.
-            transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, 0.05));
+    if kbd.pressed(KeyCode::Space) {
+        let window = windows.get_primary().unwrap();
+        
+        if let Some(position) = window.cursor_position() {
+            println!("{:?}", position);
+            for mut transform in main_query.iter_mut() {
+                println!("{:?}", transform.translation);
+                transform.translation.x = position.x - (window.width()/2.0); // Mouse position is from bottom left
+                transform.translation.y = position.y - (window.height()/2.0); // Whereas entity position is from middle of screen.
+                transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, 0.05));
+            }
+        }
+
+        for mut transform in inside_cursor.iter_mut() {
+            transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, -0.05));
         }
     }
+}
 
-    for mut transform in inside_cursor.iter_mut() {
-        transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, -0.05));
+pub fn move_lr_box(
+    kbd: Res<Input<KeyCode>>,
+    mut main_query: Query<&mut Transform, (With<ui::textbox::BoxRoot>)>,
+) {
+    for mut e in main_query.iter_mut() {
+        e.translation.x += 1.0;
     }
-
 }
 // fn main() {
 //     let mut v = vec![vec![wire{test:1,id:1},wire{test:1,id:2},wire{test:1,id:2},wire{test:1,id:3}],vec![wire{test:2,id:1},wire{test:2,id:2},wire{test:2,id:2},wire{test:2,id:3}]];
