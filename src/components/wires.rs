@@ -33,7 +33,7 @@ impl ConnectionData {
     }
     /// Direction should be given with respect to self
     pub fn check_link(&self, direction: &Direction, other_link: &ConnectionData) -> bool {
-        return self.get_dir(direction) && other_link.get_dir(&direction.reverse());
+        self.get_dir(direction) && other_link.get_dir(&direction.reverse())
     }
 }
 

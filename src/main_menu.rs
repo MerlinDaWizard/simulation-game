@@ -100,7 +100,7 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
         color: Color::WHITE,
     };
 
-    let background = commands.spawn((SpriteBundle {
+    let _background = commands.spawn((SpriteBundle {
         texture: ass.load("background.jpg"),
 
         ..Default::default()
@@ -165,7 +165,7 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
     let butt_test = commands
         .spawn((ButtonBundle {
             background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
-            style: butt_style.clone(),
+            style: butt_style,
             ..Default::default()
         }, TestButt))
         .with_children(|btn| {

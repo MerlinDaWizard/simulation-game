@@ -1,10 +1,10 @@
 use bevy::prelude::*;
-use bevy::sprite::Anchor;
-use bevy::text::Text2dSize;
-use iyes_loopless::prelude::*;
+
+
+
 
 use crate::components;
-use crate::GameState;
+
 use crate::components::wires::ConnectionData;
 use crate::components::wires::GridPos;
 use crate::level_select::CurrentLevel;
@@ -16,7 +16,7 @@ use Val::*;
 pub struct GameRoot;
 
 /// Sets up screen using flex boxies and loads components etc.
-pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<CurrentLevel>) { // At the moment `CurrentLevel` actually refers to the level to load
+pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<CurrentLevel>) { // At the moment `CurrentLevel` actually refers to the level to load
     let root_bundle = commands
         .spawn((NodeBundle {
             style: Style {
@@ -197,8 +197,8 @@ pub fn get_cursor_pos(
 }
 
 pub fn move_lr_box(
-    kbd: Res<Input<KeyCode>>,
-    mut main_query: Query<&mut Transform, (With<ui::textbox::BoxRoot>)>,
+    _kbd: Res<Input<KeyCode>>,
+    mut main_query: Query<&mut Transform, With<ui::textbox::BoxRoot>>,
 ) {
     for mut e in main_query.iter_mut() {
         e.translation.x += 1.0;
