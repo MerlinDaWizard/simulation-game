@@ -5,10 +5,10 @@ mod components;
 mod ui;
 
 use bevy::prelude::*;
-use bevy::render::render_resource::Texture;
+
 use iyes_loopless::prelude::*;
 
-use bevy::app::AppExit;
+
 use bevy::window::close_on_esc;
 
 use std::time::Duration;

@@ -1,7 +1,4 @@
-use bevy::{prelude::*, log::Level};
-use iyes_loopless::prelude::*;
-
-use crate::GameState;
+use bevy::{prelude::*};
 
 #[derive(Component)]
 pub struct LevelsMenu;
@@ -48,9 +45,9 @@ pub fn butt_interact_visual(
 ///
 /// We get which level it is working off from the text. We do this by queryi9ng the children of the buttons to get the text and then parsing it back to u16.
 pub fn on_butt_interact<B: Component>(
-    mut commands: Commands,
+    _commands: Commands,
     q_parent: Query<(&Children, &Interaction), (Changed<Interaction>, With<Button>, With<B>)>, // The buttons
-    q_child: Query<(&Text), (With<ButtonText>)> // Should be the text
+    q_child: Query<&Text, With<ButtonText>> // Should be the text
 ) {
     for (children, interaction) in q_parent.iter() {
         if *interaction == Interaction::Clicked {
@@ -113,7 +110,7 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
 
     // Acts as padding to shift down the button container
     let padding = commands.spawn (
-        ( NodeBundle {
+        NodeBundle {
             background_color: BackgroundColor(Color::NONE),
             style: Style {
                 
@@ -124,13 +121,13 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
                 ..Default::default()
             },
             ..Default::default()
-        })
+        }
         //}, LevelsMenu)
     ).id();
 
     // Contains all the buttons
     let container = commands.spawn(
-        (NodeBundle {
+        NodeBundle {
                 background_color: BackgroundColor(Color::CYAN),
                 style: Style {
                     size: Size::new(Val::Auto, Val::Auto),
@@ -143,7 +140,7 @@ pub fn setup(mut commands: Commands, ass: Res<AssetServer>) {
                     ..Default::default()
                 },
                 ..Default::default()
-            })
+            }
             //}, LevelsMenu)
     ).id();
     
