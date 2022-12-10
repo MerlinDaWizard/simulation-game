@@ -118,7 +118,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
                 ..Default::default()
             },
             transform: Transform {
-                translation: Vec3 { x: 50.0, y: 50.0, z: 1.0 },
+                translation: Vec3 { x: 0.0, y: 0.0, z: 1.0 },
                 scale: Vec3::ONE,
                 ..Default::default()
             },
@@ -131,7 +131,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
         }
     });
 
-    commands.spawn( (SpriteBundle {
+    let cursor = commands.spawn( (SpriteBundle {
         sprite: Sprite {
             ..Default::default()
         },
@@ -141,26 +141,49 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
         },
         texture: ass.load("cursor.png"),
         ..Default::default()
-    }, Cursor));
-    
+    }, Cursor)).id();
+
+    let cursor_inside = commands.spawn( (SpriteBundle {
+        sprite: Sprite {
+            color: Color::GREEN,
+            ..Default::default()
+        },
+        transform: Transform {
+            translation: Vec3 { x: 0.0, y: 0.0, z: 101.0 },
+            scale: Vec3::new(0.5,0.5,1.0),
+            ..Default::default()
+        },
+        texture: ass.load("cursor.png"),
+        ..Default::default()
+    }, CursorInside)).id();
+    commands.entity(cursor).add_child(cursor_inside);
 }
 
 #[derive(Component)]
 pub struct Cursor;
 
+#[derive(Component)]
+pub struct CursorInside;
+
 pub fn get_cursor_pos(
     windows: Res<Windows>,
-    mut q: Query<&mut Transform, With<Cursor>>
+    mut main_query: Query<&mut Transform, (With<Cursor>, Without<CursorInside>)>,
+    mut inside_cursor: Query<&mut Transform, (With<CursorInside>, Without<Cursor>)>
 ) {
     let window = windows.get_primary().unwrap();
     
     if let Some(position) = window.cursor_position() {
         println!("{:?}", position);
-        for mut transform in q.iter_mut() {
+        for mut transform in main_query.iter_mut() {
             println!("{:?}", transform.translation);
             transform.translation.x = position.x - (window.width()/2.0); // Mouse position is from bottom left
             transform.translation.y = position.y - (window.height()/2.0); // Whereas entity position is from middle of screen.
+            transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, 0.05));
         }
+    }
+
+    for mut transform in inside_cursor.iter_mut() {
+        transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, -0.05));
     }
 
 }
