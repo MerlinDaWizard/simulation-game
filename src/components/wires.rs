@@ -18,19 +18,19 @@ pub struct WireBundle {
 /// Orginally used bitfields but moved away due to not needed
 #[derive(Component)]
 pub struct ConnectionData {
-    pub Up: bool,
-    pub Down: bool,
-    pub Left: bool,
-    pub Right: bool,
+    pub up: bool,
+    pub down: bool,
+    pub left: bool,
+    pub right: bool,
 }
 
 impl ConnectionData {
     fn get_dir(&self, direction: &Direction) -> bool {
         match direction {
-            Direction::Up => self.Up,
-            Direction::Down => self.Down,
-            Direction::Left => self.Left,
-            Direction::Right => self.Right,
+            Direction::Up => self.up,
+            Direction::Down => self.down,
+            Direction::Left => self.left,
+            Direction::Right => self.right,
         }
     }
     /// Direction should be given with respect to self
