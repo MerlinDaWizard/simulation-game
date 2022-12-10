@@ -59,6 +59,7 @@ fn main() {
             ConditionSet::new()
                 .run_in_state(GameState::InGame)
                 .with_system(back_to_menu_on_esc)
+                .with_system(game::get_cursor_pos)
                 .into()
         )
         .add_system_set(

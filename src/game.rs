@@ -127,13 +127,43 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, level: Res<Cu
         },
         grid_pos: GridPos(1,1),
         connections: ConnectionData {
-            Up: true, Down: true, Left: true, Right: true,
+            up: true, down: true, left: true, right: true,
         }
     });
 
+    commands.spawn( (SpriteBundle {
+        sprite: Sprite {
+            ..Default::default()
+        },
+        transform: Transform {
+            translation: Vec3 { x: 50.0, y: 50.0, z: 100.0 },
+            ..Default::default()
+        },
+        texture: ass.load("cursor.png"),
+        ..Default::default()
+    }, Cursor));
     
 }
 
+#[derive(Component)]
+pub struct Cursor;
+
+pub fn get_cursor_pos(
+    windows: Res<Windows>,
+    mut q: Query<&mut Transform, With<Cursor>>
+) {
+    let window = windows.get_primary().unwrap();
+    
+    if let Some(position) = window.cursor_position() {
+        println!("{:?}", position);
+        for mut transform in q.iter_mut() {
+            println!("{:?}", transform.translation);
+            transform.translation.x = position.x - (window.width()/2.0); // Mouse position is from bottom left
+            transform.translation.y = position.y - (window.height()/2.0); // Whereas entity position is from middle of screen.
+        }
+    }
+
+}
 // fn main() {
 //     let mut v = vec![vec![wire{test:1,id:1},wire{test:1,id:2},wire{test:1,id:2},wire{test:1,id:3}],vec![wire{test:2,id:1},wire{test:2,id:2},wire{test:2,id:2},wire{test:2,id:3}]];
 //     for mut across in 0..v.len() {
