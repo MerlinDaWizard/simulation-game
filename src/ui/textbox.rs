@@ -35,7 +35,7 @@ impl ProgramBox {
         let box_top = commands.spawn((BoxRootBundle {
             sprite: SpriteBundle {
                 sprite: Sprite {
-                    color: Color::MIDNIGHT_BLUE,
+                    color: Color::rgb_u8(70, 70, 70),
                     custom_size: Some(Vec2::new(200.0,35.0)),
                     ..Default::default()
                 },
@@ -52,16 +52,25 @@ impl ProgramBox {
     
         let box_name = commands.spawn( Text2dBundle {
             text: Text {
-                sections: vec![TextSection::new(name, TextStyle { font: ass.load("Pixelboy.ttf"), font_size: 24.0, color: Color::GRAY })],
+                sections: vec![TextSection::new(name, TextStyle { font: ass.load("Pixelboy.ttf"), font_size: 24.0, color: Color::WHITE })],
                 alignment: TextAlignment { vertical: VerticalAlign::Top, horizontal: HorizontalAlign::Left },
             },
             transform: Transform {
-                translation: Vec3 { x: 10.0, y: 10.0, z: 1.1 },
+                translation: Vec3 { x: -95.0, y: 12.0, z: 1.1 },
                 ..Default::default()
             },
             ..Default::default()
         }).id();
         
-        commands.entity(box_top).add_child(box_name);
+        let box_exit = commands.spawn(( SpriteBundle {
+            texture: ass.load("exit_button.png"),
+            transform: Transform {
+                translation: Vec3 { x: 83.0, y: 0.0, z: 1.2 },
+                ..Default::default()
+            },
+            ..Default::default()
+        }, BoxCloseButton)).id();
+
+        commands.entity(box_top).push_children(&[box_name, box_exit]);
     }
 }

@@ -61,7 +61,7 @@ fn main() {
                 .run_in_state(GameState::InGame)
                 .with_system(back_to_menu_on_esc)
                 .with_system(game::get_cursor_pos)
-                .with_system(game::move_lr_box)
+                //.with_system(game::move_lr_box)
                 .into()
         )
         .add_system_set(
