@@ -5,6 +5,7 @@ mod components;
 mod ui;
 
 use bevy::prelude::*;
+use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
 use iyes_loopless::prelude::*;
 use bevy::window::close_on_esc;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -21,7 +22,7 @@ enum GameState {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         // add out states driver
@@ -107,7 +108,7 @@ fn despawn_with<T: Component>(mut commands: Commands, q: Query<Entity, With<T>>)
 
 /// Spawn the camera
 fn setup_camera(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), GameCamera));
+    commands.spawn((Camera2dBundle::default(), PickingCameraBundle::default(), GameCamera));
 }
 
 
