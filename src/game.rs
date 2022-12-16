@@ -171,6 +171,10 @@ pub struct Cursor;
 #[derive(Component)]
 pub struct CursorInside;
 
+/// Unit component to mark an entity as interactable for the click_system
+#[derive(Component)]
+pub struct Interactable;
+
 pub fn get_cursor_pos(
     windows: Res<Windows>,
     kbd: Res<Input<KeyCode>>,
