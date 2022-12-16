@@ -5,12 +5,9 @@ mod components;
 mod ui;
 
 use bevy::prelude::*;
-
 use iyes_loopless::prelude::*;
-
-
 use bevy::window::close_on_esc;
-
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use std::time::Duration;
 
 
@@ -25,6 +22,8 @@ enum GameState {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(LogDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         // add out states driver
         .add_loopless_state(GameState::MainMenu)
         // Add a FixedTimestep, cuz we can!
@@ -61,6 +60,7 @@ fn main() {
                 .run_in_state(GameState::InGame)
                 .with_system(back_to_menu_on_esc)
                 .with_system(game::get_cursor_pos)
+                .with_system(ui::textbox::drag_system)
                 //.with_system(game::move_lr_box)
                 .into()
         )
@@ -82,7 +82,7 @@ fn main() {
 
 /// Marker for the main game camera entity
 #[derive(Component)]
-struct GameCamera;
+pub struct GameCamera;
 
 /// Transition back to menu on pressing Escape
 fn back_to_menu_on_esc(mut commands: Commands, kbd: Res<Input<KeyCode>>) {
