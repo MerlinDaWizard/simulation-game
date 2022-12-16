@@ -1,5 +1,4 @@
-use bevy::{prelude::*, input::{mouse::{MouseMotion, MouseButtonInput}, ButtonState}, render::camera::RenderTarget, utils::hashbrown::raw::Global};
-
+use bevy::{prelude::*, input::{mouse::{MouseMotion, MouseButtonInput}, ButtonState}, render::camera::RenderTarget};
 use crate::{GameCamera, game::Interactable};
 
 #[derive(Component)]
@@ -141,7 +140,7 @@ pub fn click_system(
                 // Loop here first,
                 for (entity, global_transform, sprite, draggable) in query.iter() {
                     let pos = global_transform.translation();
-                    global_transform.trans
+
                 }
                 match ev.state {
                     ButtonState::Pressed => {
