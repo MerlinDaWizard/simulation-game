@@ -140,7 +140,7 @@ pub fn click_system(
                 // Loop here first,
                 for (entity, global_transform, sprite, draggable) in query.iter() {
                     let pos = global_transform.translation();
-
+                    
                 }
                 match ev.state {
                     ButtonState::Pressed => {
