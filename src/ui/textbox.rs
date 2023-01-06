@@ -1,6 +1,6 @@
 use bevy::{prelude::*, input::{mouse::{MouseMotion, MouseButtonInput}, ButtonState}, render::camera::RenderTarget};
 use crate::{GameCamera, game::Interactable};
-
+use bevy_mod_picking::prelude::{backends::sprite::SpriteBackend, *};
 #[derive(Component)]
 pub struct BoxRoot;
 
@@ -58,7 +58,7 @@ impl ProgramBox {
             },
             box_root: BoxRoot,
             held: DragState::Held,
-        }, root_type)).id();
+        }, root_type, Interactable)).id();
     
         let box_name = commands.spawn( Text2dBundle {
             text: Text {
@@ -140,19 +140,51 @@ pub fn click_system(
                 // Loop here first,
                 for (entity, global_transform, sprite, draggable) in query.iter() {
                     let pos = global_transform.translation();
-                    
+                    match ev.state {
+                        ButtonState::Pressed => {
+                            
+                        },
+                        ButtonState::Released => {
+                            
+                        },
+                    }
                 }
-                match ev.state {
-                    ButtonState::Pressed => {
-                        
-                    },
-                    ButtonState::Released => {
-                        
-                    },
-                }
+
             } else {
                 // Should drop if mouse cursor released off screen
             }
         }
+    }
+}
+
+pub fn drag_v2(
+    mut commands: Commands,
+    mut drag_start_events: EventReader<PointerDragStart>,
+    mut drag_events: EventReader<PointerDrag>,
+    mut drag_end_events: EventReader<PointerDragEnd>,
+    pointers: Res<PointerMap>,
+    windows: Res<Windows>,
+    images: Res<Assets<Image>>,
+    locations: Query<&PointerLocation>,
+    mut boxes: Query<(Entity, &mut Transform)>,
+
+) {
+    for dragging in drag_events.iter() {
+        let pointer_entity = pointers.get_entity(dragging.pointer_id()).unwrap();
+        let pointer_location = locations.get(pointer_entity).unwrap().location().unwrap();
+        let pointer_position = pointer_location.position;
+        let target = pointer_location
+            .target
+            .get_render_target_info(&windows, &images)
+            .unwrap();
+        let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
+        dbg!(&boxes);
+        dbg!(&dragging.target());
+        let (_, mut box_transform) = boxes.get_mut(dragging.target()).unwrap();
+
+        println!("AAAA");
+        let z = box_transform.translation.z;
+        box_transform.translation = (pointer_position - (target_size / 2.0)).extend(z);
+        println!("==============");
     }
 }

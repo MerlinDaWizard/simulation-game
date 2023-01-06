@@ -5,7 +5,8 @@ mod components;
 mod ui;
 
 use bevy::prelude::*;
-use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
+use bevy_mod_picking::prelude::*;
+//use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
 use iyes_loopless::prelude::*;
 use bevy::window::close_on_esc;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -25,6 +26,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugins(DefaultPickingPlugins)
         // add out states driver
         .add_loopless_state(GameState::MainMenu)
         // Add a FixedTimestep, cuz we can!
@@ -61,7 +63,9 @@ fn main() {
                 .run_in_state(GameState::InGame)
                 .with_system(back_to_menu_on_esc)
                 .with_system(game::get_cursor_pos)
-                .with_system(ui::textbox::drag_system)
+                .with_system(ui::textbox::drag_v2)
+                //.with_system(ui::textbox::drag_system)
+                //.with_system(ui::textbox::click_system)
                 //.with_system(game::move_lr_box)
                 .into()
         )
@@ -108,8 +112,6 @@ fn despawn_with<T: Component>(mut commands: Commands, q: Query<Entity, With<T>>)
 
 /// Spawn the camera
 fn setup_camera(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), PickingCameraBundle::default(), GameCamera));
+    commands.spawn((Camera2dBundle::default(), GameCamera));
+    //commands.spawn((Camera2dBundle::default(), PickingCameraBundle::default(), GameCamera));
 }
-
-
-
