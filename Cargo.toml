@@ -9,7 +9,7 @@ edition = "2021"
 bevy = { version = "0.9", features = ["dynamic","jpeg"] }
 iyes_loopless = "0.9.1"
 rand = "0.8.5"
-bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "beta", features = ["all"]}
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "beta", features = ["backend_sprite", "debug"]}
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
