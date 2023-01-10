@@ -12,7 +12,7 @@ pub struct LevelButton;
 #[derive(Component)]
 pub struct ButtonText;
 
-#[derive(Resource)] // TODO: 
+#[derive(Resource)] // TODO:
 pub struct CurrentLevel(pub Option<u16>);
 
 const LEVEL_COUNT: u16 = 35;
