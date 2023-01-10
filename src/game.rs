@@ -162,7 +162,6 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
     commands.entity(cursor).add_child(cursor_inside);
 
     ui::textbox::ProgramBox::new(commands, ass, "A2", GameRoot);
-
 }
 
 #[derive(Component)]

@@ -40,7 +40,7 @@ pub struct ProgramBox {
 }
 
 impl ProgramBox {
-    pub fn new<S: Into<String>, T: Component>(mut commands: Commands, ass: Res<AssetServer>, name: S, root_type: T) {
+    pub fn new<S: Into<String>, T: Component>(mut commands: Commands, ass: Res<AssetServer>, name: S, root_type: T) -> Entity {
         let box_top = commands.spawn((BoxRootBundle {
             sprite: SpriteBundle {
                 sprite: Sprite {
@@ -82,6 +82,7 @@ impl ProgramBox {
         }, BoxCloseButton)).id();
 
         commands.entity(box_top).push_children(&[box_name, box_exit]);
+        return box_top;
     }
 }
 
@@ -169,7 +170,9 @@ pub fn drag_v2(
     mut boxes: Query<(Entity, &mut Transform)>,
 
 ) {
+    //println!("{:?}", boxes);
     for dragging in drag_events.iter() {
+        println!("TEST");
         let pointer_entity = pointers.get_entity(dragging.pointer_id()).unwrap();
         let pointer_location = locations.get(pointer_entity).unwrap().location().unwrap();
         let pointer_position = pointer_location.position;
