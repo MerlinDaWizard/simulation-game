@@ -49,7 +49,7 @@ impl ProgramBox {
                     ..Default::default()
                 },
                 transform: Transform {
-                    translation: Vec3 { x: 0.0, y: 0.0, z: 2.0 },
+                    translation: Vec3 { x: 0.0, y: 0.0, z: 200.0 },
                     ..Default::default()
                 },
                 //texture: todo!(),
@@ -66,7 +66,7 @@ impl ProgramBox {
                 alignment: TextAlignment { vertical: VerticalAlign::Top, horizontal: HorizontalAlign::Left },
             },
             transform: Transform {
-                translation: Vec3 { x: -95.0, y: 12.0, z: 1.1 },
+                translation: Vec3 { x: -95.0, y: 12.0, z: 200.1 },
                 ..Default::default()
             },
             ..Default::default()
@@ -75,7 +75,7 @@ impl ProgramBox {
         let box_exit = commands.spawn(( SpriteBundle {
             texture: ass.load("exit_button.png"),
             transform: Transform {
-                translation: Vec3 { x: 83.0, y: 0.0, z: 1.2 },
+                translation: Vec3 { x: 83.0, y: 0.0, z: 200.2 },
                 ..Default::default()
             },
             ..Default::default()
@@ -171,6 +171,9 @@ pub fn drag_v2(
 
 ) {
     //println!("{:?}", boxes);
+    for start in drag_start_events.iter() {
+        dbg!(start);
+    }
     for dragging in drag_events.iter() {
         println!("TEST");
         let pointer_entity = pointers.get_entity(dragging.pointer_id()).unwrap();
