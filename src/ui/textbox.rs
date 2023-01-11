@@ -1,4 +1,4 @@
-use bevy::{prelude::*, input::{mouse::{MouseMotion, MouseButtonInput}, ButtonState}, render::camera::RenderTarget};
+use bevy::{prelude::*, input::{mouse::{MouseMotion, MouseButtonInput}, ButtonState}, render::camera::RenderTarget, ui::FocusPolicy};
 use crate::{GameCamera, game::Interactable};
 use bevy_mod_picking::prelude::{backends::sprite::SpriteBackend, *};
 #[derive(Component)]
@@ -44,7 +44,7 @@ pub struct ProgramBox {
 }
 
 impl ProgramBox {
-    pub fn new<S: Into<String>, T: Component>(mut commands: Commands, ass: Res<AssetServer>, name: S, root_type: T) -> Entity {
+    pub fn new<S: Into<String>, T: Component>(mut commands: &mut Commands, ass: &Res<AssetServer>, name: S, root_type: T) -> Entity {
         let box_top = commands.spawn((BoxRootBundle {
             sprite: SpriteBundle {
                 sprite: Sprite {
@@ -82,7 +82,7 @@ impl ProgramBox {
                 ..Default::default()
             },
             ..Default::default()
-        }, BoxCloseButton)).id();
+        }, BoxCloseButton, FocusPolicy::Block)).id();
 
         commands.entity(box_top).push_children(&[box_name, box_exit]);
         return box_top;

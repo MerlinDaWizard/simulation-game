@@ -1,3 +1,4 @@
+use bevy::ecs::system::SystemState;
 use bevy::prelude::*;
 use crate::components;
 
@@ -136,7 +137,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
             ..Default::default()
         },
         transform: Transform {
-            translation: Vec3 { x: 50.0, y: 50.0, z: 100.0 },
+            translation: Vec3 { x: 50.0, y: 50.0, z: 99.0 },
             ..Default::default()
         },
         texture: ass.load("cursor.png"),
@@ -149,7 +150,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
             ..Default::default()
         },
         transform: Transform {
-            translation: Vec3 { x: 0.0, y: 0.0, z: 101.0 },
+            translation: Vec3 { x: 0.0, y: 0.0, z: 100.1 },
             scale: Vec3::new(0.5,0.5,1.0),
             ..Default::default()
         },
@@ -158,7 +159,8 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
     }, CursorInside, GameRoot)).id();
     commands.entity(cursor).add_child(cursor_inside);
 
-    ui::textbox::ProgramBox::new(commands, ass, "A2", GameRoot);
+    ui::textbox::ProgramBox::new(&mut commands, &ass, "A1", GameRoot);
+    ui::textbox::ProgramBox::new(&mut commands, &ass, "A2", GameRoot);
 }
 
 #[derive(Component)]
@@ -196,14 +198,6 @@ pub fn get_cursor_pos(
     }
 }
 
-pub fn move_lr_box(
-    _kbd: Res<Input<KeyCode>>,
-    mut main_query: Query<&mut Transform, With<ui::textbox::BoxRoot>>,
-) {
-    for mut e in main_query.iter_mut() {
-        e.translation.x += 1.0;
-    }
-}
 // fn main() {
 //     let mut v = vec![vec![wire{test:1,id:1},wire{test:1,id:2},wire{test:1,id:2},wire{test:1,id:3}],vec![wire{test:2,id:1},wire{test:2,id:2},wire{test:2,id:2},wire{test:2,id:3}]];
 //     for mut across in 0..v.len() {
