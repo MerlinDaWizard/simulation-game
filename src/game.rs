@@ -118,7 +118,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
                 ..Default::default()
             },
             transform: Transform {
-                translation: Vec3 { x: 0.0, y: 0.0, z: 10.0 },
+                translation: Vec3 { x: -500.0, y: 0.0, z: 10.0 },
                 scale: Vec3::ONE,
                 ..Default::default()
             },
@@ -181,9 +181,9 @@ pub fn get_cursor_pos(
         let window = windows.get_primary().unwrap();
         
         if let Some(position) = window.cursor_position() {
-            println!("{:?}", position);
+            //println!("{:?}", position);
             for mut transform in main_query.iter_mut() {
-                println!("{:?}", transform.translation);
+                //println!("{:?}", transform.translation);
                 transform.translation.x = position.x - (window.width()/2.0); // Mouse position is from bottom left
                 transform.translation.y = position.y - (window.height()/2.0); // Whereas entity position is from middle of screen.
                 transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, 0.05));
