@@ -1,3 +1,4 @@
+//! MODIFIED VERSION TO DEMONSTRATE ONLY WORKING WITH SINGLE SPRITE
 //! Demonstrates how to use the bevy_sprite picking backend.
 //!
 //! You must enable the `backend_sprite` or `all` features.
@@ -14,30 +15,34 @@ fn main() {
         .run();
 }
 
-#[derive(Component)]
-struct Mover(i32);
-
-fn move_sprite(time: Res<Time>, mut sprite: Query<(&mut Transform, &Mover), With<Sprite>>) {
-    for (mut transform, mover) in sprite.iter_mut() {
-        let new = Vec2 {
-            x: 200.0 * (time.elapsed_seconds().sin() * mover.0 as f32),
-            y: 200.0 * (time.elapsed_seconds() * 2.0).sin(),
-        };
-        transform.translation.x = new.x;
-        transform.translation.y = new.y;
+fn move_sprite(time: Res<Time>, mut sprite: Query<&mut Transform, With<Sprite>>) {
+    for mut transform in sprite.iter_mut() {
+        transform.translation.y = 200.0 * (time.elapsed_seconds() * 2.0).sin()
     }
 
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
-    commands.spawn((SpriteBundle {
-        texture: asset_server.load("grid.png"),
+    commands.spawn(SpriteBundle {
+        texture: asset_server.load("bavy.png"),
+        sprite: Sprite { // Style image blue just to make things clear
+            color: Color::BLUE,
+            ..Default::default()
+        },
+        transform: Transform {
+            translation: Vec3::new(-200.0,0.0,1.0),
+            ..Default::default()
+        },
         ..default()
-    }, Mover(-1)));
+    });
 
-    commands.spawn((SpriteBundle {
-        texture: asset_server.load("grid.png"),
+    commands.spawn(SpriteBundle {
+        texture: asset_server.load("bavy.png"),
+        transform: Transform {
+            translation: Vec3::new(200.0,0.0,1.0),
+            ..Default::default()
+        },
         ..default()
-    }, Mover(1)));
+    });
 }
