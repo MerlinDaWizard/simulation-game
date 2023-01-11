@@ -7,7 +7,6 @@ use crate::components::wires::GridPos;
 use crate::level_select::CurrentLevel;
 use crate::ui;
 use Val::*;
-
 /// Root component for this screen
 #[derive(Component)]
 pub struct GameRoot;
@@ -98,7 +97,6 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
     //             flex_direction: FlexDirection::Row,
     //             justify_content: JustifyContent::Center,
     //             ..Default::default()
-
     //         },
     //         ..Default::default()
     //     }).id();
@@ -161,6 +159,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
 
     ui::textbox::ProgramBox::new(&mut commands, &ass, "A1", GameRoot);
     ui::textbox::ProgramBox::new(&mut commands, &ass, "A2", GameRoot);
+
 }
 
 #[derive(Component)]

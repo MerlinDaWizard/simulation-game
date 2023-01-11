@@ -1,6 +1,20 @@
 use bevy::{prelude::*, input::{mouse::{MouseMotion, MouseButtonInput}, ButtonState}, render::camera::RenderTarget, ui::FocusPolicy};
 use crate::{GameCamera, game::Interactable};
 use bevy_mod_picking::prelude::{backends::sprite::SpriteBackend, *};
+use iyes_loopless::prelude::*;
+pub struct TextboxPlugin;
+
+impl Plugin for TextboxPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_set(
+            ConditionSet::new()
+                .run_in_state(crate::GameState::InGame)
+                .with_system(drag_v2)
+                .with_system(CloseBox::handle_events)
+                .into()
+        );
+    }
+}
 #[derive(Component)]
 pub struct BoxRoot;
 
@@ -56,14 +70,14 @@ impl ProgramBox {
                     translation: Vec3 { x: 0.0, y: 0.0, z: 200.0 },
                     ..Default::default()
                 },
-                //texture: todo!(),
+                //texture: todo!index(),
                 //visibility: todo!(),
                 ..Default::default()
             },
             box_root: BoxRoot,
         }, root_type, Draggable::new())).id();
     
-        let box_name = commands.spawn( Text2dBundle {
+        let box_name = commands.spawn( (Text2dBundle {
             text: Text {
                 sections: vec![TextSection::new(name, TextStyle { font: ass.load("Pixelboy.ttf"), font_size: 24.0, color: Color::WHITE })],
                 alignment: TextAlignment { vertical: VerticalAlign::Top, horizontal: HorizontalAlign::Left },
@@ -73,7 +87,7 @@ impl ProgramBox {
                 ..Default::default()
             },
             ..Default::default()
-        }).id();
+        }, BoxTitle)).id();
         
         let box_exit = commands.spawn(( SpriteBundle {
             texture: ass.load("exit_button.png"),
@@ -82,13 +96,49 @@ impl ProgramBox {
                 ..Default::default()
             },
             ..Default::default()
-        }, BoxCloseButton, FocusPolicy::Block)).id();
+        }, BoxCloseButton, FocusPolicy::Block, PickableBundle::default()))
+            .forward_events::<PointerClick, CloseBox>()
+            .id();
 
         commands.entity(box_top).push_children(&[box_name, box_exit]);
         return box_top;
     }
 }
 
+// Event for closing a box
+struct CloseBox(Entity);
+
+impl ForwardedEvent<PointerClick> for CloseBox {
+    fn from_data(event_data: &PointerEventData<PointerClick>) -> CloseBox {
+        CloseBox(event_data.target())
+    }
+}
+
+impl CloseBox {
+    fn handle_events(
+        mut commands: Commands,
+        mut close: EventReader<CloseBox>,
+        q_boxes: Query<(&Children, Entity), With<BoxRoot>>,
+        q_titles: Query<(&Parent, &Text), With<BoxTitle>>,
+    ) {
+        for event in close.iter() {
+            for (children, box_root) in q_boxes.iter() {
+                if !children.contains(&event.0) {
+                    continue;
+                }
+
+                for (bot_root_list, text) in q_titles.iter() {
+                    if bot_root_list.get() != box_root {
+                        continue;
+                    }
+
+                    println!("Box {} pressed", text.sections[0].value);
+                }
+            }
+            //commands.entity(event.0)
+        }
+    }
+}
 pub fn drag_v2(
     mut commands: Commands,
     mut drag_start_events: EventReader<PointerDragStart>,

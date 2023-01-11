@@ -15,7 +15,7 @@ use std::time::Duration;
 
 /// Our Application State
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum GameState {
+pub enum GameState {
     MainMenu,
     LevelsMenu,
     InGame,
@@ -29,6 +29,7 @@ fn main() {
         .add_plugins(DefaultPickingPlugins)
         // add out states driver
         .add_loopless_state(GameState::MainMenu)
+        .add_plugin(crate::ui::textbox::TextboxPlugin)
         // Add a FixedTimestep, cuz we can!
         .add_fixed_timestep(
             Duration::from_millis(125),
@@ -63,10 +64,6 @@ fn main() {
                 .run_in_state(GameState::InGame)
                 .with_system(back_to_menu_on_esc)
                 .with_system(game::get_cursor_pos)
-                .with_system(ui::textbox::drag_v2)
-                //.with_system(ui::textbox::drag_system)
-                //.with_system(ui::textbox::click_system)
-                //.with_system(game::move_lr_box)
                 .into()
         )
         .add_system_set(
