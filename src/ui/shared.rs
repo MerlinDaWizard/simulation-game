@@ -108,7 +108,7 @@ pub fn drag_v2(
         let new_pos = pointer_position - (target_size / 2.0) + draggable.offset;
         let mouse_pos = pointer_position - (target_size / 2.0);
         dbg!(new_pos);
-        if gridlock.is_some() && mouse_pos.x >= bottom_left_corner.x && mouse_pos.y >= bottom_left_corner.y && mouse_pos.x <= top_right_corner.x && mouse_pos.y <= top_right_corner.y {
+        if gridlock.is_some() && mouse_pos.x >= bottom_left_corner.x && mouse_pos.y >= bottom_left_corner.y && mouse_pos.x < top_right_corner.x && mouse_pos.y < top_right_corner.y {
             let grid_slot = ((mouse_pos - bottom_left_corner) / 64.0).floor();
             let size = size.unwrap();
             dbg!(grid_slot);
