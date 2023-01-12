@@ -33,6 +33,7 @@ fn main() {
         .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
         .add_plugin(EguiPlugin)
+        .add_plugin(bevy_framepace::FramepacePlugin)
         // Add a FixedTimestep, cuz we can!
         .add_fixed_timestep(
             Duration::from_millis(125),

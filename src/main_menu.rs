@@ -162,21 +162,22 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
         .id();
 
     // button for testing small snippets
-    let butt_test = commands
-        .spawn((ButtonBundle {
-            background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
-            style: butt_style,
-            ..Default::default()
-        }, TestButt))
-        .with_children(|btn| {
-            btn.spawn(TextBundle {
-                text: Text::from_section("Test!", butt_textstyle.clone()),
-                ..Default::default()
-            });
-        })
-        .id();
+    // let butt_test = commands
+    //     .spawn((ButtonBundle {
+    //         background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
+    //         style: butt_style,
+    //         ..Default::default()
+    //     }, TestButt))
+    //     .with_children(|btn| {
+    //         btn.spawn(TextBundle {
+    //             text: Text::from_section("Test!", butt_textstyle.clone()),
+    //             ..Default::default()
+    //         });
+    //     })
+    //     .id();
 
     commands
         .entity(menu)
-        .push_children(&[butt_enter, butt_levels, butt_exit, butt_test]);
+        //.push_children(&[butt_enter, butt_levels, butt_exit, butt_test]);
+        .push_children(&[butt_enter, butt_levels, butt_exit]);
 }
