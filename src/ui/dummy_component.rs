@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::texture};
+use bevy::{prelude::*};
 use bevy_mod_picking::prelude::*;
 use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
@@ -33,7 +33,7 @@ fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
                     scale: Vec3::splat(2.0),
                     ..Default::default()
                 },
-                texture: texture,
+                texture,
                 ..Default::default()
             },
             ComponentLink(comp),

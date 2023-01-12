@@ -150,7 +150,7 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
     let butt_exit = commands
         .spawn((ButtonBundle {
             background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
-            style: butt_style.clone(),
+            style: butt_style,
             ..Default::default()
         }, ExitButt))
         .with_children(|btn| {

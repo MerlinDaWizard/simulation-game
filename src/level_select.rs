@@ -55,7 +55,7 @@ pub fn on_butt_interact<B: Component>(
             for &child in children.iter() {
                 let text = q_child.get(child);
                 match text {
-                    Err(e) => println!("{}",e),
+                    Err(e) => println!("{e}"),
                     Ok(bevy_text) => {
                         println!("Found text!");
                         let text = bevy_text.sections[0].value.clone();
@@ -65,7 +65,7 @@ pub fn on_butt_interact<B: Component>(
                 }
             }
 
-            println!("{}", level_num);
+            println!("{level_num}");
         }
     }
 }

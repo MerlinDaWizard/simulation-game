@@ -1,4 +1,4 @@
-use bevy::ecs::system::SystemState;
+
 use bevy::prelude::*;
 use crate::components;
 
@@ -6,7 +6,7 @@ use crate::components::wires::ConnectionData;
 use crate::components::shared::GridPos;
 use crate::level_select::CurrentLevel;
 use crate::ui;
-use Val::*;
+
 /// Root component for this screen
 #[derive(Component)]
 pub struct GameRoot;

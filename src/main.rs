@@ -1,3 +1,7 @@
+#![allow(clippy::type_complexity)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_lines)]
+
 mod main_menu;
 mod level_select;
 mod game;
@@ -10,7 +14,7 @@ use bevy_mod_picking::prelude::*;
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
 use iyes_loopless::prelude::*;
 use bevy::window::close_on_esc;
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+use bevy::diagnostic::{LogDiagnosticsPlugin};
 use std::time::Duration;
 
 
@@ -100,7 +104,7 @@ fn back_to_menu_on_esc(mut commands: Commands, kbd: Res<Input<KeyCode>>) {
 /// We can just access the `CurrentState`, and even use change detection!
 fn debug_current_state(state: Res<CurrentState<GameState>>) {
     if state.is_changed() {
-        println!("Detected state change to {:?}!", state);
+        println!("Detected state change to {state:?}!");
     }
 }
 

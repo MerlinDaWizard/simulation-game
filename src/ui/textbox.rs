@@ -1,6 +1,6 @@
-use bevy::{prelude::*, input::{mouse::{MouseMotion, MouseButtonInput}, ButtonState}, render::camera::RenderTarget, ui::FocusPolicy};
-use crate::{GameCamera, game::Interactable};
-use bevy_mod_picking::prelude::{backends::sprite::SpriteBackend, *};
+use bevy::{prelude::*, ui::FocusPolicy};
+
+use bevy_mod_picking::prelude::{*};
 use iyes_loopless::prelude::*;
 use crate::ui::shared::*;
 
@@ -45,10 +45,11 @@ pub struct BoxRootBundle {
 pub struct ProgramBox {
     root: Entity,
     name_text: Entity,
+    exit_button: Entity,
 }
 
 impl ProgramBox {
-    pub fn new<S: Into<String>, T: Component>(mut commands: &mut Commands, ass: &Res<AssetServer>, name: S, root_type: T) -> Entity {
+    pub fn new<S: Into<String>, T: Component>(commands: &mut Commands, ass: &Res<AssetServer>, name: S, root_type: T) -> Self {
         let box_top = commands.spawn((BoxRootBundle {
             sprite: SpriteBundle {
                 sprite: Sprite {
@@ -91,7 +92,7 @@ impl ProgramBox {
             .id();
 
         commands.entity(box_top).push_children(&[box_name, box_exit]);
-        return box_top;
+        ProgramBox { root: box_top, name_text: box_name, exit_button: box_exit}
     }
 }
 
@@ -106,7 +107,7 @@ impl ForwardedEvent<PointerClick> for CloseBox {
 
 impl CloseBox {
     fn handle_events(
-        mut commands: Commands,
+        _commands: Commands,
         mut close: EventReader<CloseBox>,
         mut q_boxes: Query<(&Children, Entity, &mut Visibility), With<BoxRoot>>,
         q_titles: Query<(&Parent, &Text), With<BoxTitle>>,
