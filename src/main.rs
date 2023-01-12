@@ -5,6 +5,7 @@ mod components;
 mod ui;
 
 use bevy::prelude::*;
+use bevy_egui::EguiPlugin;
 use bevy_mod_picking::prelude::*;
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
 use iyes_loopless::prelude::*;
@@ -30,6 +31,8 @@ fn main() {
         // add out states driver
         .add_loopless_state(GameState::MainMenu)
         .add_plugin(crate::ui::textbox::TextboxPlugin)
+        .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
+        .add_plugin(EguiPlugin)
         // Add a FixedTimestep, cuz we can!
         .add_fixed_timestep(
             Duration::from_millis(125),

@@ -2,6 +2,8 @@ use bevy::{prelude::*, input::{mouse::{MouseMotion, MouseButtonInput}, ButtonSta
 use crate::{GameCamera, game::Interactable};
 use bevy_mod_picking::prelude::{backends::sprite::SpriteBackend, *};
 use iyes_loopless::prelude::*;
+use crate::ui::shared::*;
+
 pub struct TextboxPlugin;
 
 impl Plugin for TextboxPlugin {
@@ -40,18 +42,6 @@ pub struct BoxRootBundle {
     pub(crate) box_root: BoxRoot,
 }
 
-#[derive(Component)]
-pub struct Draggable {
-    pub offset: Vec2,
-}
-
-impl Draggable {
-    pub fn new() -> Draggable {
-        Draggable {
-            offset: Vec2::ZERO,
-        }
-    }
-}
 pub struct ProgramBox {
     root: Entity,
     name_text: Entity,
@@ -118,14 +108,15 @@ impl CloseBox {
     fn handle_events(
         mut commands: Commands,
         mut close: EventReader<CloseBox>,
-        q_boxes: Query<(&Children, Entity), With<BoxRoot>>,
+        mut q_boxes: Query<(&Children, Entity, &mut Visibility), With<BoxRoot>>,
         q_titles: Query<(&Parent, &Text), With<BoxTitle>>,
     ) {
         for event in close.iter() {
-            for (children, box_root) in q_boxes.iter() {
+            for (children, box_root, mut visibility) in q_boxes.iter_mut() {
                 if !children.contains(&event.0) {
                     continue;
                 }
+                visibility.is_visible = false;
 
                 for (bot_root_list, text) in q_titles.iter() {
                     if bot_root_list.get() != box_root {
@@ -137,61 +128,5 @@ impl CloseBox {
             }
             //commands.entity(event.0)
         }
-    }
-}
-pub fn drag_v2(
-    mut commands: Commands,
-    mut drag_start_events: EventReader<PointerDragStart>,
-    mut drag_events: EventReader<PointerDrag>,
-    pointers: Res<PointerMap>,
-    windows: Res<Windows>,
-    images: Res<Assets<Image>>,
-    locations: Query<&PointerLocation>,
-    mut boxes: Query<((Entity, &mut Draggable), &mut Transform)>,
-
-) {
-    for start in drag_start_events.iter() {
-        
-        let ((_, mut draggable), transform) = match boxes.get_mut(start.target()) {
-            Ok(b) => b,
-            Err(_)=> {
-                continue;
-            }
-        };
-
-        let pointer_entity = pointers.get_entity(start.pointer_id()).unwrap();
-        let pointer_location = locations.get(pointer_entity).unwrap().location().unwrap();
-        let pointer_position = pointer_location.position;
-        let target = pointer_location
-            .target
-            .get_render_target_info(&windows, &images)
-            .unwrap();
-        let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
-        
-        draggable.offset = transform.translation.truncate() - (pointer_position - (target_size / 2.0));
-        
-    }
-
-    for dragging in drag_events.iter() {
-        let pointer_entity = pointers.get_entity(dragging.pointer_id()).unwrap();
-        let pointer_location = locations.get(pointer_entity).unwrap().location().unwrap();
-        let pointer_position = pointer_location.position;
-        let target = pointer_location
-            .target
-            .get_render_target_info(&windows, &images)
-            .unwrap();
-        let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
-        //dbg!(&boxes);
-        //dbg!(&dragging.target());
-        let ((_, mut draggable), mut box_transform) = match boxes.get_mut(dragging.target()) {
-            Ok(e) => e,
-            Err(e) => {
-                continue;
-            }
-        };
-
-        let z = box_transform.translation.z;
-        box_transform.translation = (pointer_position - (target_size / 2.0) + draggable.offset).extend(z);
-        println!("==============");
     }
 }

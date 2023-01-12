@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-
-#[derive(Debug, Component)]
-pub struct GridPos(pub u8,pub u8);
-
+use crate::components::shared::GridPos;
 /// Dummy wires
 #[derive(Bundle)]
 pub struct WireBundle {

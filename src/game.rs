@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::components;
 
 use crate::components::wires::ConnectionData;
-use crate::components::wires::GridPos;
+use crate::components::shared::GridPos;
 use crate::level_select::CurrentLevel;
 use crate::ui;
 use Val::*;
@@ -117,8 +117,8 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
                 ..Default::default()
             },
             transform: Transform {
-                translation: Vec3 { x: -500.0, y: 0.0, z: 10.0 },
-                scale: Vec3::ONE,
+                translation: Vec3 { x: 0.0, y: 0.0, z: 10.0 },
+                scale: Vec3::splat(2.0),
                 ..Default::default()
             },
             texture: ass.load("grid.png"),
