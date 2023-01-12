@@ -4,7 +4,7 @@ use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
 use crate::{components::shared::*};
 use crate::ui::shared::*;
-
+use crate::components::shared::Size;
 pub struct ComponentTrayPlugin;
 
 impl Plugin for ComponentTrayPlugin {
@@ -20,8 +20,14 @@ impl Plugin for ComponentTrayPlugin {
     }
 }
 
+pub const SCALE: f32 = 2.0;
 fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
+    let mut current_down = -250.0;
     for (i, comp) in Components::iter().enumerate() {
+        let size = comp.get_size();
+        dbg!(&comp);
+        dbg!(current_down);
+        current_down += size.y * SCALE * 0.5;
         let texture: Handle<Image> = ass.load(comp.get_path());
         commands.spawn((
             SpriteBundle {
@@ -29,21 +35,22 @@ fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
                     ..Default::default()
                 },
                 transform: Transform {
-                    translation: Vec3 { x: 400.0, y: (-200.0+100.0*i as f32), z: 11.0 },
-                    scale: Vec3::splat(2.0),
+                    translation: Vec3 { x: 400.0, y: current_down, z: 11.0},
+                    scale: Vec3::splat(SCALE),
                     ..Default::default()
                 },
                 texture,
                 ..Default::default()
             },
-            ComponentLink(comp),
             GridLock,
             crate::game::GameRoot,
             Draggable::new(),
             DragTypeReturn::new(),
-            DragOpacity(0.5),
+            DragOpacity(0.75),
+            Size(comp.get_size()),
+            ComponentLink(comp),
         ));
-
+        current_down += size.y * 0.5 * SCALE + 5.0;
     }
 }
 

@@ -3,6 +3,10 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
+use crate::game::PlacementGrid;
+use crate::components::shared::Size;
+use super::dummy_component::GridLock;
+
 // Stores type and offset for use in dragging
 // Must have this component to take effect
 #[derive(Component, Default)]
@@ -43,11 +47,12 @@ pub fn drag_v2(
     windows: Res<Windows>,
     images: Res<Assets<Image>>,
     locations: Query<&PointerLocation>,
-    mut draggable_entity: Query<(Entity, &mut Sprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>)>,
-
+    mut draggable_entity: Query<(Entity, &mut Sprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>, Option<&GridLock>, Option<&Size>), Without<PlacementGrid>>,
+    placement_grid: Query<(&Sprite, &Transform, With<PlacementGrid>)>,
 ) {
     for start in drag_start_events.iter() {
-        let (_, mut sprite, mut draggable, transform, opacity, must_return) = match draggable_entity.get_mut(start.target()) {
+        let grid = placement_grid.get_single().unwrap();
+        let (_, mut sprite, mut draggable, transform, opacity, must_return, _, _) = match draggable_entity.get_mut(start.target()) {
             Ok(b) => b,
             Err(_)=> {
                 continue;
@@ -73,6 +78,11 @@ pub fn drag_v2(
         }
     }
 
+    let grid = placement_grid.get_single().unwrap();
+    //let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
+    let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-224.0,-224.0);
+    let top_right_corner = grid.1.translation.truncate() + Vec2::new(224.0, 224.0);
+
     for dragging in drag_events.iter() {
         let pointer_entity = pointers.get_entity(dragging.pointer_id()).unwrap();
         let pointer_location = locations.get(pointer_entity).unwrap().location().unwrap();
@@ -84,7 +94,7 @@ pub fn drag_v2(
         let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
         //dbg!(&boxes);
         //dbg!(&dragging.target());::new(DragType::Return(Vec2::ZERO))
-        let (_, _, draggable, mut box_transform, _, _) = match draggable_entity.get_mut(dragging.target()) {
+        let (_, _, draggable, mut box_transform, _, _, gridlock, size) = match draggable_entity.get_mut(dragging.target()) {
             Ok(e) => e,
             Err(_) => {
                 continue;
@@ -92,11 +102,26 @@ pub fn drag_v2(
         };
 
         let z = box_transform.translation.z;
-        box_transform.translation = (pointer_position - (target_size / 2.0) + draggable.offset).extend(z);
+        
+        dbg!(bottom_left_corner);
+        dbg!(top_right_corner);
+        let new_pos = pointer_position - (target_size / 2.0) + draggable.offset;
+        let mouse_pos = pointer_position - (target_size / 2.0);
+        dbg!(new_pos);
+        if gridlock.is_some() && mouse_pos.x >= bottom_left_corner.x && mouse_pos.y >= bottom_left_corner.y && mouse_pos.x <= top_right_corner.x && mouse_pos.y <= top_right_corner.y {
+            let grid_slot = ((mouse_pos - bottom_left_corner) / 64.0).floor();
+            let size = size.unwrap();
+            dbg!(grid_slot);
+            box_transform.translation = (bottom_left_corner + Vec2::new(64.0*grid_slot.x,64.0*grid_slot.y) + (size.0 * box_transform.scale.truncate()) * 0.5).extend(z);
+            // box_transform.translation = (bottom_left_corner).extend(z);
+            // box_transform.translation = (bottom_left_corner + Vec2::new((mouse_pos.x / 64.0).floor() * 64.0,(mouse_pos.y / 64.0).floor() * 64.0) + (size.0 * box_transform.scale.truncate() / 2.0)).extend(z);
+        } else {
+            box_transform.translation = (pointer_position - (target_size / 2.0) + draggable.offset).extend(z);
+        }
     }
 
     for end in drag_end_events.iter() {
-        let (_, mut sprite, _, mut transform, opacity, must_return) = match draggable_entity.get_mut(end.target()) {
+        let (_, mut sprite, _, mut transform, opacity, must_return, gridlock, _) = match draggable_entity.get_mut(end.target()) {
             Ok(b) => b,
             Err(_)=> {
                 continue;
@@ -110,5 +135,6 @@ pub fn drag_v2(
             transform.translation = pos.0
         }
     }
+
 
 }

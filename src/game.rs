@@ -11,6 +11,8 @@ use crate::ui;
 #[derive(Component)]
 pub struct GameRoot;
 
+#[derive(Component)]
+pub struct PlacementGrid;
 /// Sets up screen using flex boxies and loads components etc.
 pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<CurrentLevel>) { // At the moment `CurrentLevel` actually refers to the level to load
     // let root_bundle = commands
@@ -111,24 +113,18 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
     //     .entity(root_bundle)
     //     .push_children(&[main_side,component_panel]);
 
-    commands.spawn((components::wires::WireBundle {
-        sprite: SpriteBundle {
-            sprite: Sprite {
-                ..Default::default()
-            },
-            transform: Transform {
-                translation: Vec3 { x: 0.0, y: 0.0, z: 10.0 },
-                scale: Vec3::splat(2.0),
-                ..Default::default()
-            },
-            texture: ass.load("grid.png"),
+    commands.spawn((SpriteBundle {
+        sprite: Sprite {
             ..Default::default()
         },
-        grid_pos: GridPos(1,1),
-        connections: ConnectionData {
-            up: true, down: true, left: true, right: true,
-        }
-    }, GameRoot));
+        transform: Transform {
+            translation: Vec3 { x: 0.0, y: 0.0, z: 10.0 },
+            scale: Vec3::splat(2.0),
+            ..Default::default()
+        },
+        texture: ass.load("grid.png"),
+        ..Default::default()
+    }, GameRoot, PlacementGrid));
 
     let cursor = commands.spawn( (SpriteBundle {
         sprite: Sprite {

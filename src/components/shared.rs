@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use bevy::prelude::Component;
+use bevy::prelude::{Component, Vec2};
 use strum_macros::EnumIter;
 
 #[derive(EnumIter, Debug, PartialEq)]
@@ -26,7 +26,20 @@ impl Components {
         p.push(s);
         p
     }
+
+    pub fn get_size(&self) -> Vec2 {
+        match self {
+            Components::WirePiece => Vec2::splat(32.0),
+            Components::GateNot => Vec2::splat(32.0),
+            Components::GateAnd => Vec2::splat(64.0),
+            Components::SignalCopy => Vec2::new(32.0,64.0),
+            Components::SignalPassthrough => Vec2::splat(32.0),
+        }
+    }
 }
+
+#[derive(Component)]
+pub struct Size(pub Vec2);
 
 #[derive(Debug, Component)]
 pub struct GridPos(pub u8,pub u8);
