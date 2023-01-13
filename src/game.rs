@@ -1,7 +1,12 @@
 
 use bevy::prelude::*;
+use crate::components::shared::Size;
 use crate::level_select::CurrentLevel;
 use crate::ui;
+
+pub const GRID_CELL_SIZE: f32 = 64.0;
+pub const GRID_CELL_AMOUNT_WIDTH: u8 = 7;
+pub const GRID_CELL_AMOUNT_HEIGHT: u8 = 7;
 
 /// Root component for this screen
 #[derive(Component)]
@@ -120,7 +125,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
         },
         texture: ass.load("grid.png"),
         ..Default::default()
-    }, GameRoot, PlacementGrid));
+    }, GameRoot, PlacementGrid, Size(Vec2::new(GRID_CELL_AMOUNT_WIDTH as f32,GRID_CELL_AMOUNT_HEIGHT as f32)*GRID_CELL_SIZE)));
 
     let cursor = commands.spawn( (SpriteBundle {
         sprite: Sprite {

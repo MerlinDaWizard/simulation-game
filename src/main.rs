@@ -36,6 +36,7 @@ fn main() {
         .add_loopless_state(GameState::MainMenu)
         .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
+        .add_plugin(crate::components::shared::ComponentSetupPlugin)
         .add_plugin(EguiPlugin)
         .add_plugin(bevy_framepace::FramepacePlugin)
         // Add a FixedTimestep, cuz we can!

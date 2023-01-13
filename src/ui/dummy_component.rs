@@ -26,7 +26,7 @@ fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
         let size = comp.get_size();
         dbg!(&comp);
         dbg!(current_down);
-        current_down += size.y * SCALE * 0.5;
+        current_down += size.y * 0.5;
         let texture: Handle<Image> = ass.load(comp.get_path());
         commands.spawn((
             SpriteBundle {
@@ -34,7 +34,7 @@ fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
                     ..Default::default()
                 },
                 transform: Transform {
-                    translation: Vec3 { x: 400.0, y: current_down, z: 11.0},
+                    translation: Vec3 { x: 400.0, y: current_down, z: 20.0},
                     scale: Vec3::splat(SCALE),
                     ..Default::default()
                 },
@@ -49,7 +49,7 @@ fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
             Size(comp.get_size()),
             ComponentLink(comp),
         ));
-        current_down += size.y * 0.5 * SCALE + 5.0;
+        current_down += size.y * 0.5 + 5.0;
     }
 }
 
@@ -57,7 +57,7 @@ fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
 pub struct TrayComponent;
 
 #[derive(Component)]
-pub struct ComponentLink(Components);
+pub struct ComponentLink(pub Components);
 
 #[derive(Component)]
 pub struct GridLock{
