@@ -1,9 +1,5 @@
 
 use bevy::prelude::*;
-use crate::components;
-
-use crate::components::wires::ConnectionData;
-use crate::components::shared::GridPos;
 use crate::level_select::CurrentLevel;
 use crate::ui;
 

@@ -1,5 +1,4 @@
 use bevy::{prelude::*};
-use bevy_mod_picking::prelude::*;
 use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
 use crate::{components::shared::*};
@@ -23,7 +22,7 @@ impl Plugin for ComponentTrayPlugin {
 pub const SCALE: f32 = 2.0;
 fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
     let mut current_down = -250.0;
-    for (i, comp) in Components::iter().enumerate() {
+    for comp in Components::iter() {
         let size = comp.get_size();
         dbg!(&comp);
         dbg!(current_down);
