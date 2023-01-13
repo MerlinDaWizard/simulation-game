@@ -42,7 +42,7 @@ fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
                 texture,
                 ..Default::default()
             },
-            GridLock,
+            GridLock::new(),
             crate::game::GameRoot,
             Draggable::new(),
             DragTypeReturn::new(),
@@ -61,5 +61,13 @@ pub struct TrayComponent;
 pub struct ComponentLink(Components);
 
 #[derive(Component)]
-pub struct GridLock;
+pub struct GridLock{
+    pub grab_part: Vec2
+}
+
+impl GridLock {
+    pub fn new() -> Self {
+        GridLock { grab_part: Vec2::ZERO }
+    }
+}
 

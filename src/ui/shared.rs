@@ -1,6 +1,7 @@
 
 
 use bevy::prelude::*;
+use bevy::prelude::system_adapter::unwrap;
 use bevy_mod_picking::prelude::*;
 
 use crate::game::PlacementGrid;
@@ -47,12 +48,16 @@ pub fn drag_v2(
     windows: Res<Windows>,
     images: Res<Assets<Image>>,
     locations: Query<&PointerLocation>,
-    mut draggable_entity: Query<(Entity, &mut Sprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>, Option<&GridLock>, Option<&Size>), Without<PlacementGrid>>,
+    mut draggable_entity: Query<(Entity, &mut Sprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>, Option<&mut GridLock>, Option<&Size>), Without<PlacementGrid>>,
     placement_grid: Query<(&Sprite, &Transform, With<PlacementGrid>)>,
 ) {
+    let grid = placement_grid.get_single().unwrap();
+    //let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
+    let grid_bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-224.0,-224.0);
+    let grid_top_right_corner = grid.1.translation.truncate() + Vec2::new(224.0, 224.0);
+
     for start in drag_start_events.iter() {
-        let grid = placement_grid.get_single().unwrap();
-        let (_, mut sprite, mut draggable, transform, opacity, must_return, _, _) = match draggable_entity.get_mut(start.target()) {
+        let (_, mut sprite, mut draggable, transform, opacity, must_return, gridlock, size) = match draggable_entity.get_mut(start.target()) {
             Ok(b) => b,
             Err(_)=> {
                 continue;
@@ -67,6 +72,7 @@ pub fn drag_v2(
             .get_render_target_info(&windows, &images)
             .unwrap();
         let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
+        let mouse_pos = pointer_position - (target_size / 2.0);
         
         draggable.offset = transform.translation.truncate() - (pointer_position - (target_size / 2.0));
         if let Some(a) = opacity {
@@ -76,12 +82,22 @@ pub fn drag_v2(
         if let Some(mut r) = must_return {
             r.0 = transform.translation
         }
-    }
 
-    let grid = placement_grid.get_single().unwrap();
-    //let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
-    let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-224.0,-224.0);
-    let top_right_corner = grid.1.translation.truncate() + Vec2::new(224.0, 224.0);
+        if let Some(mut gridlock) = gridlock {
+            match size {
+                Some(s) => {
+                    let entity_bottom_left_corner = transform.translation.truncate() - s.0 * transform.scale.truncate() * 0.5;
+                    let difference = mouse_pos - entity_bottom_left_corner;
+                    dbg!(difference);
+                    gridlock.grab_part = (difference / 64.0).floor();
+                    dbg!(gridlock.grab_part);
+                },
+                None => { // Assume it is the same size as the grid
+                    // Keep gridlock grabpart as set by init (zero)
+                }
+            }
+        }
+    }
 
     for dragging in drag_events.iter() {
         let pointer_entity = pointers.get_entity(dragging.pointer_id()).unwrap();
@@ -102,17 +118,14 @@ pub fn drag_v2(
         };
 
         let z = box_transform.translation.z;
+        // dbg!(draggable.offset);
         
-        dbg!(bottom_left_corner);
-        dbg!(top_right_corner);
-        let new_pos = pointer_position - (target_size / 2.0) + draggable.offset;
         let mouse_pos = pointer_position - (target_size / 2.0);
-        dbg!(new_pos);
-        if gridlock.is_some() && mouse_pos.x >= bottom_left_corner.x && mouse_pos.y >= bottom_left_corner.y && mouse_pos.x < top_right_corner.x && mouse_pos.y < top_right_corner.y {
-            let grid_slot = ((mouse_pos - bottom_left_corner) / 64.0).floor();
+        if gridlock.is_some() && mouse_pos.x >= grid_bottom_left_corner.x && mouse_pos.y >= grid_bottom_left_corner.y && mouse_pos.x < grid_top_right_corner.x && mouse_pos.y < grid_top_right_corner.y {
+            let gridlock = gridlock.unwrap(); // Weird way of doing it cuz I wanna put the above in one expression
+            let grid_slot = ((mouse_pos - grid_bottom_left_corner) / 64.0).floor() - gridlock.grab_part;
             let size = size.unwrap();
-            dbg!(grid_slot);
-            box_transform.translation = (bottom_left_corner + Vec2::new(64.0*grid_slot.x,64.0*grid_slot.y) + (size.0 * box_transform.scale.truncate()) * 0.5).extend(z);
+            box_transform.translation = (grid_bottom_left_corner + Vec2::new(64.0*grid_slot.x,64.0*grid_slot.y) + (size.0 * box_transform.scale.truncate()) * 0.5).extend(z);
             // box_transform.translation = (bottom_left_corner).extend(z);
             // box_transform.translation = (bottom_left_corner + Vec2::new((mouse_pos.x / 64.0).floor() * 64.0,(mouse_pos.y / 64.0).floor() * 64.0) + (size.0 * box_transform.scale.truncate() / 2.0)).extend(z);
         } else {
@@ -121,7 +134,7 @@ pub fn drag_v2(
     }
 
     for end in drag_end_events.iter() {
-        let (_, mut sprite, _, mut transform, opacity, must_return, gridlock, _) = match draggable_entity.get_mut(end.target()) {
+        let (_, mut sprite, _, mut transform, opacity, must_return, _, _) = match draggable_entity.get_mut(end.target()) {
             Ok(b) => b,
             Err(_)=> {
                 continue;
@@ -135,6 +148,4 @@ pub fn drag_v2(
             transform.translation = pos.0
         }
     }
-
-
 }
