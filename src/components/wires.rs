@@ -1,22 +1,42 @@
 use bevy::prelude::*;
-use crate::components::shared::GridPos;
-/// Dummy wires
-#[derive(Bundle)]
-pub struct WireBundle {
-    #[bundle]
-    pub(crate) sprite: SpriteBundle,
-    pub(crate) grid_pos: GridPos,
-    pub(crate) connections: ConnectionData
+
+use super::shared::GridComponent;
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
+pub struct Wire {
+    pub grid_pos: UVec2,
+    pub connection_data: ConnectionData,
 }
 
+impl GridComponent for Wire {
+    fn get_grid_pos(&self) -> UVec2 {
+        self.grid_pos
+    }
+}
 /// Struct of bools corrisponding to connections. UP DOWN LEFT RIGHT
 /// Orginally used bitfields but moved away due to not needed
-#[derive(Component)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct ConnectionData {
+    pub blocked_sides: SideBlock,
     pub up: bool,
     pub down: bool,
     pub left: bool,
     pub right: bool,
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
+pub enum BlockState {
+    Blocked,
+    #[default]
+    Normal,
+}
+
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
+pub struct SideBlock {
+    pub up: BlockState,
+    pub down: BlockState,
+    pub left: BlockState,
+    pub right: BlockState,
 }
 
 impl ConnectionData {
@@ -34,6 +54,7 @@ impl ConnectionData {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Direction {
     Up,
     Down,
@@ -50,12 +71,4 @@ impl Direction {
             Direction::Right => Direction::Left,
         }
     }
-}
-
-
-
-#[derive(Component)]
-enum Components {
-    Wires(WireBundle),
-    // Other components eventually here aswell
 }

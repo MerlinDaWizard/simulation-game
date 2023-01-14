@@ -2,9 +2,10 @@ use std::path::PathBuf;
 use bevy::prelude::*;
 use iyes_loopless::prelude::ConditionSet;
 use strum_macros::EnumIter;
-
+use enum_dispatch::enum_dispatch;
 use crate::game::{PlacementGrid, GRID_CELL_SIZE, GameRoot};
-
+use super::temp::*;
+use super::wires::Wire;
 pub struct ComponentSetupPlugin;
 
 impl Plugin for ComponentSetupPlugin {
@@ -22,25 +23,36 @@ impl Plugin for ComponentSetupPlugin {
     }
 }
 
-#[derive(EnumIter, Debug, PartialEq, Clone)]
+#[enum_dispatch]
+#[derive(EnumIter, Debug, PartialEq, Clone, Component)]
 pub enum Components {
-    WirePiece,
-    GateNot,
-    GateAnd,
-    SignalCopy,
-    SignalPassthrough,
+    WirePiece(Wire),
+    GateNot(GateNot),
+    GateAnd(GateAnd),
+    SignalCopy(SignalCopy),
+    SignalPassthrough(SignalPassthrough),
 
 }
 
 impl Components {
+    pub fn create_default(source: &Components, pos: &GridPos) -> Components {
+        match source {
+            Components::WirePiece(_) => Self::WirePiece(Wire { grid_pos: pos.0, ..Default::default()}),
+            Components::GateNot(_) => todo!(),
+            Components::GateAnd(_) => todo!(),
+            Components::SignalCopy(_) => todo!(),
+            Components::SignalPassthrough(_) => todo!(),
+        }
+    }
+
     pub fn get_path(&self) -> PathBuf {
         let mut p = PathBuf::from("components");
         let s = match self {
-            Components::WirePiece => "wire_fake.png",
-            Components::GateNot => "gate_not.png",
-            Components::GateAnd => "gate_and.png",
-            Components::SignalCopy => "signal_copy.png",
-            Components::SignalPassthrough => "signal_passthrough.png",
+            Components::WirePiece(_) => "wire_fake.png",
+            Components::GateNot(_) => "gate_not.png",
+            Components::GateAnd(_) => "gate_and.png",
+            Components::SignalCopy(_) => "signal_copy.png",
+            Components::SignalPassthrough(_) => "signal_passthrough.png",
         };
         p.push(s);
         p
@@ -48,24 +60,28 @@ impl Components {
 
     pub fn get_size(&self) -> Vec2 {
         match self {
-            Components::WirePiece => Vec2::splat(64.0),
-            Components::GateNot => Vec2::splat(64.0),
-            Components::GateAnd => Vec2::splat(128.0),
-            Components::SignalCopy => Vec2::new(64.0,128.0),
-            Components::SignalPassthrough => Vec2::splat(64.0),
+            Components::WirePiece(_) => Vec2::splat(64.0),
+            Components::GateNot(_) => Vec2::splat(64.0),
+            Components::GateAnd(_) => Vec2::splat(128.0),
+            Components::SignalCopy(_) => Vec2::new(64.0,128.0),
+            Components::SignalPassthrough(_) => Vec2::splat(64.0),
         }
     }
 
     pub fn get_grid_size(&self) -> UVec2 {
         match self {
-            Components::WirePiece => UVec2::new(1,1),
-            Components::GateNot => UVec2::new(1,1),
-            Components::GateAnd => UVec2::new(2,2),
-            Components::SignalCopy => UVec2::new(1,2),
-            Components::SignalPassthrough => UVec2::new(1,1),
+            Components::WirePiece(_) => UVec2::new(1,1),
+            Components::GateNot(_) => UVec2::new(1,1),
+            Components::GateAnd(_) => UVec2::new(2,2),
+            Components::SignalCopy(_) => UVec2::new(1,2),
+            Components::SignalPassthrough(_) => UVec2::new(1,1),
         }
-
     }
+}
+
+#[enum_dispatch(Components)]
+pub trait GridComponent {
+    fn get_grid_pos(&self) -> UVec2;
 }
 
 /// Represents the size of a sprite used in some cases for gridlocking where not every sprite is exactly 1 grid size
@@ -75,7 +91,7 @@ impl Components {
 pub struct Size(pub Vec2);
 
 /// Represents a components position in the placement grid
-#[derive(Debug, Component)]
+#[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct GridPos(pub UVec2);
 
 pub struct PlaceComponentEvent(pub GridPos, pub Components);
@@ -98,11 +114,10 @@ fn placement_event(
                 translation: calc_grid_pos(&placement.1, &grid_bottom_left, &placement.0).extend(11.0),
                 scale: Vec3::splat(2.0),
                 ..Default::default()
-                
             },
             texture: ass.load(placement.1.get_path()),
             ..Default::default()
-        }, GameRoot)); // TODO! Component for board components and functionality
+        }, GameRoot, Components::create_default(&placement.1, &placement.0))); // TODO! Component for board components and functionality
     }
 }
 
