@@ -152,7 +152,7 @@ pub fn drag_v2(
                     let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
                     let mouse_pos = pointer_position - (target_size / 2.0);
                     let grid_slot = ((mouse_pos - grid_bottom_left_corner) / GRID_CELL_SIZE).floor() - g.grab_part;
-                    let grid_slot = GridPos(grid_slot.x as u8, grid_slot.y as u8);
+                    let grid_slot = GridPos(grid_slot.as_uvec2());
                     place_event_creator.send(PlaceComponentEvent(grid_slot, component.0.clone())) // Feel like theres much better ways of doing this
                     
                 }

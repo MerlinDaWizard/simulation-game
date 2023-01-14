@@ -55,6 +55,17 @@ impl Components {
             Components::SignalPassthrough => Vec2::splat(64.0),
         }
     }
+
+    pub fn get_grid_size(&self) -> UVec2 {
+        match self {
+            Components::WirePiece => UVec2::new(1,1),
+            Components::GateNot => UVec2::new(1,1),
+            Components::GateAnd => UVec2::new(2,2),
+            Components::SignalCopy => UVec2::new(1,2),
+            Components::SignalPassthrough => UVec2::new(1,1),
+        }
+
+    }
 }
 
 /// Represents the size of a sprite used in some cases for gridlocking where not every sprite is exactly 1 grid size
@@ -65,13 +76,8 @@ pub struct Size(pub Vec2);
 
 /// Represents a components position in the placement grid
 #[derive(Debug, Component)]
-pub struct GridPos(pub u8,pub u8);
+pub struct GridPos(pub UVec2);
 
-impl GridPos {
-    fn create_vec2(&self) -> Vec2 {
-        Vec2 { x: self.0 as f32, y: self.1 as f32 }
-    }
-}
 pub struct PlaceComponentEvent(pub GridPos, pub Components);
 
 fn placement_event(
@@ -101,6 +107,6 @@ fn placement_event(
 }
 
 fn calc_grid_pos(comp: &Components, grid_bottom_left: &Vec2, pos_in_grid: &GridPos) -> Vec2 {
-    let pos = *grid_bottom_left + (pos_in_grid.create_vec2() * GRID_CELL_SIZE) + comp.get_size() * 0.5;
+    let pos = *grid_bottom_left + (pos_in_grid.0.as_vec2() * GRID_CELL_SIZE) + comp.get_size() * 0.5;
     pos
 }
