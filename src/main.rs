@@ -13,10 +13,10 @@ use bevy_egui::EguiPlugin;
 use bevy_mod_picking::prelude::*;
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
 use iyes_loopless::prelude::*;
-use bevy::window::close_on_esc;
+use bevy::window::{close_on_esc, PresentMode};
 use bevy::diagnostic::{LogDiagnosticsPlugin};
 use std::time::Duration;
-
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 
 /// Our Application State
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -28,9 +28,18 @@ pub enum GameState {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
+            window: WindowDescriptor {
+                title: "Simulation game!".to_string(),
+                width: 1000.,
+                height: 600.,
+                present_mode: PresentMode::AutoVsync,
+                ..default()
+            },
+            ..default()
+        }))
         .add_plugin(LogDiagnosticsPlugin::default())
-        //.add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPickingPlugins)
         // add out states driver
         .add_loopless_state(GameState::MainMenu)
@@ -38,7 +47,7 @@ fn main() {
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
         .add_plugin(crate::components::shared::ComponentSetupPlugin)
         .add_plugin(EguiPlugin)
-        .add_plugin(bevy_framepace::FramepacePlugin)
+        //.add_plugin(bevy_framepace::FramepacePlugin)
         // Add a FixedTimestep, cuz we can!
         .add_fixed_timestep(
             Duration::from_millis(125),

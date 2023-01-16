@@ -14,7 +14,7 @@ bevy_mod_picking = { path = "./dependencies/bevy_mod_picking-beta", features = [
 bevy_egui = "0.18.0"
 strum = "0.24.1"
 strum_macros = "0.24"
-bevy_framepace = { version = "0.10.0", default-features = true }
+bevy_framepace = { version = "0.10.0", default-features = false }
 enum_dispatch = "0.3.11"
 # Enable a small amount of optimization in debug mode
 [profile.dev]

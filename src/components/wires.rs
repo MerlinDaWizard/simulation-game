@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::shared::GridComponent;
+use super::shared::{GridComponent, Components};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Wire {
@@ -69,6 +69,23 @@ impl Direction {
             Direction::Down => Direction::Up,
             Direction::Left => Direction::Right,
             Direction::Right => Direction::Left,
+        }
+    }
+}
+
+pub fn wire_update(
+    mut commands: Commands,
+    ass: Res<AssetServer>,
+    components: Query<(&mut Sprite, &mut Components)>,
+
+) {
+    for comp in components.iter() {
+        let a = comp.1;
+        match a {
+            Components::WirePiece(wire) => {
+                wire.connection_data
+            },
+            _ => {}
         }
     }
 }

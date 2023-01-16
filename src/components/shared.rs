@@ -36,12 +36,13 @@ pub enum Components {
 
 impl Components {
     pub fn create_default(source: &Components, pos: &GridPos) -> Components {
+        dbg!(source.get_grid_pos());
         match source {
             Components::WirePiece(_) => Self::WirePiece(Wire { grid_pos: pos.0, ..Default::default()}),
-            Components::GateNot(_) => todo!(),
-            Components::GateAnd(_) => todo!(),
-            Components::SignalCopy(_) => todo!(),
-            Components::SignalPassthrough(_) => todo!(),
+            Components::GateNot(_) => Self::GateNot(GateNot { grid_pos: pos.0, ..Default::default()}),
+            Components::GateAnd(_) => Self::GateAnd(GateAnd { grid_pos: pos.0, ..Default::default()}),
+            Components::SignalCopy(_) => Self::SignalCopy(SignalCopy { grid_pos: pos.0, ..Default::default()}),
+            Components::SignalPassthrough(_) => Self::SignalPassthrough(SignalPassthrough { grid_pos: pos.0, ..Default::default()}),
         }
     }
 
