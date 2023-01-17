@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use iyes_loopless::prelude::ConditionSet;
 use strum_macros::EnumIter;
 use enum_dispatch::enum_dispatch;
+use crate::MainTextureAtlas;
 use crate::game::{PlacementGrid, GRID_CELL_SIZE, GameRoot};
 use super::temp::*;
 use super::wires::Wire;
@@ -46,17 +47,20 @@ impl Components {
         }
     }
 
-    pub fn get_path(&self) -> PathBuf {
-        let mut p = PathBuf::from("components");
+    pub fn get_sprite_index(&self, texture_atlas: &TextureAtlas) -> usize {
         let s = match self {
-            Components::WirePiece(_) => "wire_fake.png",
-            Components::GateNot(_) => "gate_not.png",
-            Components::GateAnd(_) => "gate_and.png",
-            Components::SignalCopy(_) => "signal_copy.png",
-            Components::SignalPassthrough(_) => "signal_passthrough.png",
+            Components::WirePiece(_) => "wire_left_right",
+            Components::GateNot(_) => "gate_not",
+            Components::GateAnd(_) => "gate_and",
+            Components::SignalCopy(_) => "signal_copy",
+            Components::SignalPassthrough(_) => "signal_passthrough",
         };
-        p.push(s);
-        p
+        match texture_atlas.get_texture_index(&Handle::weak(s.into())) {
+            Some(idx) => idx,
+            None =>  {
+                panic!("Attempted to load none existent texture {}", s);
+            }
+        }
     }
 
     pub fn get_size(&self) -> Vec2 {
@@ -102,21 +106,22 @@ fn placement_event(
     ass: Res<AssetServer>,
     mut place_ev: EventReader<PlaceComponentEvent>,
     placement_grid: Query<(&Sprite, &Transform, &Size, With<PlacementGrid>)>,
+    atlases: Res<Assets<TextureAtlas>>,
+    main_atlas: Res<MainTextureAtlas>,
 ) {
+    let atlas = atlases.get(&main_atlas.handle).unwrap();
     let grid = placement_grid.single();
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0 * 0.5);
     for placement in place_ev.iter() {
-        commands.spawn((SpriteBundle {
-            sprite: Sprite {
-                ..Default::default()
-            },
+        commands.spawn((SpriteSheetBundle {
+            sprite: TextureAtlasSprite::new(placement.1.get_sprite_index(atlas)),
             transform: Transform {
                 translation: calc_grid_pos(&placement.1, &grid_bottom_left, &placement.0).extend(11.0),
                 scale: Vec3::splat(2.0),
                 ..Default::default()
             },
-            texture: ass.load(placement.1.get_path()),
+            texture_atlas: main_atlas.handle.clone(),
             ..Default::default()
         }, GameRoot, Components::create_default(&placement.1, &placement.0))); // TODO! Component for board components and functionality
     }

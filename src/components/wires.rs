@@ -83,7 +83,7 @@ pub fn wire_update(
         let a = comp.1;
         match a {
             Components::WirePiece(wire) => {
-                wire.connection_data
+                &wire.connection_data;
             },
             _ => {}
         }

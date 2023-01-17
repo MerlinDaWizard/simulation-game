@@ -1,6 +1,7 @@
 use bevy::{prelude::*};
 use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
+use crate::MainTextureAtlas;
 use crate::{components::shared::*};
 use crate::ui::shared::*;
 use crate::components::shared::Size;
@@ -20,25 +21,25 @@ impl Plugin for ComponentTrayPlugin {
 }
 
 pub const SCALE: f32 = 2.0;
-fn enter_system(mut commands: Commands, ass: Res<AssetServer>) {
+fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main_atlas: Res<MainTextureAtlas>) {
+    let atlas = atlases.get(&main_atlas.handle).unwrap();
     let mut current_down = -250.0;
     for comp in Components::iter() {
         let size = comp.get_size();
         dbg!(&comp);
         dbg!(current_down);
         current_down += size.y * 0.5;
-        let texture: Handle<Image> = ass.load(comp.get_path());
+        //let texture: Handle<Image> = ass.load(comp.get_path());
+        let sprite_idx = comp.get_sprite_index(atlas);
         commands.spawn((
-            SpriteBundle {
-                sprite: Sprite {
-                    ..Default::default()
-                },
+            SpriteSheetBundle  {
+                sprite: TextureAtlasSprite::new(sprite_idx),
                 transform: Transform {
                     translation: Vec3 { x: 400.0, y: current_down, z: 20.0},
                     scale: Vec3::splat(SCALE),
                     ..Default::default()
                 },
-                texture,
+                texture_atlas: main_atlas.handle.clone(),
                 ..Default::default()
             },
             GridLock::new(),

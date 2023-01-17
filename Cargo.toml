@@ -16,6 +16,8 @@ strum = "0.24.1"
 strum_macros = "0.24"
 bevy_framepace = { version = "0.10.0", default-features = false }
 enum_dispatch = "0.3.11"
+bevy_heterogeneous_texture_atlas_loader = "0.10.0"
+bevy_asset_loader = { version = "0.14.1", features = ["stageless"] }
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1

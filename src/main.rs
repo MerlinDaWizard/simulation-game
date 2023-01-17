@@ -9,6 +9,7 @@ mod components;
 mod ui;
 
 use bevy::prelude::*;
+use bevy_asset_loader::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_mod_picking::prelude::*;
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
@@ -17,10 +18,12 @@ use bevy::window::{close_on_esc, PresentMode};
 use bevy::diagnostic::{LogDiagnosticsPlugin};
 use std::time::Duration;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy_heterogeneous_texture_atlas_loader::*;
 
 /// Our Application State
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameState {
+    Loading,
     MainMenu,
     LevelsMenu,
     InGame,
@@ -41,8 +44,14 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPickingPlugins)
+        .add_plugin(TextureAtlasLoaderPlugin)
         // add out states driver
-        .add_loopless_state(GameState::MainMenu)
+        .add_loopless_state(GameState::Loading)
+        .add_loading_state(
+            LoadingState::new(GameState::Loading)
+            .continue_to_state(GameState::MainMenu)
+            .with_collection::<MainTextureAtlas>()
+        )
         .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
         .add_plugin(crate::components::shared::ComponentSetupPlugin)
@@ -96,7 +105,7 @@ fn main() {
         // our other various systems:
         .add_system(debug_current_state)
         // setup our camera globally (for UI) at startup and keep it alive at all times
-        .add_startup_system(setup_camera)
+        .add_startup_system(setup)
         .run();
 }
 
@@ -125,8 +134,16 @@ fn despawn_with<T: Component>(mut commands: Commands, q: Query<Entity, With<T>>)
     }
 }
 
-/// Spawn the camera
-fn setup_camera(mut commands: Commands) {
+/// Spawn the camera & assets
+fn setup(mut commands: Commands) {
     commands.spawn((Camera2dBundle::default(), GameCamera));
+    //let texture_atlas: Handle<TextureAtlas> = ass.load("sprite_map.ron");
+    //commands.insert_resource(MainTextureAtlas{handle:});
     //commands.spawn((Camera2dBundle::default(), PickingCameraBundle::default(), GameCamera));
+}
+
+#[derive(AssetCollection, Resource, Deref, DerefMut)]
+pub struct MainTextureAtlas{
+    #[asset(path = "sprite_map.ron")]
+    handle: Handle<TextureAtlas>
 }
