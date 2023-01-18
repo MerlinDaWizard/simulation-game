@@ -2,7 +2,7 @@
 use bevy::prelude::*;
 use crate::components::shared::Size;
 use crate::level_select::CurrentLevel;
-use crate::ui;
+use crate::{ui, MainTextureAtlas};
 
 pub const GRID_CELL_SIZE: f32 = 64.0;
 pub const GRID_CELL_AMOUNT_WIDTH: u8 = 7;
@@ -15,7 +15,7 @@ pub struct GameRoot;
 #[derive(Component)]
 pub struct PlacementGrid;
 /// Sets up screen using flex boxies and loads components etc.
-pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<CurrentLevel>) { // At the moment `CurrentLevel` actually refers to the level to load
+pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<CurrentLevel>, atlases: Res<Assets<TextureAtlas>>, main_atlas: Res<MainTextureAtlas>) { // At the moment `CurrentLevel` actually refers to the level to load
     // let root_bundle = commands
     //     .spawn((NodeBundle {
     //         z_index: ZIndex::Global(0),
@@ -154,8 +154,9 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
     }, CursorInside, GameRoot)).id();
     commands.entity(cursor).add_child(cursor_inside);
 
-    ui::textbox::ProgramBox::new(&mut commands, &ass, "A1", GameRoot);
-    ui::textbox::ProgramBox::new(&mut commands, &ass, "A2", GameRoot);
+    ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A1", GameRoot);
+    ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A2", GameRoot);
+
 
 }
 

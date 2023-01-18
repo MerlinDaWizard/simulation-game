@@ -45,7 +45,7 @@ pub fn drag_v2(
     windows: Res<Windows>,
     images: Res<Assets<Image>>,
     locations: Query<&PointerLocation>,
-    mut draggable_entity: Query<(Entity, &mut Sprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>, Option<&mut GridLock>, Option<&Size>, Option<&ComponentLink>), Without<PlacementGrid>>,
+    mut draggable_entity: Query<(Entity, &mut TextureAtlasSprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>, Option<&mut GridLock>, Option<&Size>, Option<&ComponentLink>), Without<PlacementGrid>>,
     placement_grid: Query<(&Sprite, &Transform, With<PlacementGrid>)>,
 ) {
     let grid = placement_grid.get_single().unwrap();

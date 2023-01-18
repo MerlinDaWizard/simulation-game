@@ -2,7 +2,7 @@ use bevy::{prelude::*, ui::FocusPolicy};
 
 use bevy_mod_picking::prelude::{*};
 use iyes_loopless::prelude::*;
-use crate::ui::shared::*;
+use crate::{ui::shared::*, MainTextureAtlas};
 
 pub struct TextboxPlugin;
 
@@ -38,7 +38,7 @@ pub struct BoxHideButton;
 #[derive(Bundle)]
 pub struct BoxRootBundle {
     #[bundle]
-    pub(crate) sprite: SpriteBundle,
+    pub(crate) sprite: SpriteSheetBundle,
     pub(crate) box_root: BoxRoot,
 }
 
@@ -49,20 +49,16 @@ pub struct ProgramBox {
 }
 
 impl ProgramBox {
-    pub fn new<S: Into<String>, T: Component>(commands: &mut Commands, ass: &Res<AssetServer>, name: S, root_type: T) -> Self {
+    pub fn new<S: Into<String>, T: Component>(commands: &mut Commands, ass: &Res<AssetServer>, atlases: &Res<Assets<TextureAtlas>>, main_atlas: &Res<MainTextureAtlas>, name: S, root_type: T) -> Self {
+        let texture_atlas = atlases.get(&main_atlas.handle).unwrap();
         let box_top = commands.spawn((BoxRootBundle {
-            sprite: SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb_u8(70, 70, 70),
-                    custom_size: Some(Vec2::new(200.0,35.0)),
-                    ..Default::default()
-                },
+            sprite: SpriteSheetBundle {
+                sprite: TextureAtlasSprite::new(texture_atlas.get_texture_index(&Handle::weak("box_root".into())).unwrap()),
                 transform: Transform {
                     translation: Vec3 { x: 0.0, y: 0.0, z: 200.0 },
                     ..Default::default()
                 },
-                //texture: todo!index(),
-                //visibility: todo!(),
+                texture_atlas: main_atlas.handle.clone(),
                 ..Default::default()
             },
             box_root: BoxRoot,
