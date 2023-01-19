@@ -96,7 +96,7 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
     };
 
     let _background = commands.spawn((SpriteBundle {
-        texture: ass.load("background.jpg"),
+        texture: ass.load("background1.jpg"),
 
         ..Default::default()
     }, MainMenu)).id();

@@ -17,9 +17,15 @@ pixely_font:
   link: https://www.fontspace.com/pixeboy-font-f43730
   credits: AbasCreativeID
 
-background_img:
+background_img2:
   name: Asia Neon City Lights Reflections
-  desc: Main menu background
-  path: background.jpg
-  credits: unknown
+  desc: Streets and signs at night Shenzhen China
+  path: background2.jpg
+  link: https://www.flickr.com/photos/dcmaster/8444029086
+  credits: Chris
 
+background_img1:
+  name: Shenzhen 14
+  path: background1.jpg
+  link: https://commons.wikimedia.org/wiki/File:Shenzhen_14.jpg
+  credits: jo.sau
