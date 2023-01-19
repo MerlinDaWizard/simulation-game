@@ -41,6 +41,7 @@ fn main() {
             },
             ..default()
         }))
+        .insert_resource(Msaa { samples: 1})
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPickingPlugins)

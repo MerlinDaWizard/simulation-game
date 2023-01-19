@@ -71,7 +71,8 @@ pub fn drag_v2(
         let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
         let mouse_pos = pointer_position - (target_size / 2.0);
         
-        draggable.offset = transform.translation.truncate() - (pointer_position - (target_size / 2.0));
+        draggable.offset = transform.translation.truncate() - mouse_pos;
+        //draggable.offset = Vec2::ZERO;
         if let Some(a) = opacity {
             sprite.color.set_a(a.0);
         }
@@ -85,7 +86,7 @@ pub fn drag_v2(
                 Some(s) => {
                     let entity_bottom_left_corner = transform.translation.truncate() - s.0 * 0.5;
                     let difference = mouse_pos - entity_bottom_left_corner;
-                    gridlock.grab_part = (difference / GRID_CELL_SIZE).floor();
+                    //gridlock.grab_part = (difference / GRID_CELL_SIZE).floor();
                 },
                 None => { // Assume it is the same size as the grid
                     // Keep gridlock grabpart as set by init (zero)
