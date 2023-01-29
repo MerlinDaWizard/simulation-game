@@ -9,9 +9,11 @@ mod components;
 mod ui;
 
 use bevy::prelude::*;
+use bevy::render::camera::ScalingMode;
 use bevy_asset_loader::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_mod_picking::prelude::*;
+use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle};
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
 use iyes_loopless::prelude::*;
 use bevy::window::{close_on_esc, PresentMode};
@@ -34,14 +36,19 @@ fn main() {
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
             window: WindowDescriptor {
                 title: "Simulation game!".to_string(),
-                width: 1000.,
-                height: 600.,
+                width: 1920.,
+                height: 1080.,
                 present_mode: PresentMode::AutoVsync,
+                mode: WindowMode::Fullscreen,
                 ..default()
             },
             ..default()
         }))
         .insert_resource(Msaa { samples: 1})
+        .add_plugin(PixelCameraPlugin)
+        .add_plugin(PixelBorderPlugin {
+            color: Color::rgb(0.1, 0.1, 0.1),
+        })
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPickingPlugins)
@@ -137,8 +144,9 @@ fn despawn_with<T: Component>(mut commands: Commands, q: Query<Entity, With<T>>)
 
 /// Spawn the camera & assets
 fn setup(mut commands: Commands) {
-    commands.spawn((Camera2dBundle::default(), GameCamera));
+    //commands.spawn((Camera2dBundle::default(), GameCamera));
     //let texture_atlas: Handle<TextureAtlas> = ass.load("sprite_map.ron");
+    commands.spawn((PixelCameraBundle::from_resolution(640, 360), GameCamera));
     //commands.insert_resource(MainTextureAtlas{handle:});
     //commands.spawn((Camera2dBundle::default(), PickingCameraBundle::default(), GameCamera));
 }

@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use bevy::prelude::*;
+use bevy::render::camera::ScalingMode;
 use iyes_loopless::prelude::ConditionSet;
 use strum_macros::EnumIter;
 use enum_dispatch::enum_dispatch;
@@ -65,11 +66,11 @@ impl Components {
 
     pub fn get_size(&self) -> Vec2 {
         match self {
-            Components::WirePiece(_) => Vec2::splat(64.0),
-            Components::GateNot(_) => Vec2::splat(64.0),
-            Components::GateAnd(_) => Vec2::splat(128.0),
-            Components::SignalCopy(_) => Vec2::new(64.0,128.0),
-            Components::SignalPassthrough(_) => Vec2::splat(64.0),
+            Components::WirePiece(_) => Vec2::splat(32.0),
+            Components::GateNot(_) => Vec2::splat(32.0),
+            Components::GateAnd(_) => Vec2::splat(64.0),
+            Components::SignalCopy(_) => Vec2::new(32.0,64.0),
+            Components::SignalPassthrough(_) => Vec2::splat(32.0),
         }
     }
 
@@ -118,12 +119,13 @@ fn placement_event(
             sprite: TextureAtlasSprite::new(placement.1.get_sprite_index(atlas)),
             transform: Transform {
                 translation: calc_grid_pos(&placement.1, &grid_bottom_left, &placement.0).extend(11.0),
-                scale: Vec3::splat(2.0),
+                //scale: Vec3::splat(2.0),
                 ..Default::default()
             },
             texture_atlas: main_atlas.handle.clone(),
             ..Default::default()
-        }, GameRoot, Components::create_default(&placement.1, &placement.0))); // TODO! Component for board components and functionality
+        },
+        GameRoot, Components::create_default(&placement.1, &placement.0))); // TODO! Component for board components and functionality
     }
 }
 

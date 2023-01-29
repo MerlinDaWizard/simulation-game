@@ -1,8 +1,9 @@
 
 use bevy::prelude::*;
+use bevy::render::camera::RenderTarget;
 use crate::components::shared::Size;
 use crate::level_select::CurrentLevel;
-use crate::{ui, MainTextureAtlas};
+use crate::{ui, MainTextureAtlas, GameCamera};
 
 pub const GRID_CELL_SIZE: f32 = 64.0;
 pub const GRID_CELL_AMOUNT_WIDTH: u8 = 7;
@@ -120,7 +121,7 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
         },
         transform: Transform {
             translation: Vec3 { x: 0.0, y: 0.0, z: 10.0 },
-            scale: Vec3::splat(2.0),
+            //scale: Vec3::splat(2.0),
             ..Default::default()
         },
         texture: ass.load("grid.png"),
@@ -171,26 +172,53 @@ pub struct CursorInside;
 pub struct Interactable;
 
 pub fn get_cursor_pos(
-    windows: Res<Windows>,
+    wnds: Res<Windows>,
     kbd: Res<Input<KeyCode>>,
+    q_camera: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
     mut main_query: Query<&mut Transform, (With<Cursor>, Without<CursorInside>)>,
     mut inside_cursor: Query<&mut Transform, (With<CursorInside>, Without<Cursor>)>
 ) {
+    
     if kbd.pressed(KeyCode::Space) {
-        let window = windows.get_primary().unwrap();
-        
-        if let Some(position) = window.cursor_position() {
-            //println!("{:?}", position);
+            // get the camera info and transform
+        // assuming there is exactly one main camera entity, so query::single() is OK
+        let (camera, camera_transform) = q_camera.single();
+
+        // get the window that the camera is displaying to (or the primary window)
+        let wnd = if let RenderTarget::Window(id) = camera.target {
+            wnds.get(id).unwrap()
+        } else {
+            wnds.get_primary().unwrap()
+        };
+
+        // check if the cursor is inside the window and get its position
+        if let Some(screen_pos) = wnd.cursor_position() {
+            // get the size of the window
+            let window_size = Vec2::new(wnd.width() as f32, wnd.height() as f32);
+
+            // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
+            let ndc = (screen_pos / window_size) * 2.0 - Vec2::ONE;
+
+            // matrix for undoing the projection and camera transform
+            let ndc_to_world = camera_transform.compute_matrix() * camera.projection_matrix().inverse();
+
+            // use it to convert ndc to world-space coordinates
+            let world_pos = ndc_to_world.project_point3(ndc.extend(-1.0));
+
+            // reduce it to a 2D value
+            let world_pos: Vec2 = world_pos.truncate();
+
+            eprintln!("World coords: {}/{}", world_pos.x, world_pos.y);
             for mut transform in main_query.iter_mut() {
                 //println!("{:?}", transform.translation);
-                transform.translation.x = position.x - (window.width()/2.0); // Mouse position is from bottom left
-                transform.translation.y = position.y - (window.height()/2.0); // Whereas entity position is from middle of screen.
+                transform.translation.x = world_pos.x; // Mouse position is from bottom left
+                transform.translation.y = world_pos.y; // Whereas entity position is from middle of screen.
                 transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, 0.05));
             }
-        }
 
-        for mut transform in inside_cursor.iter_mut() {
-            transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, -0.05));
+            for mut transform in inside_cursor.iter_mut() {
+                transform.rotate_local(Quat::from_euler(EulerRot::XYZ, 0.0, 0.0, -0.05));
+            }
         }
     }
 }
