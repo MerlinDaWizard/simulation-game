@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
+use bevy::sprite::Anchor;
 use iyes_loopless::prelude::ConditionSet;
 use strum_macros::EnumIter;
 use enum_dispatch::enum_dispatch;
@@ -114,9 +115,12 @@ fn placement_event(
     let grid = placement_grid.single();
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0 * 0.5);
+
     for placement in place_ev.iter() {
+        let mut sprite = TextureAtlasSprite::new(placement.1.get_sprite_index(atlas));
+        sprite.anchor = Anchor::BottomLeft;
         commands.spawn((SpriteSheetBundle {
-            sprite: TextureAtlasSprite::new(placement.1.get_sprite_index(atlas)),
+            sprite: sprite,
             transform: Transform {
                 translation: calc_grid_pos(&placement.1, &grid_bottom_left, &placement.0).extend(11.0),
                 //scale: Vec3::splat(2.0),
@@ -130,6 +134,6 @@ fn placement_event(
 }
 
 fn calc_grid_pos(comp: &Components, grid_bottom_left: &Vec2, pos_in_grid: &GridPos) -> Vec2 {
-    let pos = *grid_bottom_left + (pos_in_grid.0.as_vec2() * GRID_CELL_SIZE) + comp.get_size() * 0.5;
+    let pos = *grid_bottom_left + (pos_in_grid.0.as_vec2() * GRID_CELL_SIZE);
     pos
 }

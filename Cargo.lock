@@ -141,7 +141,27 @@ dependencies = [
  "parking_lot",
  "thiserror",
  "winapi",
- "x11rb",
+ "x11rb 0.9.0",
+]
+
+[[package]]
+name = "arboard"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6041616acea41d67c4a984709ddab1587fd0b10efe5cc563fee954d2f011854"
+dependencies = [
+ "clipboard-win",
+ "core-graphics",
+ "image 0.24.5",
+ "log",
+ "objc",
+ "objc-foundation",
+ "objc_id",
+ "once_cell",
+ "parking_lot",
+ "thiserror",
+ "winapi",
+ "x11rb 0.10.1",
 ]
 
 [[package]]
@@ -232,6 +252,44 @@ checksum = "dae99b246505811f5bc19d2de1e406ec5d2816b421d58fa223779eb576f472c9"
 dependencies = [
  "bevy_dylib",
  "bevy_internal",
+]
+
+[[package]]
+name = "bevy-inspector-egui"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8be4f9fa859e4840e7cbcc0ddf2c8a1441ff8f663c317769c5ccc70cdf13bcf2"
+dependencies = [
+ "bevy-inspector-egui-derive",
+ "bevy_app",
+ "bevy_asset",
+ "bevy_core",
+ "bevy_core_pipeline",
+ "bevy_ecs",
+ "bevy_egui 0.19.0",
+ "bevy_hierarchy",
+ "bevy_log",
+ "bevy_math",
+ "bevy_pbr",
+ "bevy_reflect",
+ "bevy_render",
+ "bevy_utils",
+ "egui",
+ "image 0.24.5",
+ "once_cell",
+ "pretty-type-name",
+ "smallvec",
+]
+
+[[package]]
+name = "bevy-inspector-egui-derive"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97826e6225a5b56e77683e7b99418171f7531d48682b8531252dc6b8ef3e8113"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -441,7 +499,20 @@ version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f93fab81b00d664b7fd09c74eadcc8ab4a608649af1fb355647cd43f95f38ec6"
 dependencies = [
- "arboard",
+ "arboard 2.1.1",
+ "bevy",
+ "egui",
+ "thread_local",
+ "webbrowser",
+]
+
+[[package]]
+name = "bevy_egui"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbb8036050af170243e803eb68e0b5d34f549828a8de92479619fb6dac842f85"
+dependencies = [
+ "arboard 3.2.0",
  "bevy",
  "egui",
  "thread_local",
@@ -642,22 +713,8 @@ version = "0.11.0"
 dependencies = [
  "bevy",
  "bevy_picking_core",
- "bevy_picking_egui",
- "bevy_picking_highlight",
  "bevy_picking_input",
- "bevy_picking_raycast",
- "bevy_picking_selection",
  "bevy_picking_sprite",
- "bevy_picking_ui",
-]
-
-[[package]]
-name = "bevy_mod_raycast"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a5813c0224e31350919e5fbf5a2099c3be4c7b8c04e8584ee4dba4e87795a19"
-dependencies = [
- "bevy",
 ]
 
 [[package]]
@@ -690,45 +747,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_picking_egui"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_egui",
- "bevy_picking_core",
- "bevy_picking_selection",
-]
-
-[[package]]
-name = "bevy_picking_highlight"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_picking_core",
- "bevy_picking_input",
- "bevy_picking_selection",
-]
-
-[[package]]
 name = "bevy_picking_input"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_picking_core",
- "bevy_picking_selection",
-]
-
-[[package]]
-name = "bevy_picking_raycast"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_mod_raycast",
- "bevy_picking_core",
-]
-
-[[package]]
-name = "bevy_picking_selection"
 version = "0.1.0"
 dependencies = [
  "bevy",
@@ -741,14 +760,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_picking_core",
-]
-
-[[package]]
-name = "bevy_picking_ui"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_picking_core",
+ "bevy_pixel_camera",
 ]
 
 [[package]]
@@ -2007,7 +2019,7 @@ dependencies = [
  "num-rational 0.3.2",
  "num-traits",
  "png 0.16.8",
- "tiff",
+ "tiff 0.6.1",
 ]
 
 [[package]]
@@ -2024,6 +2036,7 @@ dependencies = [
  "num-traits",
  "png 0.17.7",
  "scoped_threadpool",
+ "tiff 0.8.1",
 ]
 
 [[package]]
@@ -2498,6 +2511,18 @@ dependencies = [
 
 [[package]]
 name = "nix"
+version = "0.24.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa52e972a9a719cecb6864fb88568781eb706bac2cd1d4f04a648542dbf78069"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "libc",
+ "memoffset",
+]
+
+[[package]]
+name = "nix"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f346ff70e7dbfd675fe90590b92d59ef2de15a8779ae305ebcbfd3f0caf59be4"
@@ -2831,6 +2856,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
+name = "pretty-type-name"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0f73cdaf19b52e6143685c3606206e114a4dfa969d6b14ec3894c88eb38bd4b"
+
+[[package]]
 name = "proc-macro-crate"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3133,8 +3164,9 @@ name = "sim_game"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy-inspector-egui",
  "bevy_asset_loader",
- "bevy_egui",
+ "bevy_egui 0.18.0",
  "bevy_framepace",
  "bevy_heterogeneous_texture_atlas_loader",
  "bevy_mod_picking",
@@ -3355,6 +3387,17 @@ checksum = "9a53f4706d65497df0c4349241deddf35f84cee19c87ed86ea8ca590f4464437"
 dependencies = [
  "jpeg-decoder 0.1.22",
  "miniz_oxide 0.4.4",
+ "weezl",
+]
+
+[[package]]
+name = "tiff"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7449334f9ff2baf290d55d73983a7d6fa15e01198faef72af07e2a8db851e471"
+dependencies = [
+ "flate2",
+ "jpeg-decoder 0.3.0",
  "weezl",
 ]
 
@@ -4004,6 +4047,28 @@ dependencies = [
  "nix 0.22.3",
  "winapi",
  "winapi-wsapoll",
+]
+
+[[package]]
+name = "x11rb"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "592b4883219f345e712b3209c62654ebda0bb50887f330cbd018d0f654bfd507"
+dependencies = [
+ "gethostname",
+ "nix 0.24.3",
+ "winapi",
+ "winapi-wsapoll",
+ "x11rb-protocol",
+]
+
+[[package]]
+name = "x11rb-protocol"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "56b245751c0ac9db0e006dc812031482784e434630205a93c73cfefcaabeac67"
+dependencies = [
+ "nix 0.24.3",
 ]
 
 [[package]]

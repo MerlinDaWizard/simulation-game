@@ -1,3 +1,4 @@
+use bevy::sprite::Anchor;
 use bevy::{prelude::*};
 use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
@@ -20,22 +21,22 @@ impl Plugin for ComponentTrayPlugin {
     }
 }
 
-pub const SCALE: f32 = 2.0;
 fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main_atlas: Res<MainTextureAtlas>) {
     let atlas = atlases.get(&main_atlas.handle).unwrap();
-    let mut current_down = -250.0;
+    let mut current_down = -150.0;
     for comp in Components::iter() {
         let size = comp.get_size();
         dbg!(&comp);
         dbg!(current_down);
-        current_down += size.y * 0.5;
         //let texture: Handle<Image> = ass.load(comp.get_path());
         let sprite_idx = comp.get_sprite_index(atlas);
+        let mut sprite = TextureAtlasSprite::new(sprite_idx);
+        sprite.anchor = Anchor::BottomLeft;
         commands.spawn((
             SpriteSheetBundle  {
-                sprite: TextureAtlasSprite::new(sprite_idx),
+                sprite: sprite,
                 transform: Transform {
-                    translation: Vec3 { x: 100.0, y: current_down, z: 20.0},
+                    translation: Vec3 { x: 200.0, y: current_down, z: 20.0},
                     //scale: Vec3::splat(SCALE),
                     ..Default::default()
                 },
@@ -50,7 +51,7 @@ fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main
             Size(comp.get_size()),
             ComponentLink(comp),
         ));
-        current_down += size.y * 0.5 + 5.0;
+        current_down += size.y + 10.0;
     }
 }
 

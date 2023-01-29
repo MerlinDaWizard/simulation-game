@@ -5,7 +5,7 @@ use crate::components::shared::Size;
 use crate::level_select::CurrentLevel;
 use crate::{ui, MainTextureAtlas, GameCamera};
 
-pub const GRID_CELL_SIZE: f32 = 64.0;
+pub const GRID_CELL_SIZE: f32 = 32.0;
 pub const GRID_CELL_AMOUNT_WIDTH: u8 = 7;
 pub const GRID_CELL_AMOUNT_HEIGHT: u8 = 7;
 

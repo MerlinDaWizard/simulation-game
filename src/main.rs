@@ -12,6 +12,7 @@ use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 use bevy_asset_loader::prelude::*;
 use bevy_egui::EguiPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_mod_picking::prelude::*;
 use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle};
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
@@ -39,7 +40,7 @@ fn main() {
                 width: 1920.,
                 height: 1080.,
                 present_mode: PresentMode::AutoVsync,
-                mode: WindowMode::Fullscreen,
+                mode: WindowMode::BorderlessFullscreen,
                 ..default()
             },
             ..default()
@@ -52,6 +53,8 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPickingPlugins)
+        //.add_plugin(EguiPlugin)
+        .add_plugin(WorldInspectorPlugin)
         .add_plugin(TextureAtlasLoaderPlugin)
         // add out states driver
         .add_loopless_state(GameState::Loading)
@@ -63,7 +66,6 @@ fn main() {
         .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
         .add_plugin(crate::components::shared::ComponentSetupPlugin)
-        .add_plugin(EguiPlugin)
         //.add_plugin(bevy_framepace::FramepacePlugin)
         // Add a FixedTimestep, cuz we can!
         .add_fixed_timestep(

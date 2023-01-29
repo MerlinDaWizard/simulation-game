@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
-use crate::game::{PlacementGrid, GRID_CELL_SIZE};
+use bevy_pixel_camera::PixelProjection;
+use crate::game::{PlacementGrid, GRID_CELL_SIZE, GRID_CELL_AMOUNT_HEIGHT, GRID_CELL_AMOUNT_WIDTH};
 use crate::components::shared::{Size, PlaceComponentEvent, GridPos};
 use super::dummy_component::{GridLock, ComponentLink};
 
@@ -44,14 +45,17 @@ pub fn drag_v2(
     pointers: Res<PointerMap>,
     windows: Res<Windows>,
     images: Res<Assets<Image>>,
+    camera_query: Query<&PixelProjection, (With<Camera>, With<Camera2d>)>,
     locations: Query<&PointerLocation>,
     mut draggable_entity: Query<(Entity, &mut TextureAtlasSprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>, Option<&mut GridLock>, Option<&Size>, Option<&ComponentLink>), Without<PlacementGrid>>,
     placement_grid: Query<(&Sprite, &Transform, With<PlacementGrid>)>,
 ) {
     let grid = placement_grid.get_single().unwrap();
     //let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
-    let grid_bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-224.0,-224.0);
-    let grid_top_right_corner = grid.1.translation.truncate() + Vec2::new(224.0, 224.0);
+    let grid_bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
+    let grid_top_right_corner = grid.1.translation.truncate() + Vec2::new(112.0, 112.0);
+
+    let pixel_zoom = camera_query.single().zoom as f32;
 
     for start in drag_start_events.iter() {
         let (_, mut sprite, mut draggable, transform, opacity, must_return, gridlock, size, _) = match draggable_entity.get_mut(start.target()) {
@@ -69,9 +73,10 @@ pub fn drag_v2(
             .get_render_target_info(&windows, &images)
             .unwrap();
         let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
-        let mouse_pos = pointer_position - (target_size / 2.0);
+        dbg!(target_size);
+        let mouse_pos = (pointer_position - (target_size / 2.0)) / pixel_zoom;
         
-        draggable.offset = transform.translation.truncate() - mouse_pos;
+        draggable.offset = mouse_pos - transform.translation.truncate();
         //draggable.offset = Vec2::ZERO;
         if let Some(a) = opacity {
             sprite.color.set_a(a.0);
@@ -84,9 +89,9 @@ pub fn drag_v2(
         if let Some(mut gridlock) = gridlock {
             match size {
                 Some(s) => {
-                    let entity_bottom_left_corner = transform.translation.truncate() - s.0 * 0.5;
+                    let entity_bottom_left_corner = transform.translation.truncate();
                     let difference = mouse_pos - entity_bottom_left_corner;
-                    //gridlock.grab_part = (difference / GRID_CELL_SIZE).floor();
+                    gridlock.grab_part = (difference / GRID_CELL_SIZE).floor();
                 },
                 None => { // Assume it is the same size as the grid
                     // Keep gridlock grabpart as set by init (zero)
@@ -104,7 +109,7 @@ pub fn drag_v2(
             .get_render_target_info(&windows, &images)
             .unwrap();
         let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
-        let mouse_pos = pointer_position - (target_size / 2.0);
+        let mouse_pos = (pointer_position - (target_size / 2.0)) / pixel_zoom;
 
         //dbg!(&boxes);
         //dbg!(&dragging.target());::new(DragType::Return(Vec2::ZERO))
@@ -122,9 +127,9 @@ pub fn drag_v2(
             let gridlock = gridlock.unwrap(); // Weird way of doing it cuz I wanna put the above in one expression
             let grid_slot = ((mouse_pos - grid_bottom_left_corner) / GRID_CELL_SIZE).floor() - gridlock.grab_part;
             let size = size.unwrap();
-            box_transform.translation = (grid_bottom_left_corner + Vec2::new(GRID_CELL_SIZE * grid_slot.x,GRID_CELL_SIZE * grid_slot.y) + size.0 * 0.5).extend(z);
+            box_transform.translation = (grid_bottom_left_corner + Vec2::new(GRID_CELL_SIZE * grid_slot.x,GRID_CELL_SIZE * grid_slot.y)).extend(z);
         } else {
-            box_transform.translation = (pointer_position - (target_size / 2.0) + draggable.offset).extend(z);
+            box_transform.translation = (mouse_pos - draggable.offset).extend(z);
         }
     }
 
@@ -151,11 +156,16 @@ pub fn drag_v2(
                         .get_render_target_info(&windows, &images)
                         .unwrap();
                     let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
-                    let mouse_pos = pointer_position - (target_size / 2.0);
+                    let mouse_pos = (pointer_position - (target_size / 2.0)) / pixel_zoom;
                     let grid_slot = ((mouse_pos - grid_bottom_left_corner) / GRID_CELL_SIZE).floor() - g.grab_part;
-                    let grid_slot = grid_slot.as_uvec2();
-                    place_event_creator.send(PlaceComponentEvent(GridPos(grid_slot), component.0.clone())); // Feel like theres much better ways of doing this
-                    
+                    if grid_slot.x >= 0.0 &&
+                        grid_slot.y >= 0.0 &&
+                        grid_slot.x < GRID_CELL_AMOUNT_WIDTH as f32 &&
+                        grid_slot.y < GRID_CELL_AMOUNT_HEIGHT as f32
+                    {
+                        let grid_slot = grid_slot.as_uvec2();
+                        place_event_creator.send(PlaceComponentEvent(GridPos(grid_slot), component.0.clone()));
+                    }
                 }
             }
         }
