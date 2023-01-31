@@ -1,5 +1,5 @@
 use bevy::sprite::Anchor;
-use bevy::{prelude::*};
+use bevy::{prelude::*, core::Name};
 use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
 use crate::MainTextureAtlas;
@@ -41,6 +41,7 @@ fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main
                 texture_atlas: main_atlas.handle.clone(),
                 ..Default::default()
             },
+            Name::new(format!("Dummy Component - {}", comp.get_sprite_name())),
             GridLock::new(),
             crate::game::GameRoot,
             Draggable::new(),

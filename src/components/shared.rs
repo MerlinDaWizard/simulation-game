@@ -48,6 +48,16 @@ impl Components {
     }
 
     pub fn get_sprite_index(&self, texture_atlas: &TextureAtlas) -> usize {
+        let s = self.get_sprite_name();
+        match texture_atlas.get_texture_index(&Handle::weak(s.into())) {
+            Some(idx) => idx,
+            None =>  {
+                panic!("Attempted to load none existent texture {}", s);
+            }
+        }
+    }
+
+    pub fn get_sprite_name(&self) -> &str {
         let s = match self {
             Components::WirePiece(_) => "wire_left_right",
             Components::GateNot(_) => "gate_not",
@@ -55,12 +65,7 @@ impl Components {
             Components::SignalCopy(_) => "signal_copy",
             Components::SignalPassthrough(_) => "signal_passthrough",
         };
-        match texture_atlas.get_texture_index(&Handle::weak(s.into())) {
-            Some(idx) => idx,
-            None =>  {
-                panic!("Attempted to load none existent texture {}", s);
-            }
-        }
+        s
     }
 
     pub fn get_size(&self) -> Vec2 {
@@ -126,7 +131,10 @@ fn placement_event(
             texture_atlas: main_atlas.handle.clone(),
             ..Default::default()
         },
-        GameRoot, Components::create_default(&placement.1, &placement.0))); // TODO! Component for board components and functionality
+        GameRoot,
+        Components::create_default(&placement.1, &placement.0),
+        Name::new(format!("Component - {}", (&placement).1.get_sprite_name())),
+    )); // TODO! Component for board components and functionality
     }
 }
 

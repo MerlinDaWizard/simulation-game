@@ -104,7 +104,7 @@ impl FromWorld for Images {
 
 pub fn configure_visuals_system(mut egui_ctx: ResMut<EguiContext>) {
     egui_ctx.ctx_mut().set_visuals(egui::Visuals {
-        window_rounding: 0.0.into(),
+        // window_rounding: 0.0.into(),
         ..Default::default()
     });
 }

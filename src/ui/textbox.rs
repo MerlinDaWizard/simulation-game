@@ -50,6 +50,7 @@ pub struct ProgramBox {
 
 impl ProgramBox {
     pub fn new<S: Into<String>, T: Component>(commands: &mut Commands, ass: &Res<AssetServer>, atlases: &Res<Assets<TextureAtlas>>, main_atlas: &Res<MainTextureAtlas>, name: S, root_type: T) -> Self {
+        let name: String = name.into();
         let texture_atlas = atlases.get(&main_atlas.handle).unwrap();
         let box_top = commands.spawn((BoxRootBundle {
             sprite: SpriteSheetBundle {
@@ -62,7 +63,11 @@ impl ProgramBox {
                 ..Default::default()
             },
             box_root: BoxRoot,
-        }, root_type, Draggable::new())).id();
+        },
+        root_type,
+        Draggable::new(),
+        Name::new(format!("Box - {}", &name))
+    )).id();
     
         let box_name = commands.spawn( (Text2dBundle {
             text: Text {
