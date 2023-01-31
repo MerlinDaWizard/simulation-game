@@ -1,6 +1,4 @@
-use std::path::PathBuf;
 use bevy::prelude::*;
-use bevy::render::camera::ScalingMode;
 use bevy::sprite::Anchor;
 use iyes_loopless::prelude::ConditionSet;
 use strum_macros::EnumIter;
@@ -105,7 +103,6 @@ pub struct PlaceComponentEvent(pub GridPos, pub Components);
 
 fn placement_event(
     mut commands: Commands,
-    ass: Res<AssetServer>,
     mut place_ev: EventReader<PlaceComponentEvent>,
     placement_grid: Query<(&Sprite, &Transform, &Size, With<PlacementGrid>)>,
     atlases: Res<Assets<TextureAtlas>>,
@@ -122,7 +119,7 @@ fn placement_event(
         commands.spawn((SpriteSheetBundle {
             sprite: sprite,
             transform: Transform {
-                translation: calc_grid_pos(&placement.1, &grid_bottom_left, &placement.0).extend(11.0),
+                translation: calc_grid_pos(&grid_bottom_left, &placement.0).extend(11.0),
                 //scale: Vec3::splat(2.0),
                 ..Default::default()
             },
@@ -133,7 +130,7 @@ fn placement_event(
     }
 }
 
-fn calc_grid_pos(comp: &Components, grid_bottom_left: &Vec2, pos_in_grid: &GridPos) -> Vec2 {
+fn calc_grid_pos(grid_bottom_left: &Vec2, pos_in_grid: &GridPos) -> Vec2 {
     let pos = *grid_bottom_left + (pos_in_grid.0.as_vec2() * GRID_CELL_SIZE);
     pos
 }

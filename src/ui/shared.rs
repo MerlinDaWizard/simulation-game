@@ -88,7 +88,7 @@ pub fn drag_v2(
 
         if let Some(mut gridlock) = gridlock {
             match size {
-                Some(s) => {
+                Some(_) => {
                     let entity_bottom_left_corner = transform.translation.truncate();
                     let difference = mouse_pos - entity_bottom_left_corner;
                     gridlock.grab_part = (difference / GRID_CELL_SIZE).floor();
@@ -113,7 +113,7 @@ pub fn drag_v2(
 
         //dbg!(&boxes);
         //dbg!(&dragging.target());::new(DragType::Return(Vec2::ZERO))
-        let (_, _, draggable, mut box_transform, _, _, gridlock, size, _) = match draggable_entity.get_mut(dragging.target()) {
+        let (_, _, draggable, mut box_transform, _, _, gridlock, _, _) = match draggable_entity.get_mut(dragging.target()) {
             Ok(e) => e,
             Err(_) => {
                 continue;
@@ -126,7 +126,6 @@ pub fn drag_v2(
         if gridlock.is_some() && mouse_pos.x >= grid_bottom_left_corner.x && mouse_pos.y >= grid_bottom_left_corner.y && mouse_pos.x < grid_top_right_corner.x && mouse_pos.y < grid_top_right_corner.y {
             let gridlock = gridlock.unwrap(); // Weird way of doing it cuz I wanna put the above in one expression
             let grid_slot = ((mouse_pos - grid_bottom_left_corner) / GRID_CELL_SIZE).floor() - gridlock.grab_part;
-            let size = size.unwrap();
             box_transform.translation = (grid_bottom_left_corner + Vec2::new(GRID_CELL_SIZE * grid_slot.x,GRID_CELL_SIZE * grid_slot.y)).extend(z);
         } else {
             box_transform.translation = (mouse_pos - draggable.offset).extend(z);

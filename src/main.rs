@@ -9,9 +9,8 @@ mod components;
 mod ui;
 
 use bevy::prelude::*;
-use bevy::render::camera::ScalingMode;
 use bevy_asset_loader::prelude::*;
-use bevy_egui::EguiPlugin;
+use bevy_egui::{EguiPlugin};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_mod_picking::prelude::*;
 use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle};
@@ -53,7 +52,7 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPickingPlugins)
-        //.add_plugin(EguiPlugin)
+        .add_plugin(EguiPlugin)
         .add_plugin(WorldInspectorPlugin)
         .add_plugin(TextureAtlasLoaderPlugin)
         // add out states driver
@@ -66,8 +65,8 @@ fn main() {
         .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
         .add_plugin(crate::components::shared::ComponentSetupPlugin)
+        .add_plugin(crate::ui::egui::left_panel::LeftPanelPlugin)
         //.add_plugin(bevy_framepace::FramepacePlugin)
-        // Add a FixedTimestep, cuz we can!
         .add_fixed_timestep(
             Duration::from_millis(125),
             // give it a label

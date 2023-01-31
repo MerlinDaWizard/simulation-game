@@ -15,105 +15,17 @@ pub struct GameRoot;
 
 #[derive(Component)]
 pub struct PlacementGrid;
+
 /// Sets up screen using flex boxies and loads components etc.
-pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<CurrentLevel>, atlases: Res<Assets<TextureAtlas>>, main_atlas: Res<MainTextureAtlas>) { // At the moment `CurrentLevel` actually refers to the level to load
-    // let root_bundle = commands
-    //     .spawn((NodeBundle {
-    //         z_index: ZIndex::Global(0),
-    //         style: Style {
-    //             size: Size::new(Percent(100.0),Percent(100.0)),
-    //             align_items: AlignItems::FlexStart,
-    //             flex_direction: FlexDirection::Row,
-    //             justify_content: JustifyContent::FlexStart,
-    //             padding: UiRect::all(Px(0.0)),
-    //             ..Default::default()
-    //         },
-    //         ..Default::default()
-    //     }, GameRoot)).id();
-    
-    // let component_panel = commands
-    //     .spawn( NodeBundle {
-    //         background_color: BackgroundColor(Color::RED),
-    //         style: Style {
-    //             size: Size::new(Val::Percent(30.0),Percent(100.0)),
-    //             margin: UiRect::left(Px(8.0)),
-    //             align_self: AlignSelf::FlexEnd,
-    //             align_items: AlignItems::Center,
-    //             flex_direction: FlexDirection::Column,
-    //             justify_content: JustifyContent::FlexStart,
-    //             ..Default::default()
-    //         },
-    //         ..Default::default()
-    //     }).id();
+pub fn setup_screen(
+    mut commands: Commands,
+    ass: Res<AssetServer>,
 
-    // let main_side = commands
-    //     .spawn( NodeBundle {
-    //         background_color: BackgroundColor(Color::ORANGE_RED),
-    //         style: Style {
-    //             size: Size::new(Percent(70.0), Percent(100.0)),
-    //             align_self: AlignSelf::FlexStart,
-    //             align_items: AlignItems::FlexStart,
-    //             flex_direction: FlexDirection::Column,
-    //             justify_content: JustifyContent::FlexStart,
-    //             ..Default::default()
+    _level: Res<CurrentLevel>,
 
-    //         },
-    //         ..Default::default()
-    //     }).id();
+    atlases: Res<Assets<TextureAtlas>>,
+    main_atlas: Res<MainTextureAtlas>) { // At the moment `CurrentLevel` actually refers to the level to load
 
-    //     let top_bar = commands
-    //     .spawn( NodeBundle {
-    //         background_color: BackgroundColor(Color::PINK),
-    //         style: Style {
-    //             size: Size::new(Percent(100.0), Percent(10.0)),
-    //             align_self: AlignSelf::FlexStart,
-    //             align_items: AlignItems::FlexStart,
-    //             flex_direction: FlexDirection::Row,
-    //             justify_content: JustifyContent::Center,
-    //             ..Default::default()
-
-    //         },
-    //         ..Default::default()
-    //     }).id();
-
-    //     let middle_area = commands
-    //     .spawn( NodeBundle {
-    //         background_color: BackgroundColor(Color::INDIGO),
-    //         style: Style {
-    //             size: Size::new(Percent(100.0), Percent(70.0)),
-    //             align_self: AlignSelf::FlexStart,
-    //             align_items: AlignItems::FlexStart,
-    //             flex_direction: FlexDirection::Row,
-    //             justify_content: JustifyContent::Center,
-    //             ..Default::default()
-
-    //         },
-    //         ..Default::default()
-    //     }).id();
-
-    //     let bottom_bar = commands
-    //     .spawn( NodeBundle {
-    //         background_color: BackgroundColor(Color::PURPLE),
-    //         style: Style {
-    //             size: Size::new(Percent(100.0), Percent(20.0)),
-    //             align_self: AlignSelf::FlexStart,
-    //             align_items: AlignItems::FlexStart,
-    //             flex_direction: FlexDirection::Row,
-    //             justify_content: JustifyContent::Center,
-    //             ..Default::default()
-    //         },
-    //         ..Default::default()
-    //     }).id();
-
-    //     //let home_button = commands
-    //     //    .spawn( ButtonBundle {
-    //     //        
-    //     //    })
-
-    // commands.entity(main_side).push_children(&[top_bar, middle_area, bottom_bar]);
-    // commands
-    //     .entity(root_bundle)
-    //     .push_children(&[main_side,component_panel]);
 
     commands.spawn((SpriteBundle {
         sprite: Sprite {
@@ -157,7 +69,6 @@ pub fn setup_screen(mut commands: Commands, ass: Res<AssetServer>, _level: Res<C
 
     ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A1", GameRoot);
     ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A2", GameRoot);
-
 
 }
 

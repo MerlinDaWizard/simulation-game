@@ -26,8 +26,6 @@ fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main
     let mut current_down = -150.0;
     for comp in Components::iter() {
         let size = comp.get_size();
-        dbg!(&comp);
-        dbg!(current_down);
         //let texture: Handle<Image> = ass.load(comp.get_path());
         let sprite_idx = comp.get_sprite_index(atlas);
         let mut sprite = TextureAtlasSprite::new(sprite_idx);
