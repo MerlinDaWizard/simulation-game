@@ -7,6 +7,7 @@ mod level_select;
 mod game;
 mod components;
 mod ui;
+mod config;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
@@ -18,6 +19,8 @@ use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle}
 use iyes_loopless::prelude::*;
 use bevy::window::{close_on_esc, PresentMode};
 use bevy::diagnostic::{LogDiagnosticsPlugin};
+use std::fs::File;
+use std::io::Read;
 use std::time::Duration;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy_heterogeneous_texture_atlas_loader::*;
@@ -44,7 +47,11 @@ fn main() {
             },
             ..default()
         }))
+        // Resources
         .insert_resource(Msaa { samples: 1})
+        .insert_resource(ClearColor(Color::rgb_u8(30, 32, 48)))
+        .insert_resource(level_select::CurrentLevel(None))
+        // Plugins (foreign)
         .add_plugin(PixelCameraPlugin)
         .add_plugin(PixelBorderPlugin {
             color: Color::rgb(0.1, 0.1, 0.1),
@@ -53,6 +60,7 @@ fn main() {
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(EguiPlugin)
+        //.add_plugin(bevy_framepace::FramepacePlugin)
         .add_plugin(WorldInspectorPlugin)
         .add_plugin(TextureAtlasLoaderPlugin)
         // add out states driver
@@ -62,17 +70,18 @@ fn main() {
             .continue_to_state(GameState::MainMenu)
             .with_collection::<MainTextureAtlas>()
         )
-        .add_plugin(crate::ui::textbox::TextboxPlugin)
-        .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
-        .add_plugin(crate::components::shared::ComponentSetupPlugin)
-        .add_plugin(crate::ui::egui::left_panel::LeftPanelPlugin)
-        //.add_plugin(bevy_framepace::FramepacePlugin)
         .add_fixed_timestep(
             Duration::from_millis(125),
             // give it a label
             "my_fixed_update",
         )
-        .insert_resource(level_select::CurrentLevel(None))
+        // Own plugins
+        .add_plugin(crate::ui::textbox::TextboxPlugin)
+        .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
+        .add_plugin(crate::components::shared::ComponentSetupPlugin)
+        .add_plugin(crate::ui::egui::left_panel::LeftPanelPlugin)
+        .add_plugin(crate::ui::egui::theming::EguiThemingPlugin)
+        .add_plugin(crate::config::SettingsPlugin)
         // menu setup (state enter) systems
         .add_enter_system(GameState::MainMenu, main_menu::setup_menu)
         .add_enter_system(GameState::LevelsMenu, level_select::setup)

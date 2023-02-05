@@ -1,13 +1,14 @@
 use bevy::prelude::*;
 use bevy_egui::EguiContext;
-use iyes_loopless::prelude::ConditionSet;
+use egui::{Frame, Color32};
+use iyes_loopless::{prelude::ConditionSet, state::NextState};
 
+use crate::GameState;
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiState>()
-        .add_startup_system(configure_visuals_system)
         .add_startup_system(configure_ui_state_system);
 
 
@@ -22,11 +23,12 @@ impl Plugin for LeftPanelPlugin {
 
 
 pub fn left_panel(
+    mut commands: Commands,
     mut ui_state: ResMut<UiState>,
     mut egui_ctx: ResMut<EguiContext>,
     mut rendered_texture_id: Local<egui::TextureId>,
     mut is_initialized: Local<bool>,
-    images: Local<Images>, 
+    images: Local<Images>,
 ) { // At the moment `CurrentLevel` actually refers to the level to load
     let egui_texture_handle = ui_state
     .egui_texture_handle
@@ -45,6 +47,20 @@ pub fn left_panel(
         *is_initialized = true;
         *rendered_texture_id = egui_ctx.add_image(images.bevy_icon.clone_weak());
     }
+    egui::SidePanel::right("right_panel")
+        .exact_width(250.0)
+        .frame(Frame::none())
+        .resizable(false)
+        .show(egui_ctx.ctx_mut(), |ui| {});
+
+    egui::TopBottomPanel::top("top_panel")
+        .show(egui_ctx.ctx_mut(), |ui| {
+            let exit_button = ui.add(
+                egui::widgets::ImageButton::new(*rendered_texture_id, [32.0,32.0])
+                
+            );
+            if exit_button.clicked() {commands.insert_resource(NextState(GameState::MainMenu))}
+        });
 
     egui::SidePanel::left("side_panel")
         .default_width(200.0)
@@ -88,9 +104,41 @@ pub fn left_panel(
                 ));
             });
         });
+
+    egui::TopBottomPanel::bottom("bottom_panel")
+        .default_height(20.0)
+        .resizable(true)
+        .show(egui_ctx.ctx_mut(), |ui| {
+            ui.heading("Side Panel");
+
+            ui.horizontal(|ui| {
+                ui.label("Write something: ");
+                ui.text_edit_singleline(&mut ui_state.label);
+            });
+
+            ui.add(egui::widgets::Image::new(
+                egui_texture_handle.id(),
+                egui_texture_handle.size_vec2(),
+            ));
+
+            ui.add(egui::Slider::new(&mut ui_state.value, 0.0..=10.0).text("value"));
+            if ui.button("Increment").clicked() {
+                ui_state.value += 1.0;
+            }
+
+            ui.checkbox(&mut ui_state.is_window_open, "Window Is Open");
+
+            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                ui.add(egui::Hyperlink::from_label_and_url(
+                    "powered by egui",
+                    "https://github.com/emilk/egui/",
+                ));
+            });
+        });
 }
 pub struct Images {
-    pub bevy_icon: Handle<Image>,
+    bevy_icon: Handle<Image>,
+    back_button: Handle<Image>,
 }
 
 impl FromWorld for Images {
@@ -98,15 +146,9 @@ impl FromWorld for Images {
         let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
         Self {
             bevy_icon: asset_server.load("bavy.png"),
+            back_button: asset_server.load("egui/back.png"),
         }
     }
-}
-
-pub fn configure_visuals_system(mut egui_ctx: ResMut<EguiContext>) {
-    egui_ctx.ctx_mut().set_visuals(egui::Visuals {
-        // window_rounding: 0.0.into(),
-        ..Default::default()
-    });
 }
 
 pub fn configure_ui_state_system(mut ui_state: ResMut<UiState>) {

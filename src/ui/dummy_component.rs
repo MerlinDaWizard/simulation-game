@@ -34,7 +34,7 @@ fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main
             SpriteSheetBundle  {
                 sprite: sprite,
                 transform: Transform {
-                    translation: Vec3 { x: 200.0, y: current_down, z: 20.0},
+                    translation: Vec3 { x: 225.0, y: current_down, z: 20.0},
                     //scale: Vec3::splat(SCALE),
                     ..Default::default()
                 },

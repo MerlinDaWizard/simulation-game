@@ -29,3 +29,10 @@ background_img1:
   path: background1.jpg
   link: https://commons.wikimedia.org/wiki/File:Shenzhen_14.jpg
   credits: jo.sau
+
+default_colour_schemes:
+  name: Catppuccin
+  link: https://github.com/catppuccin/catppuccin
+  note: Custom themes can be created by the user, the default ones shipped are catppuccin
+  path: {PROJECT_ROOT}/data/themes/*
+  license: MIT
