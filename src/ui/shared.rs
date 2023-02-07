@@ -73,7 +73,7 @@ pub fn drag_v2(
             .get_render_target_info(&windows, &images)
             .unwrap();
         let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
-        dbg!(target_size);
+        //dbg!(target_size);
         let mouse_pos = (pointer_position - (target_size / 2.0)) / pixel_zoom;
         
         draggable.offset = mouse_pos - transform.translation.truncate();

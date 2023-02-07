@@ -5,6 +5,7 @@ use strum_macros::EnumIter;
 use enum_dispatch::enum_dispatch;
 use crate::MainTextureAtlas;
 use crate::game::{PlacementGrid, GRID_CELL_SIZE, GameRoot};
+use super::grid::{Grid, CellInUse};
 use super::temp::*;
 use super::wires::Wire;
 pub struct ComponentSetupPlugin;
@@ -13,6 +14,7 @@ impl Plugin for ComponentSetupPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_event::<PlaceComponentEvent>()
+            .init_resource::<Grid>()
             //.add_enter_system(crate::GameState::InGame, enter_system)
             .add_system_set(
             ConditionSet::new()
@@ -37,7 +39,6 @@ pub enum Components {
 
 impl Components {
     pub fn create_default(source: &Components, pos: &GridPos) -> Components {
-        dbg!(source.get_grid_pos());
         match source {
             Components::WirePiece(_) => Self::WirePiece(Wire { grid_pos: pos.0, ..Default::default()}),
             Components::GateNot(_) => Self::GateNot(GateNot { grid_pos: pos.0, ..Default::default()}),
@@ -109,6 +110,7 @@ pub struct PlaceComponentEvent(pub GridPos, pub Components);
 fn placement_event(
     mut commands: Commands,
     mut place_ev: EventReader<PlaceComponentEvent>,
+    mut grid_data: ResMut<Grid>,
     placement_grid: Query<(&Sprite, &Transform, &Size, With<PlacementGrid>)>,
     atlases: Res<Assets<TextureAtlas>>,
     main_atlas: Res<MainTextureAtlas>,
@@ -117,8 +119,13 @@ fn placement_event(
     let grid = placement_grid.single();
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0 * 0.5);
-
     for placement in place_ev.iter() {
+        let component = Components::create_default(&placement.1, &placement.0);
+        let grid_size = component.get_grid_size();
+        if grid_data.can_fit(&placement.0, &grid_size) == false {
+            continue;
+        }
+        grid_data.fill(&placement.0, &grid_size, CellInUse::Occupied);
         let mut sprite = TextureAtlasSprite::new(placement.1.get_sprite_index(atlas));
         sprite.anchor = Anchor::BottomLeft;
         commands.spawn((SpriteSheetBundle {
@@ -132,7 +139,7 @@ fn placement_event(
             ..Default::default()
         },
         GameRoot,
-        Components::create_default(&placement.1, &placement.0),
+        component,
         Name::new(format!("Component - {}", (&placement).1.get_sprite_name())),
     )); // TODO! Component for board components and functionality
     }

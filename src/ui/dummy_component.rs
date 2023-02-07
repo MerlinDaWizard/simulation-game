@@ -69,5 +69,5 @@ impl GridLock {
     pub fn new() -> Self {
         GridLock { grab_part: Vec2::ZERO }
     }
-}
 
+}
