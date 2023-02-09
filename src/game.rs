@@ -1,6 +1,7 @@
 
 use bevy::prelude::*;
 use bevy::render::camera::RenderTarget;
+use crate::components::grid::Grid;
 use crate::components::shared::Size;
 use crate::level_select::CurrentLevel;
 use crate::{ui, MainTextureAtlas, GameCamera};
@@ -20,25 +21,22 @@ pub struct PlacementGrid;
 pub fn setup_screen(
     mut commands: Commands,
     ass: Res<AssetServer>,
-
     _level: Res<CurrentLevel>,
 
     atlases: Res<Assets<TextureAtlas>>,
     main_atlas: Res<MainTextureAtlas>) { // At the moment `CurrentLevel` actually refers to the level to load
-
-
     commands.spawn((SpriteBundle {
         sprite: Sprite {
             ..Default::default()
         },
         transform: Transform {
-            translation: Vec3 { x: 0.0, y: 0.0, z: 10.0 },
+            translation: Vec3 { x: -60.0, y: 35.0, z: 10.0 },
             //scale: Vec3::splat(2.0),
             ..Default::default()
         },
         texture: ass.load("grid.png"),
         ..Default::default()
-    }, GameRoot, PlacementGrid, Size(Vec2::new(GRID_CELL_AMOUNT_WIDTH as f32,GRID_CELL_AMOUNT_HEIGHT as f32)*GRID_CELL_SIZE)));
+    }, GameRoot, Name::new("Placement Grid"), PlacementGrid, Size(Vec2::new(GRID_CELL_AMOUNT_WIDTH as f32,GRID_CELL_AMOUNT_HEIGHT as f32)*GRID_CELL_SIZE)));
 
     let cursor = commands.spawn( (SpriteBundle {
         sprite: Sprite {

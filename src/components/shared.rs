@@ -1,10 +1,10 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use iyes_loopless::prelude::ConditionSet;
+use iyes_loopless::prelude::{ConditionSet, AppLooplessStateExt};
 use strum_macros::EnumIter;
 use enum_dispatch::enum_dispatch;
 use crate::MainTextureAtlas;
-use crate::game::{PlacementGrid, GRID_CELL_SIZE, GameRoot};
+use crate::game::{PlacementGrid, GRID_CELL_SIZE, GameRoot, GRID_CELL_AMOUNT_HEIGHT, GRID_CELL_AMOUNT_WIDTH};
 use super::grid::{Grid, CellInUse};
 use super::temp::*;
 use super::wires::Wire;
@@ -15,6 +15,7 @@ impl Plugin for ComponentSetupPlugin {
         app
             .add_event::<PlaceComponentEvent>()
             .init_resource::<Grid>()
+            .add_exit_system(crate::GameState::InGame, clear_grid)
             //.add_enter_system(crate::GameState::InGame, enter_system)
             .add_system_set(
             ConditionSet::new()
@@ -24,6 +25,11 @@ impl Plugin for ComponentSetupPlugin {
                 .into()
         );
     }
+}
+
+fn clear_grid(mut grid: ResMut<Grid>) {
+    let grid = grid.as_mut();
+    grid.fill(&GridPos(UVec2::new(0,0)), &UVec2::new(GRID_CELL_AMOUNT_WIDTH as u32, GRID_CELL_AMOUNT_HEIGHT as u32), CellInUse::Free);
 }
 
 #[enum_dispatch]
