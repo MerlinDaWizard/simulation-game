@@ -79,7 +79,7 @@ fn main() {
         .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
         .add_plugin(crate::components::shared::ComponentSetupPlugin)
-        .add_plugin(crate::ui::egui::left_panel::LeftPanelPlugin)
+        .add_plugin(crate::ui::egui::main::LeftPanelPlugin)
         .add_plugin(crate::ui::egui::theming::EguiThemingPlugin)
         .add_plugin(crate::config::SettingsPlugin)
         // menu setup (state enter) systems
