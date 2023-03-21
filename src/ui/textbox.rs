@@ -1,7 +1,5 @@
 use bevy::{prelude::*, ui::FocusPolicy};
-
 use bevy_mod_picking::prelude::{*};
-use iyes_loopless::prelude::*;
 use crate::{ui::shared::*, MainTextureAtlas};
 
 pub struct TextboxPlugin;
@@ -9,7 +7,7 @@ pub struct TextboxPlugin;
 impl Plugin for TextboxPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
-            ConditionSet::new()
+            Condition::new()
                 .run_in_state(crate::GameState::InGame)
                 .with_system(drag_v2)
                 .with_system(CloseBox::handle_events)
@@ -72,7 +70,8 @@ impl ProgramBox {
         let box_name = commands.spawn( (Text2dBundle {
             text: Text {
                 sections: vec![TextSection::new(name, TextStyle { font: ass.load("Pixelboy.ttf"), font_size: 24.0, color: Color::WHITE })],
-                alignment: TextAlignment { vertical: VerticalAlign::Top, horizontal: HorizontalAlign::Left },
+                alignment: TextAlignment::Left,
+                linebreak_behaviour: bevy::text::BreakLineOn::AnyCharacter,
             },
             transform: Transform {
                 translation: Vec3 { x: -95.0, y: 12.0, z: 200.1 },

@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
 use super::shared::{GridComponent, Components};
+#[derive(Debug)]
+pub struct WireUpdateEvent();
 
 #[derive(Debug, PartialEq, Eq, Default, Clone)]
 pub struct Wire {
@@ -73,9 +75,11 @@ impl Direction {
     }
 }
 
+// TODO: After component revamp
 pub fn wire_update(
     mut commands: Commands,
     ass: Res<AssetServer>,
+    wire_update: EventReader<WireUpdateEvent>,
     components: Query<(&mut Sprite, &mut Components)>,
 
 ) {

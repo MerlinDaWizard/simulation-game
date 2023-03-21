@@ -1,5 +1,4 @@
 use bevy::{prelude::*, app::AppExit};
-use iyes_loopless::prelude::*;
 
 use crate::GameState;
 
@@ -69,11 +68,11 @@ pub fn butt_exit(mut ev: EventWriter<AppExit>) {
 /// Handler for the Enter Game button
 pub fn butt_game(mut commands: Commands) {
     // queue state transition
-    commands.insert_resource(NextState(GameState::InGame));
+    commands.insert_resource(State(GameState::InGame));
 }
 
 pub fn butt_levels(mut commands: Commands) {
-    commands.insert_resource(NextState(GameState::LevelsMenu));
+    commands.insert_resource(State(GameState::LevelsMenu));
 }
 
 /// Construct the main menu UI

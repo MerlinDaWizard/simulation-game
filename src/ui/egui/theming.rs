@@ -15,7 +15,7 @@ impl Plugin for EguiThemingPlugin {
     }
 }
 
-pub fn egui_startup(mut egui_ctx: ResMut<EguiContext>, user_config: Res<UserSettings>, bevy_clear_color: ResMut<ClearColor>) {
+pub fn egui_startup(mut egui_ctx: EguiContext, user_config: Res<UserSettings>, bevy_clear_color: ResMut<ClearColor>) {
     let mut s = String::new();
     File::open(&user_config.theme).unwrap().read_to_string(&mut s).unwrap();
     let colours: ColourScheme = serde_json::from_str(&s).expect("Could not parse user-config.toml");
@@ -41,6 +41,7 @@ pub fn configure_egui(egui_ctx: &egui::Context, colours: ColourScheme, mut bevy_
                 bg_fill: Color32::from_gray(27), // Default
                 rounding: Rounding::same(2.0),
                 expansion: 0.0,
+                weak_bg_fill: Color32::from_gray(27), // TODO: I filled this in just to stop errors, may change alter
             },
             inactive: WidgetVisuals {
                 bg_fill: c.surface0.clone().into(),      // checkbox background
@@ -48,6 +49,7 @@ pub fn configure_egui(egui_ctx: &egui::Context, colours: ColourScheme, mut bevy_
                 fg_stroke: Stroke::new(1.0, c.text.clone()), // button text
                 rounding: Rounding::same(2.0),
                 expansion: 0.0,
+                weak_bg_fill: c.surface0.clone().into(),
             },
             hovered: WidgetVisuals {
                 bg_fill: c.surface1.clone().into(),
@@ -55,6 +57,7 @@ pub fn configure_egui(egui_ctx: &egui::Context, colours: ColourScheme, mut bevy_
                 fg_stroke: Stroke::new(1.5, c.text.clone()),
                 rounding: Rounding::same(3.0),
                 expansion: 1.0,
+                weak_bg_fill: c.surface1.clone().into(),
             },
             active: WidgetVisuals {
                 bg_fill: c.surface2.clone().into(),
@@ -62,6 +65,7 @@ pub fn configure_egui(egui_ctx: &egui::Context, colours: ColourScheme, mut bevy_
                 fg_stroke: Stroke::new(2.0, c.text.clone()),
                 rounding: Rounding::same(2.0),
                 expansion: 1.0,
+                weak_bg_fill: c.surface2.clone().into(),
             },
             ..Default::default()
         },

@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 use bevy_mod_picking::prelude::*;
 use bevy_pixel_camera::PixelProjection;
 use crate::game::{PlacementGrid, GRID_CELL_SIZE, GRID_CELL_AMOUNT_HEIGHT, GRID_CELL_AMOUNT_WIDTH};
@@ -43,7 +44,7 @@ pub fn drag_v2(
     mut place_event_creator: EventWriter<PlaceComponentEvent>,
 
     pointers: Res<PointerMap>,
-    windows: Res<Windows>,
+    windows: Query<&Window, With<PrimaryWindow>>,
     images: Res<Assets<Image>>,
     camera_query: Query<&PixelProjection, (With<Camera>, With<Camera2d>)>,
     locations: Query<&PointerLocation>,

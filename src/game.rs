@@ -1,6 +1,7 @@
 
 use bevy::prelude::*;
 use bevy::render::camera::RenderTarget;
+use bevy::window::PrimaryWindow;
 use crate::components::grid::Grid;
 use crate::components::shared::Size;
 use crate::level_select::CurrentLevel;
@@ -81,7 +82,7 @@ pub struct CursorInside;
 pub struct Interactable;
 
 pub fn get_cursor_pos(
-    wnds: Res<Windows>,
+    wnds: Query<&Window, With<PrimaryWindow>>,
     kbd: Res<Input<KeyCode>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<GameCamera>>,
     mut main_query: Query<&mut Transform, (With<Cursor>, Without<CursorInside>)>,

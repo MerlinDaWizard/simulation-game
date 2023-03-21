@@ -1,6 +1,5 @@
 use bevy::sprite::Anchor;
 use bevy::{prelude::*, core::Name};
-use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
 use crate::MainTextureAtlas;
 use crate::{components::shared::*};
@@ -13,7 +12,7 @@ impl Plugin for ComponentTrayPlugin {
         app
             .add_enter_system(crate::GameState::InGame, enter_system)
             .add_system_set(
-            ConditionSet::new()
+            Condition::new()
                 .run_in_state(crate::GameState::InGame)
                 // .with_system(ui_example_system)
                 .into()

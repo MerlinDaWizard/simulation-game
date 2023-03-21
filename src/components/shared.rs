@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use iyes_loopless::prelude::{ConditionSet, AppLooplessStateExt};
 use strum_macros::EnumIter;
 use enum_dispatch::enum_dispatch;
 use crate::MainTextureAtlas;
@@ -18,7 +17,7 @@ impl Plugin for ComponentSetupPlugin {
             .add_exit_system(crate::GameState::InGame, clear_grid)
             //.add_enter_system(crate::GameState::InGame, enter_system)
             .add_system_set(
-            ConditionSet::new()
+            Condition::new()
                 .run_in_state(crate::GameState::InGame)
                 .with_system(placement_event)
                 // .with_system(ui_example_system)
