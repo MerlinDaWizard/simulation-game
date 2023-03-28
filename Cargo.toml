@@ -25,6 +25,7 @@ lazy_static = "1.4.0"
 serde = "1.0.152"
 serde_json = "1.0.92"
 toml = "0.7.1"
+bevy_merlin_sprite_input = { path = "./dependencies/bevy_merlin_sprite_input"}
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1

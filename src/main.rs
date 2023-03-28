@@ -13,7 +13,6 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_egui::{EguiPlugin};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use bevy_mod_picking::prelude::*;
 use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle};
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
 use bevy::window::{close_on_esc, PresentMode, WindowResolution, WindowMode};
@@ -56,7 +55,6 @@ fn main() {
         })
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_plugins(DefaultPickingPlugins)
         .add_plugin(EguiPlugin)
         //.add_plugin(bevy_framepace::FramepacePlugin)
         .add_plugin(WorldInspectorPlugin::new())

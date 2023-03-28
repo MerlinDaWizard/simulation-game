@@ -1123,6 +1123,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_merlin_sprite_input"
+version = "0.1.0"
+dependencies = [
+ "bevy 0.10.0",
+]
+
+[[package]]
 name = "bevy_mikktspace"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4142,6 +4149,7 @@ dependencies = [
  "bevy_egui",
  "bevy_framepace",
  "bevy_heterogeneous_texture_atlas_loader",
+ "bevy_merlin_sprite_input",
  "bevy_pixel_camera",
  "egui",
  "enum_dispatch",

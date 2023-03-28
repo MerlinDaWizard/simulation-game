@@ -22,6 +22,10 @@ impl DragTypeReturn {
     pub fn new() -> DragTypeReturn {
         DragTypeReturn(Vec3::ZERO)
     }
+}impl ForwardedEvent<PointerClick> for CloseBox {
+    fn from_data(event_data: &PointerEventData<PointerClick>) -> CloseBox {
+        CloseBox(event_data.target())
+    }
 }
 
 /// The opacity when dragging
