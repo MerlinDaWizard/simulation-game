@@ -4,7 +4,6 @@ use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct Wire {
-
 }
 
 impl GridComponent for Wire {
@@ -16,4 +15,15 @@ impl GridComponent for Wire {
     fn build(&mut self, own_pos: &(usize,usize), sim_data: &mut SimulationData) {
         todo!()
     }
+
+    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) {
+        todo!()
+    }
+}
+
+enum ConnectionStatus {
+    Connected,
+    Floating,
+    /// Allow disabling of certain connections to allow wires running in parallel and such
+    Disabled,
 }

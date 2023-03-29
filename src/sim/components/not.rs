@@ -5,7 +5,6 @@ use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
 /// A 'Not' gate component which should invert the input posting it as the output
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct GateNot {
-
 }
 
 impl GridComponent for GateNot {
@@ -17,6 +16,10 @@ impl GridComponent for GateNot {
     }
 
     fn build(&mut self, own_pos: &(usize, usize), sim_data: &mut SimulationData) {
+        todo!()
+    }
+
+    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) {
         todo!()
     }
 }

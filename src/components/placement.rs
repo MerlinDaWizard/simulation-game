@@ -9,15 +9,13 @@ use crate::game::{PlacementGridEntity, GRID_CELL_SIZE, GameRoot, GridSize};
 use crate::level_select::CurrentLevel;
 use crate::sim::components::*;
 use crate::sim::level::LevelData;
-use crate::sim::model::{Component as SimComponent, SimulationData, DummyComponent as DummySimComponent};
-use super::occupation_grid::{CellInUse, OccupationGrid};
+use crate::sim::model::{Component as SimComponent, SimulationData, DummyComponent as DummySimComponent, CellState};
 pub struct ComponentSetupPlugin;
 
 impl Plugin for ComponentSetupPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_event::<PlaceComponentEvent>()
-            .init_resource::<OccupationGrid>()
             .init_resource::<SimulationData>()
             .init_resource::<GridSize>()
             .register_type::<SimulationData>()
@@ -37,8 +35,6 @@ impl Plugin for ComponentSetupPlugin {
 fn setup_grid(
     level: Res<CurrentLevel>,
 
-
-    mut occupation_grid: ResMut<OccupationGrid>,
     mut sim_data: ResMut<SimulationData>,
     mut grid_size: ResMut<GridSize>,
 ) {
@@ -46,18 +42,16 @@ fn setup_grid(
     File::open(format!("data/levels/{}.json", {level.0.unwrap()})).expect("Could not find level file").read_to_string(&mut s).unwrap();
     let level_data: LevelData = serde_json::from_str(&s).expect("Could not parse level");
     let size = GridSize([level_data.grid_width, level_data.grid_height]);
-    *occupation_grid = OccupationGrid::empty_grid_from_size(&size);
     //occupation_grid.0 = OccupationGrid::empty_grid_from_size(&size);
     sim_data.wire_graph = Vec::new();
-    sim_data.grid.grid = vec![vec![None; size.0[1]]; size.0[0]];
+    sim_data.grid.grid = vec![vec![CellState::Empty; size.0[1]]; size.0[0]];
     grid_size.0 = [level_data.grid_width, level_data.grid_height];
 }
 
-fn clear_grid(mut occupation_grid: ResMut<OccupationGrid>, mut simulation_grid: ResMut<SimulationData>, grid_size: Res<GridSize>) {
-    occupation_grid.fill(&[0,0], &grid_size.0, CellInUse::Free);
+fn clear_grid(mut simulation_grid: ResMut<SimulationData>, grid_size: Res<GridSize>) {
     for i in simulation_grid.grid.grid.iter_mut() {
         for mut _j in i.iter_mut() {
-            _j = &mut None;
+            _j = &mut CellState::Empty;
         }
     }
 }
@@ -146,7 +140,6 @@ pub struct PlaceComponentEvent(pub [usize; 2], pub DummySimComponent);
 fn placement_event(
     mut commands: Commands,
     mut place_ev: EventReader<PlaceComponentEvent>,
-    mut occupation_grid: ResMut<OccupationGrid>,
     mut sim_data: ResMut<SimulationData>,
     placement_grid: Query<(&Sprite, &Transform, &Size), With<PlacementGridEntity>>,
     atlases: Res<Assets<TextureAtlas>>,
@@ -157,32 +150,26 @@ fn placement_event(
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0.as_vec2() * 0.5);
     for event in place_ev.iter() {
-        
-        let grid_size = event.1.get_grid_size();
-        if occupation_grid.can_fit(&event.0, &grid_size) == false {
-            warn!("Attempted to place component at {:?}, could not fit", {&event.0});
-            eprintln!("Attempted to place component at {:?}, could not fit", {&event.0});
-            continue;
-        }
-        occupation_grid.fill(&event.0, &grid_size, CellInUse::Occupied);
-        let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
-        sprite.anchor = Anchor::BottomLeft;
-        commands.spawn((SpriteSheetBundle {
-            sprite: sprite,
-            transform: Transform {
-                translation: calc_grid_pos(&grid_bottom_left, &UVec2::from_array([event.0[0] as u32, event.0[1] as u32])).extend(11.0),
-                //scale: Vec3::splat(2.0),
+        if sim_data.grid.add_default_component(&event.1, &event.0).is_ok() {
+            let grid_size = event.1.get_grid_size();
+            let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
+            sprite.anchor = Anchor::BottomLeft;
+            commands.spawn((SpriteSheetBundle {
+                sprite: sprite,
+                transform: Transform {
+                    translation: calc_grid_pos(&grid_bottom_left, &UVec2::from_array([event.0[0] as u32, event.0[1] as u32])).extend(11.0),
+                    //scale: Vec3::splat(2.0),
+                    ..Default::default()
+                },
+                texture_atlas: main_atlas.handle.clone(),
                 ..Default::default()
             },
-            texture_atlas: main_atlas.handle.clone(),
-            ..Default::default()
-        },
-            GameRoot,
-            GridLink(event.0),
-            Name::new(format!("Component - {}", event.1.get_sprite_name())),
-        ));
-        
-        sim_data.grid.grid[event.0[0]][event.0[1]] = Some(event.1.build_default());
+                GameRoot,
+                GridLink(event.0),
+                Name::new(format!("Component - {}", event.1.get_sprite_name())),
+            ));
+        }
+        //event.1.build_default().place()
     }
 }
 

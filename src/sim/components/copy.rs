@@ -18,4 +18,8 @@ impl GridComponent for SignalCopy {
     fn build(&mut self, own_pos: &(usize, usize), sim_data: &mut SimulationData) {
         todo!()
     }
+
+    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) {
+        todo!()
+    }
 }
