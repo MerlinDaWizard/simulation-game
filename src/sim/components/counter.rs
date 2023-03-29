@@ -1,8 +1,9 @@
+use bevy::reflect::{Reflect, FromReflect};
 use serde::{Serialize, Deserialize};
 use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
 
 /// A counter which whenever it reads 100 on input A and 100 on input CLK (Clock) it will increment an internal counter and post that on the output
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct Counter {
     #[serde(skip)] input_A: Option<usize>,
     #[serde(skip)] input_clk: Option<usize>,

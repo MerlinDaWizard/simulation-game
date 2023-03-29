@@ -1,9 +1,10 @@
+use bevy::reflect::{Reflect, FromReflect};
 use serde::{Deserialize, Serialize};
 use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
 
 /// More of a debug component, not sure if it will really be need in final program\
 /// Copy input into both outputs - Very similar to passthrough
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct SignalCopy {
 
 }

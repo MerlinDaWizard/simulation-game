@@ -1,9 +1,10 @@
+use bevy::reflect::{Reflect, FromReflect};
 use serde::{Deserialize, Serialize};
 use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
 
 /// A 'And' gate component which should do typical AND behaviour, consider 100 ON, anything else OFF\
 /// No connection defaults to 0 hence off
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct GateAnd {
     #[serde(skip)] input_A: Option<usize>,
     #[serde(skip)] input_B: Option<usize>,

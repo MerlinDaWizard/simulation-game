@@ -6,14 +6,15 @@ use crate::sim::components::*;
 /// The type  that wires should store using
 type WireDataType = u16;
 
-#[derive(Resource, Debug, Default)]
+#[derive(Resource, Debug, Default, Reflect)]
+#[reflect(Resource)]
 pub struct SimulationData {
     pub grid: ComponentGrid,
     pub wire_graph: Vec<WireDataType>
 }
 
 /// The 2d grid of components
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Reflect)]
 pub struct ComponentGrid {
     pub grid: Vec<Vec<Option<Component>>>,
 }
@@ -31,7 +32,7 @@ pub enum DummyComponent {
 
 /// Each possible component for a given cell\
 /// If the cell is empty it should be expressed in the parent Option<> instead of here.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Reflect, FromReflect)]
 #[enum_dispatch]
 pub enum Component {
     WirePiece(Wire),

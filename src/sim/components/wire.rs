@@ -1,7 +1,8 @@
+use bevy::reflect::{Reflect, FromReflect};
 use serde::{Deserialize, Serialize};
 use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
 
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct Wire {
 
 }

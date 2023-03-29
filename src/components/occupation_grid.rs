@@ -28,14 +28,14 @@ impl OccupationGrid {
     pub fn can_fit(&self, place_position: &[usize; 2], size: &[usize; 2]) -> bool {
         dbg!(place_position);
         dbg!(size);
-        for x in place_position[0]..(place_position[0] + size[0] - 1) {
+        for x in place_position[0]..(place_position[0] + size[0]) {
             let row = match self.0.get(x) {
                 Some(r) => r,
                 None => {
                     return false;
                 }
             };
-            for y in place_position[1]..(place_position[1] + size[1] - 1) {
+            for y in place_position[1]..(place_position[1] + size[1]) {
                 match row.get(y) {
                     None => {return false;}
                     Some(c) => {

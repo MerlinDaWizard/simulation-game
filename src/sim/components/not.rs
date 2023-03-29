@@ -1,8 +1,9 @@
+use bevy::reflect::{Reflect, FromReflect};
 use serde::{Deserialize, Serialize};
 use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
 
 /// A 'Not' gate component which should invert the input posting it as the output
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct GateNot {
 
 }

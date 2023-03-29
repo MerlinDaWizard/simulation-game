@@ -20,6 +20,7 @@ impl Plugin for ComponentSetupPlugin {
             .init_resource::<OccupationGrid>()
             .init_resource::<SimulationData>()
             .init_resource::<GridSize>()
+            .register_type::<SimulationData>()
             .add_enter_system(crate::GameState::InGame, setup_grid)
             .add_exit_system(crate::GameState::InGame, clear_grid)
             //.add_enter_system(crate::GameState::InGame, enter_system)
@@ -53,7 +54,12 @@ fn setup_grid(
 }
 
 fn clear_grid(mut occupation_grid: ResMut<OccupationGrid>, mut simulation_grid: ResMut<SimulationData>, grid_size: Res<GridSize>) {
-    occupation_grid.fill(&[0,0], &grid_size.0, CellInUse::Free)
+    occupation_grid.fill(&[0,0], &grid_size.0, CellInUse::Free);
+    for i in simulation_grid.grid.grid.iter_mut() {
+        for mut _j in i.iter_mut() {
+            _j = &mut None;
+        }
+    }
 }
 
 impl SimComponent {
@@ -99,7 +105,7 @@ impl DummySimComponent {
             Self::GateAnd => "gate_and",
             Self::SignalCopy => "signal_copy",
             Self::SignalPassthrough => "signal_passthrough",
-            Self::Counter => "signal_passthrough",
+            Self::Counter => "signal_passthrough", // TODO: Make sprite for counter
         };
         s
     }
@@ -121,7 +127,6 @@ impl DummySimComponent {
             Self::GateNot => [1,1],
             Self::GateAnd => [2,2],
             Self::SignalCopy => [1,2],
-            Self::SignalPassthrough => [1,1],
             Self::SignalPassthrough => [1,1],
             Self::Counter => [1,2],
         }
