@@ -1,14 +1,14 @@
-use bevy::reflect::{Reflect, FromReflect};
+use bevy::{reflect::{Reflect, FromReflect}, sprite::{TextureAtlasSprite, TextureAtlas}};
 use serde::{Deserialize, Serialize};
-use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
+use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent, self, Port, Direction};
 
 /// A 'And' gate component which should do typical AND behaviour, consider 100 ON, anything else OFF\
 /// No connection defaults to 0 hence off
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct GateAnd {
-    #[serde(skip)] input_A: Option<usize>,
-    #[serde(skip)] input_B: Option<usize>,
-    #[serde(skip)] output: Option<usize>,
+    #[reflect(ignore)] #[serde(skip)] input_A: Port,
+    #[reflect(ignore)] #[serde(skip)] input_B: Port,
+    #[reflect(ignore)] #[serde(skip)] output: Port,
 }
 
 impl GridComponent for GateAnd {
@@ -23,7 +23,23 @@ impl GridComponent for GateAnd {
         todo!()
     }
 
-    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) {
-        todo!()
+    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas) {
+        ()
+    }
+
+    fn ports(&self) -> Vec<([usize; 2], model::Direction)> {
+        vec![
+            ([0,0], Direction::Left),
+            ([0,1], Direction::Left),
+            ([0,1], Direction::Right),
+        ]
+    }
+
+    fn ports_link(&mut self) -> Vec<([usize; 2], model::Direction, &mut model::Port)> {
+        vec![
+            ([0,0], Direction::Left, &mut self.input_A),
+            ([0,1], Direction::Left, &mut self.input_B),
+            ([0,1], Direction::Right, &mut self.output),
+        ]
     }
 }

@@ -16,15 +16,13 @@ use strum_macros::EnumIter;
 use crate::sim::components::*;
 
 /// The type  that wires should store using
-type WireDataType = u16;
+type WireDataType = AtomicU8;
 
+/// Most of the data used for the simulation
 #[derive(Resource, Debug, Default, Reflect)]
 #[reflect(Resource)]
 pub struct SimulationData {
     pub grid: ComponentGrid,
-    pub wire_graph: Vec<WireDataType>,
-    #[reflect(ignore)]
-    pub port_grid: PortGrid,
 }
 
 /// The 2d grid of components
@@ -62,28 +60,35 @@ impl ComponentGrid {
         return true;
     }
     /// Check if component can fit and place if possible
-    pub fn add_default_component(&mut self, component: &DummyComponent, position: &[usize; 2]) -> Result<(), PlaceError> {
+    pub fn add_default_component(&mut self, component: &DummyComponent, position: &[usize; 2]) -> Result<&mut Component, PlaceError> {
         if !self.can_fit(position, &component.get_grid_size()) {return Err(PlaceError::CantFit)}
 
-        self.place_component(component, position);
-        Ok(())
+        Ok(self.place_component(component, position))
     }
 
     /// Place a component in the grid, does not perform any overlap checks, these are done elsewhere. See [`Self::add_default_component()`]
-    fn place_component(&mut self, component: &DummyComponent, position: &[usize; 2]) {
+    fn place_component(&mut self, component: &DummyComponent, position: &[usize; 2]) -> &mut Component {
         let component_size = component.get_grid_size();
         let mut first = true; // Used to determin if to insert a real component or a grid reference
+        let mut reference: &mut Component;
         for i in position[0]..(position[0] + component_size[0]) {
             for j in position[1]..(position[1] + component_size[1]) {
                 match first {
                     true => {
                         first = false;
-                        self.grid[i][j] = CellState::Real(component.build_default())
+                        let mut component_built = component.build_default();
+                        reference = &mut component_built;
+                        self.grid[i][j] = CellState::Real(component_built);
                     },
                     false => {self.grid[i][j] = CellState::Reference(position.clone())}
                 }
             }
         }
+        return reference
+    }
+
+    pub fn fetch(&self, location: &[usize; 2]) -> Option<&CellState> {
+        return self.grid.get(location[1])?.get(location[0]);
     }
 }
 /// Contains Marker varients to pass around when wanting to create or refer to a type without all the data attached
@@ -145,32 +150,78 @@ pub struct AudioEvent {
 /// adsasd
 #[enum_dispatch(Component)]
 pub trait GridComponent {
-    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData);
+    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas);
     /// When assembling the simulation + setting up, what should it reset / alter\
     /// E.g. Any wire must flood fill to find its neightbours for the wire graph
     fn build(&mut self, own_pos: &(usize, usize), sim_data: &mut SimulationData);
 
     /// Should run the update on the component using itself
     fn tick(&mut self, own_pos: &(usize, usize), sim_data: &mut SimulationData) -> (Vec<VisualEvent>, Vec<AudioEvent>);
+
+    fn ports(&self) -> Vec<([usize; 2], Direction)>;
+
+    fn ports_link(&mut self) -> Vec<([usize; 2], Direction, &mut Port)>;
 }
 
 #[derive(Debug, Clone, Default)]
-/// Each cell stores the Top and Left edge for its own grid\
-/// \
-/// Combining these we get a full graph of edges in a grid\
-/// As a result of this the length needs to be + 1 for each direction\
-/// and must have offsets applied to help it work
-pub struct PortGrid (Vec<Vec<PortGridData>>);
-
-#[derive(Debug, Clone, Default)]
-pub struct PortGridData {
-    pub top: Option<PortSetup>,
-    pub left: Option<PortSetup>,
-}
-
-#[derive(Debug, Clone, Default)]
-pub enum PortSetup {
+pub enum Port {
+    /// For when the port is not connected to a network, its link is 'Undecided'.\
+    /// Shouldnt be serialised, saved 
     #[default]
     Undecided,
+    /// For when the simulation is 'built', allows multiple ports to communicate
     Set(Arc<AtomicU8>)
+}
+
+#[derive(EnumIter, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    /// Reverse the direction. E.g.\
+    /// 
+    /// ```rust
+    /// let up = Direction::Up;
+    /// assert_eq!(up.invert(), Direction::Left);
+    /// ```
+    pub fn invert(self) -> Self {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left
+
+        }
+    }
+
+    pub fn as_array(self) -> [isize; 2] {
+        match self {
+            Direction::Up => [0,1],
+            Direction::Down => [0,-1],
+            Direction::Left => [-1,0],
+            Direction::Right => [1,0],
+        }
+    }
+
+    pub fn as_index(self) -> usize {
+        match self {
+            Direction::Up => 0,
+            Direction::Down => 1,
+            Direction::Left => 2,
+            Direction::Right => 3,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Direction::Up => "up",
+            Direction::Down => "down",
+            Direction::Left => "left",
+            Direction::Right => "right",
+        }
+    }
 }
