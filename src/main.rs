@@ -8,6 +8,7 @@ mod game;
 mod components;
 mod ui;
 mod config;
+mod sim;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
@@ -50,7 +51,7 @@ fn main() {
         // Resources
         .insert_resource(Msaa { samples: 1})
         .insert_resource(ClearColor(Color::rgb_u8(30, 32, 48)))
-        .insert_resource(level_select::CurrentLevel(None))
+        .insert_resource(level_select::CurrentLevel(Some(1))) // TODO: Change to none + working level select
         // Plugins (foreign)
         .add_plugin(PixelCameraPlugin)
         .add_plugin(PixelBorderPlugin {
@@ -78,7 +79,7 @@ fn main() {
         // Own plugins
         .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
-        .add_plugin(crate::components::shared::ComponentSetupPlugin)
+        .add_plugin(crate::components::placement::ComponentSetupPlugin)
         .add_plugin(crate::ui::egui::main::LeftPanelPlugin)
         .add_plugin(crate::ui::egui::theming::EguiThemingPlugin)
         .add_plugin(crate::config::SettingsPlugin)

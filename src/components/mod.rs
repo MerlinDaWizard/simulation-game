@@ -1,4 +1,2 @@
-pub mod wires;
-pub mod shared;
-pub mod temp;
-pub mod grid;
+pub mod placement;
+pub mod occupation_grid;

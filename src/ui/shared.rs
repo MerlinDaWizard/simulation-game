@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 use bevy_pixel_camera::PixelProjection;
-use crate::game::{PlacementGrid, GRID_CELL_SIZE, GRID_CELL_AMOUNT_HEIGHT, GRID_CELL_AMOUNT_WIDTH};
-use crate::components::shared::{Size, PlaceComponentEvent, GridPos};
+use crate::game::{PlacementGridEntity, GRID_CELL_SIZE, GRID_CELL_AMOUNT_HEIGHT, GRID_CELL_AMOUNT_WIDTH};
+use crate::components::placement::{Size, PlaceComponentEvent};
 use super::dummy_component::{GridLock, ComponentLink};
 
 // Stores type and offset for use in dragging
@@ -47,8 +47,8 @@ pub fn drag_v2(
     images: Res<Assets<Image>>,
     camera_query: Query<&PixelProjection, (With<Camera>, With<Camera2d>)>,
     locations: Query<&PointerLocation>,
-    mut draggable_entity: Query<(Entity, &mut TextureAtlasSprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>, Option<&mut GridLock>, Option<&Size>, Option<&ComponentLink>), Without<PlacementGrid>>,
-    placement_grid: Query<(&Sprite, &Transform, With<PlacementGrid>)>,
+    mut draggable_entity: Query<(Entity, &mut TextureAtlasSprite, &mut Draggable, &mut Transform, Option<&DragOpacity>, Option<&mut DragTypeReturn>, Option<&mut GridLock>, Option<&Size>, Option<&ComponentLink>), Without<PlacementGridEntity>>,
+    placement_grid: Query<(&Sprite, &Transform, With<PlacementGridEntity>)>,
 ) {
     let grid = placement_grid.get_single().unwrap();
     //let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
@@ -91,7 +91,7 @@ pub fn drag_v2(
                 Some(_) => {
                     let entity_bottom_left_corner = transform.translation.truncate();
                     let difference = mouse_pos - entity_bottom_left_corner;
-                    gridlock.grab_part = (difference / GRID_CELL_SIZE).floor();
+                    gridlock.grab_part = (difference / GRID_CELL_SIZE as f32).floor();
                 },
                 None => { // Assume it is the same size as the grid
                     // Keep gridlock grabpart as set by init (zero)
@@ -125,8 +125,8 @@ pub fn drag_v2(
         
         if gridlock.is_some() && mouse_pos.x >= grid_bottom_left_corner.x && mouse_pos.y >= grid_bottom_left_corner.y && mouse_pos.x < grid_top_right_corner.x && mouse_pos.y < grid_top_right_corner.y {
             let gridlock = gridlock.unwrap(); // Weird way of doing it cuz I wanna put the above in one expression
-            let grid_slot = ((mouse_pos - grid_bottom_left_corner) / GRID_CELL_SIZE).floor() - gridlock.grab_part;
-            box_transform.translation = (grid_bottom_left_corner + Vec2::new(GRID_CELL_SIZE * grid_slot.x,GRID_CELL_SIZE * grid_slot.y)).extend(z);
+            let grid_slot = ((mouse_pos - grid_bottom_left_corner) / GRID_CELL_SIZE as f32).floor() - gridlock.grab_part;
+            box_transform.translation = (grid_bottom_left_corner + Vec2::new(GRID_CELL_SIZE as f32 * grid_slot.x,GRID_CELL_SIZE as f32* grid_slot.y)).extend(z);
         } else {
             box_transform.translation = (mouse_pos - draggable.offset).extend(z);
         }
@@ -156,14 +156,14 @@ pub fn drag_v2(
                         .unwrap();
                     let target_size = target.physical_size.as_vec2() / target.scale_factor as f32;
                     let mouse_pos = (pointer_position - (target_size / 2.0)) / pixel_zoom;
-                    let grid_slot = ((mouse_pos - grid_bottom_left_corner) / GRID_CELL_SIZE).floor() - g.grab_part;
+                    let grid_slot = ((mouse_pos - grid_bottom_left_corner) / GRID_CELL_SIZE as f32).floor() - g.grab_part;
                     if grid_slot.x >= 0.0 &&
                         grid_slot.y >= 0.0 &&
                         grid_slot.x < GRID_CELL_AMOUNT_WIDTH as f32 &&
                         grid_slot.y < GRID_CELL_AMOUNT_HEIGHT as f32
                     {
                         let grid_slot = grid_slot.as_uvec2();
-                        place_event_creator.send(PlaceComponentEvent(GridPos(grid_slot), component.0.clone()));
+                        place_event_creator.send(PlaceComponentEvent([grid_slot.x as usize, grid_slot.y as usize], component.0.clone()));
                     }
                 }
             }

@@ -3,9 +3,9 @@ use bevy::{prelude::*, core::Name};
 use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
 use crate::MainTextureAtlas;
-use crate::{components::shared::*};
+use crate::sim::model::DummyComponent;
 use crate::ui::shared::*;
-use crate::components::shared::Size;
+use crate::components::placement::Size;
 pub struct ComponentTrayPlugin;
 
 impl Plugin for ComponentTrayPlugin {
@@ -24,7 +24,7 @@ impl Plugin for ComponentTrayPlugin {
 fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main_atlas: Res<MainTextureAtlas>) {
     let atlas = atlases.get(&main_atlas.handle).unwrap();
     let mut current_down = -150.0;
-    for comp in Components::iter() {
+    for comp in DummyComponent::iter() {
         let size = comp.get_size();
         //let texture: Handle<Image> = ass.load(comp.get_path());
         let sprite_idx = comp.get_sprite_index(atlas);
@@ -47,7 +47,7 @@ fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main
             Draggable::new(),
             DragTypeReturn::new(),
             DragOpacity(0.75),
-            Size(comp.get_size()),
+            Size(comp.get_size().as_uvec2()),
             ComponentLink(comp),
         ));
         current_down += size.y + 10.0;
@@ -58,7 +58,7 @@ fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main
 pub struct TrayComponent;
 
 #[derive(Component)]
-pub struct ComponentLink(pub Components);
+pub struct ComponentLink(pub DummyComponent);
 
 #[derive(Component)]
 pub struct GridLock{
