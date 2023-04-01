@@ -14,6 +14,8 @@ use bevy::prelude::*;
 use enum_dispatch::enum_dispatch;
 use strum_macros::EnumIter;
 use crate::sim::components::*;
+use enum_map::EnumMap;
+use super::port_grid::{Side, PortGrid};
 
 /// The type  that wires should store using
 type WireDataType = u16;
@@ -22,9 +24,15 @@ type WireDataType = u16;
 #[reflect(Resource)]
 pub struct SimulationData {
     pub grid: ComponentGrid,
-    pub wire_graph: Vec<WireDataType>,
     #[reflect(ignore)]
     pub port_grid: PortGrid,
+}
+
+impl SimulationData {
+    pub fn add_default_component(&mut self, component: DummyComponent, position: [usize;2]) -> Result<(), PlaceError> {
+        let component = self.grid.add_default_component(component, &position)?;
+        self.port_grid.add_ports()
+    }
 }
 
 /// The 2d grid of components
@@ -62,7 +70,7 @@ impl ComponentGrid {
         return true;
     }
     /// Check if component can fit and place if possible
-    pub fn add_default_component(&mut self, component: &DummyComponent, position: &[usize; 2]) -> Result<(), PlaceError> {
+    pub fn add_default_component(&mut self, component: DummyComponent, position: &[usize; 2]) -> Result<(), PlaceError> {
         if !self.can_fit(position, &component.get_grid_size()) {return Err(PlaceError::CantFit)}
 
         self.place_component(component, position);
@@ -70,7 +78,7 @@ impl ComponentGrid {
     }
 
     /// Place a component in the grid, does not perform any overlap checks, these are done elsewhere. See [`Self::add_default_component()`]
-    fn place_component(&mut self, component: &DummyComponent, position: &[usize; 2]) {
+    fn place_component(&mut self, component: DummyComponent, position: &[usize; 2]) {
         let component_size = component.get_grid_size();
         let mut first = true; // Used to determin if to insert a real component or a grid reference
         for i in position[0]..(position[0] + component_size[0]) {
@@ -87,7 +95,7 @@ impl ComponentGrid {
     }
 }
 /// Contains Marker varients to pass around when wanting to create or refer to a type without all the data attached
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, EnumIter, Clone)]
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, EnumIter, Clone, Copy)]
 pub enum DummyComponent {
     WirePiece,
     GateNot,
@@ -152,25 +160,7 @@ pub trait GridComponent {
 
     /// Should run the update on the component using itself
     fn tick(&mut self, own_pos: &(usize, usize), sim_data: &mut SimulationData) -> (Vec<VisualEvent>, Vec<AudioEvent>);
-}
 
-#[derive(Debug, Clone, Default)]
-/// Each cell stores the Top and Left edge for its own grid\
-/// \
-/// Combining these we get a full graph of edges in a grid\
-/// As a result of this the length needs to be + 1 for each direction\
-/// and must have offsets applied to help it work
-pub struct PortGrid (Vec<Vec<PortGridData>>);
+    fn ports(&self) -> Vec<&([usize; 2], Side)>;
 
-#[derive(Debug, Clone, Default)]
-pub struct PortGridData {
-    pub top: Option<PortSetup>,
-    pub left: Option<PortSetup>,
-}
-
-#[derive(Debug, Clone, Default)]
-pub enum PortSetup {
-    #[default]
-    Undecided,
-    Set(Arc<AtomicU8>)
 }

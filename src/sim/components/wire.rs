@@ -1,6 +1,6 @@
 use bevy::reflect::{Reflect, FromReflect};
 use serde::{Deserialize, Serialize};
-use crate::sim::model::{GridComponent, SimulationData, AudioEvent, VisualEvent};
+use crate::sim::{model::{GridComponent, SimulationData, AudioEvent, VisualEvent}, port_grid::Side};
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
 pub struct Wire {
@@ -18,6 +18,10 @@ impl GridComponent for Wire {
 
     fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) {
         todo!()
+    }
+
+    fn ports(&self) -> Vec<&([usize; 2], Side)> {
+        Vec::new()
     }
 }
 

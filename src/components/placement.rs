@@ -99,7 +99,7 @@ impl DummySimComponent {
             Self::GateAnd => "gate_and",
             Self::SignalCopy => "signal_copy",
             Self::SignalPassthrough => "signal_passthrough",
-            Self::Counter => "signal_passthrough", // TODO: Make sprite for counter
+            Self::Counter => "signal_copy", // TODO: Make sprite for counter
         };
         s
     }
@@ -125,6 +125,8 @@ impl DummySimComponent {
             Self::Counter => [1,2],
         }
     }
+
+    pub fn ports(&self) -> 
 }
 
 #[derive(Debug, Component)]
@@ -150,7 +152,7 @@ fn placement_event(
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0.as_vec2() * 0.5);
     for event in place_ev.iter() {
-        if sim_data.grid.add_default_component(&event.1, &event.0).is_ok() {
+        if sim_data.grid.add_default_component(event.1, &event.0).is_ok() {
             let grid_size = event.1.get_grid_size();
             let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
             sprite.anchor = Anchor::BottomLeft;
@@ -169,6 +171,7 @@ fn placement_event(
                 Name::new(format!("Component - {}", event.1.get_sprite_name())),
             ));
         }
+        
         //event.1.build_default().place()
     }
 }
