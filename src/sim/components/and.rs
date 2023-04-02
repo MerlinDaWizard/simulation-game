@@ -35,7 +35,7 @@ impl GridComponent for GateAnd {
 
 
 impl GateAnd {
-    pub const CONST_PORTS: EnumMap<GateAndPorts, ([usize; 2], Side)> = EnumMap::from_array([ ([0,1], Side::Left), ([0,1], Side::Right), ([0,0], Side::Right) ]);
+    pub const CONST_PORTS: EnumMap<GateAndPorts, ([usize; 2], Side)> = EnumMap::from_array([ ([0,1], Side::Left), ([1,1], Side::Right), ([0,0], Side::Left) ]);
 }
 
 #[derive(Debug, Enum)]
