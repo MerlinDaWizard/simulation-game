@@ -1,4 +1,9 @@
 use std::sync::{Arc, atomic::AtomicU8};
+use enum_map::{EnumMap, Enum, enum_map};
+use strum_macros::EnumIter;
+use strum::IntoEnumIterator;
+
+use super::helpers::Side;
 
 #[derive(Debug, Clone, Default)]
 /// Each cell stores the Top and Left edge for its own grid\
@@ -47,7 +52,7 @@ impl LeftEdge {
 }
 
 #[derive(Debug, Clone)]
-pub struct Port(Option<Arc<AtomicU8>>);
+pub struct Port(pub Option<Arc<AtomicU8>>);
 
 impl PortGrid {
     /// Size refers to the size of the corrisponding component grid.\
@@ -98,16 +103,46 @@ impl PortGrid {
         let mut item = column.get_mut(position[1] + 1).ok_or(PortGridError::PositionOutOfBounds)?;
         Ok(item)
     }
+
+    /// Clones target inserting it into the correct edge
+    pub fn modify_bulk(&mut self, target: Option<Port>, list: Vec<&([usize; 2], Side)>, offset: &[usize; 2]) {
+        for (pos, side) in list {
+            dbg!(pos);
+            dbg!([pos[0]+offset[0], pos[1]+offset[1]]);
+            dbg!(side);
+            self.insert(&[pos[0]+offset[0], pos[1]+offset[1]], side.clone(), target.clone()).expect("Attempted to execute modify outside of grid");
+        }
+    }
+
+    pub fn get_sides(&self, position: &[usize; 2]) -> EnumMap<Side, bool> {
+        enum_map! {
+            Side::Up => self.get_side(position, Side::Up).unwrap_or(false),
+            Side::Down => self.get_side(position, Side::Down).unwrap_or(false),
+            Side::Left => self.get_side(position, Side::Left).unwrap_or(false),
+            Side::Right => self.get_side(position, Side::Right).unwrap_or(false),
+        }
+    }
+
+    /// Get side based of component grid position\
+    /// Ignores ports from its own position
+    pub fn get_side(&self, position: &[usize; 2], side: Side) -> Result<bool, PortGridError> {
+        match side {
+            Side::Up => Ok(self.get(position)?.top.origin_up.is_some()),
+            Side::Down => Ok(self.get(&[position[0],position[1].checked_sub(1).ok_or(PortGridError::PositionOutOfBounds)?])?.top.origin_down.is_some()),
+            Side::Left => Ok(self.get(position)?.left.origin_left.is_some()),
+            Side::Right => Ok(self.get(&[position[0]+1,position[1]])?.left.origin_right.is_some()),
+        }
+    }
+
+    /// Get a cell from the [PortGrid] accounting for any offsets as a result of the size+1 stuff
+    pub fn get(&self, position: &[usize; 2]) -> Result<&PortGridData, PortGridError> {
+        let column = self.0.get(position[0]).ok_or(PortGridError::PositionOutOfBounds)?;
+        let item = column.get(position[1] + 1).ok_or(PortGridError::PositionOutOfBounds)?;
+        Ok(item)
+    }
 }
 
-#[derive(Clone, Copy, Debug)]
-pub enum Side {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
+#[derive(Debug)]
 pub enum PortGridError {
     PositionOutOfBounds,
     IncorrectOrigin,

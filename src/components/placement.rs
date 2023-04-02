@@ -10,6 +10,8 @@ use crate::level_select::CurrentLevel;
 use crate::sim::components::*;
 use crate::sim::level::LevelData;
 use crate::sim::model::{Component as SimComponent, SimulationData, DummyComponent as DummySimComponent, CellState};
+use crate::sim::port_grid::PortGrid;
+use crate::sim::helpers::Side;
 pub struct ComponentSetupPlugin;
 
 impl Plugin for ComponentSetupPlugin {
@@ -43,12 +45,12 @@ fn setup_grid(
     let level_data: LevelData = serde_json::from_str(&s).expect("Could not parse level");
     let size = GridSize([level_data.grid_width, level_data.grid_height]);
     //occupation_grid.0 = OccupationGrid::empty_grid_from_size(&size);
-    sim_data.wire_graph = Vec::new();
     sim_data.grid.grid = vec![vec![CellState::Empty; size.0[1]]; size.0[0]];
+    sim_data.port_grid = PortGrid::new_with_size(level_data.grid_height, level_data.grid_width);
     grid_size.0 = [level_data.grid_width, level_data.grid_height];
 }
 
-fn clear_grid(mut simulation_grid: ResMut<SimulationData>, grid_size: Res<GridSize>) {
+fn clear_grid(mut simulation_grid: ResMut<SimulationData>) {
     for i in simulation_grid.grid.grid.iter_mut() {
         for mut _j in i.iter_mut() {
             _j = &mut CellState::Empty;
@@ -126,7 +128,16 @@ impl DummySimComponent {
         }
     }
 
-    pub fn ports(&self) -> 
+    pub fn ports(&self) -> Vec<&([usize; 2], Side)> {
+        match self {
+            DummySimComponent::WirePiece => crate::sim::components::Wire::CONST_PORTS.values(),
+            DummySimComponent::GateNot => crate::sim::components::GateNot::CONST_PORTS.values(),
+            DummySimComponent::GateAnd => crate::sim::components::GateAnd::CONST_PORTS.values(),
+            DummySimComponent::SignalCopy => crate::sim::components::SignalCopy::CONST_PORTS.values(),
+            DummySimComponent::SignalPassthrough => crate::sim::components::SignalPassthrough::CONST_PORTS.values(),
+            DummySimComponent::Counter => crate::sim::components::Counter::CONST_PORTS.values(),
+        }.collect()
+    }
 }
 
 #[derive(Debug, Component)]
@@ -152,9 +163,9 @@ fn placement_event(
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0.as_vec2() * 0.5);
     for event in place_ev.iter() {
-        if sim_data.grid.add_default_component(event.1, &event.0).is_ok() {
-            let grid_size = event.1.get_grid_size();
-            let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
+        let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
+        if sim_data.add_default_component(event.1, event.0, &mut sprite, &atlas).is_ok() {
+            //let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
             sprite.anchor = Anchor::BottomLeft;
             commands.spawn((SpriteSheetBundle {
                 sprite: sprite,

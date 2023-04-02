@@ -14,8 +14,7 @@ use bevy::prelude::*;
 use enum_dispatch::enum_dispatch;
 use strum_macros::EnumIter;
 use crate::sim::components::*;
-use enum_map::EnumMap;
-use super::port_grid::{Side, PortGrid};
+use super::{port_grid::{PortGrid, Port}, helpers::Side};
 
 /// The type  that wires should store using
 type WireDataType = u16;
@@ -29,9 +28,18 @@ pub struct SimulationData {
 }
 
 impl SimulationData {
-    pub fn add_default_component(&mut self, component: DummyComponent, position: [usize;2]) -> Result<(), PlaceError> {
-        let component = self.grid.add_default_component(component, &position)?;
-        self.port_grid.add_ports()
+    pub fn add_default_component(&mut self, dummy_component: DummyComponent, position: [usize;2], sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas) -> Result<(), PortGridError> {
+        let mut component = dummy_component.build_default();
+        component.on_place(&position, self, sprite, atlas);
+        self.grid.add_default_component(component, &position)?;
+        self.port_grid.modify_bulk(Some(Port(None)), dummy_component.ports(), &position);
+        Ok(())
+    }
+
+    pub fn remove_component(&mut self, component: DummyComponent, position: [usize; 2]) -> Result<(), PortGridError> {
+        self.grid.remove_component(component, &position);
+        self.port_grid.modify_bulk(None, component.ports(), &position);
+        Ok(())
     }
 }
 
@@ -41,7 +49,7 @@ pub struct ComponentGrid {
     pub grid: Vec<Vec<CellState>>,
 }
 
-pub enum PlaceError {
+pub enum PortGridError {
     CantFit
 }
 
@@ -70,26 +78,35 @@ impl ComponentGrid {
         return true;
     }
     /// Check if component can fit and place if possible
-    pub fn add_default_component(&mut self, component: DummyComponent, position: &[usize; 2]) -> Result<(), PlaceError> {
-        if !self.can_fit(position, &component.get_grid_size()) {return Err(PlaceError::CantFit)}
+    pub fn add_default_component(&mut self, component: Component, position: &[usize; 2]) -> Result<(), PortGridError> {
+        if !self.can_fit(position, &component.dummy().get_grid_size()) {return Err(PortGridError::CantFit)}
 
         self.place_component(component, position);
         Ok(())
     }
 
     /// Place a component in the grid, does not perform any overlap checks, these are done elsewhere. See [`Self::add_default_component()`]
-    fn place_component(&mut self, component: DummyComponent, position: &[usize; 2]) {
-        let component_size = component.get_grid_size();
+    fn place_component(&mut self, component: Component, position: &[usize; 2]) {
+        let component_size = component.dummy().get_grid_size();
         let mut first = true; // Used to determin if to insert a real component or a grid reference
         for i in position[0]..(position[0] + component_size[0]) {
             for j in position[1]..(position[1] + component_size[1]) {
                 match first {
                     true => {
                         first = false;
-                        self.grid[i][j] = CellState::Real(component.build_default())
+                        self.grid[i][j] = CellState::Real(component.clone());
                     },
                     false => {self.grid[i][j] = CellState::Reference(position.clone())}
                 }
+            }
+        }
+    }
+
+    fn remove_component(&mut self, component: DummyComponent, position: &[usize; 2]) {
+        let component_size = component.get_grid_size();
+        for i in position[0]..(position[0] + component_size[0]) {
+            for j in position[1]..(position[1] + component_size[1]) {
+                self.grid[i][j] = CellState::Empty;
             }
         }
     }
@@ -153,13 +170,13 @@ pub struct AudioEvent {
 /// adsasd
 #[enum_dispatch(Component)]
 pub trait GridComponent {
-    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData);
+    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas);
     /// When assembling the simulation + setting up, what should it reset / alter\
     /// E.g. Any wire must flood fill to find its neightbours for the wire graph
-    fn build(&mut self, own_pos: &(usize, usize), sim_data: &mut SimulationData);
+    fn build(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData);
 
     /// Should run the update on the component using itself
-    fn tick(&mut self, own_pos: &(usize, usize), sim_data: &mut SimulationData) -> (Vec<VisualEvent>, Vec<AudioEvent>);
+    fn tick(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) -> (Vec<VisualEvent>, Vec<AudioEvent>);
 
     fn ports(&self) -> Vec<&([usize; 2], Side)>;
 
