@@ -2,10 +2,9 @@ use std::fs::File;
 use std::io::Read;
 
 use bevy::prelude::*;
-use bevy::sprite::Anchor;
 use iyes_loopless::prelude::{ConditionSet, AppLooplessStateExt};
 use crate::MainTextureAtlas;
-use crate::game::{PlacementGridEntity, GRID_CELL_SIZE, GameRoot, GridSize};
+use crate::game::{PlacementGridEntity, GridSize};
 use crate::level_select::CurrentLevel;
 use crate::sim::components::*;
 use crate::sim::level::LevelData;
@@ -155,6 +154,7 @@ fn placement_event(
     mut place_ev: EventReader<PlaceComponentEvent>,
     mut sim_data: ResMut<SimulationData>,
     placement_grid: Query<(&Sprite, &Transform, &Size), With<PlacementGridEntity>>,
+    mut component_sprites: Query<&mut TextureAtlasSprite, With<GridLink>>,
     atlases: Res<Assets<TextureAtlas>>,
     main_atlas: Res<MainTextureAtlas>,
 ) {
@@ -163,32 +163,8 @@ fn placement_event(
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0.as_vec2() * 0.5);
     for event in place_ev.iter() {
-        let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
-        if sim_data.add_default_component(event.1, event.0, &mut sprite, &atlas).is_ok() {
-            //let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
-            sprite.anchor = Anchor::BottomLeft;
-            commands.spawn((SpriteSheetBundle {
-                sprite: sprite,
-                transform: Transform {
-                    translation: calc_grid_pos(&grid_bottom_left, &UVec2::from_array([event.0[0] as u32, event.0[1] as u32])).extend(11.0),
-                    //scale: Vec3::splat(2.0),
-                    ..Default::default()
-                },
-                texture_atlas: main_atlas.handle.clone(),
-                ..Default::default()
-            },
-                GameRoot,
-                GridLink(event.0),
-                Name::new(format!("Component - {}", event.1.get_sprite_name())),
-            ));
-        }
-        
+        dbg!(event.0);
+        sim_data.place_new_component(&mut commands, &grid_bottom_left, atlas, &main_atlas, &mut component_sprites, event.1, &event.0);
         //event.1.build_default().place()
     }
-}
-
-fn calc_grid_pos(grid_bottom_left: &Vec2, pos_in_grid: &UVec2) -> Vec2 {
-    let pos = *grid_bottom_left + (pos_in_grid.as_vec2() * GRID_CELL_SIZE as f32);
-    dbg!(pos);
-    pos
 }

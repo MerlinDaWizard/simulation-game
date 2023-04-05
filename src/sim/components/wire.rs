@@ -19,14 +19,14 @@ impl GridComponent for Wire {
         todo!()
     }
 
-    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas) {
+    fn on_place(&self, own_pos: &[usize; 2], sim_data: &SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas) {
         let mut sides = sim_data.port_grid.get_sides(own_pos);
         for (side, state) in sides.iter_mut() {
             let a = helpers::combine_offset(own_pos, &side.as_offset());
             if a.is_none() {continue;}
             debug!("{:?}", &a);
-            debug!("{:?}",check_for_wire(&a.unwrap(), &mut sim_data.grid) );
-            if check_for_wire(&a.unwrap(), &mut sim_data.grid) == true {
+            debug!("{:?}",check_for_wire(&a.unwrap(), &sim_data.grid) );
+            if check_for_wire(&a.unwrap(), &sim_data.grid) == true {
                 *state = true;
             }
         }
@@ -58,9 +58,9 @@ enum ConnectionStatus {
 }
 
 /// I just did this so I could use ?, its kinda weird
-fn check_for_wire_option(pos: &[usize; 2], grid: &mut ComponentGrid) -> Option<()> {
+fn check_for_wire_option(pos: &[usize; 2], grid: &ComponentGrid) -> Option<()> {
     let cell = grid.grid.get(pos[0])?.get(pos[1])?;
-    if let CellState::Real(a) = cell {
+    if let CellState::Real(_, a) = cell {
         if let Component::WirePiece(_) = a {
             return Some(())
         }
@@ -68,7 +68,7 @@ fn check_for_wire_option(pos: &[usize; 2], grid: &mut ComponentGrid) -> Option<(
     None
 }
 
-fn check_for_wire(pos: &[usize; 2], grid: &mut ComponentGrid) -> bool {
+fn check_for_wire(pos: &[usize; 2], grid: &ComponentGrid) -> bool {
     return check_for_wire_option(pos, grid).is_some()
 }
 

@@ -10,14 +10,13 @@ use std::{cell::{RefCell, Cell}, sync::{atomic::{AtomicUsize, AtomicU8}, Arc}};
 
 // Improvement: We add a new 'reference' component which just redirects any calls onto the actual cell the component is in.
 // This means that instead of going through every component for ports we just go through the ones which are adjacent
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::Anchor};
 use enum_dispatch::enum_dispatch;
 use strum_macros::EnumIter;
-use crate::sim::components::*;
-use super::{port_grid::{PortGrid, Port}, helpers::Side};
+use crate::{sim::components::*, game::GameRoot, components::placement::GridLink, MainTextureAtlas};
+use super::{port_grid::{PortGrid, Port}, helpers::{Side, calc_grid_pos, self}};
 
 /// The type  that wires should store using
-type WireDataType = u16;
 
 #[derive(Resource, Debug, Default, Reflect)]
 #[reflect(Resource)]
@@ -28,11 +27,43 @@ pub struct SimulationData {
 }
 
 impl SimulationData {
-    pub fn add_default_component(&mut self, dummy_component: DummyComponent, position: [usize;2], sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas) -> Result<(), PortGridError> {
-        let mut component = dummy_component.build_default();
-        component.on_place(&position, self, sprite, atlas);
-        self.grid.add_default_component(component, &position)?;
-        self.port_grid.modify_bulk(Some(Port(None)), dummy_component.ports(), &position);
+    pub fn place_new_component(&mut self,
+        commands: &mut Commands,
+        grid_bottom_left: &Vec2,
+        atlas: &TextureAtlas,
+        main_atlas: &Res<MainTextureAtlas>,
+        component_sprites: &mut Query<&mut TextureAtlasSprite, With<GridLink>>,
+        dummy_component: DummyComponent,
+        position: &[usize; 2]
+    ) -> Result<(), PortGridError> {
+        if self.grid.can_fit(position, &dummy_component.get_grid_size()) {
+            let mut sprite = TextureAtlasSprite::new(dummy_component.get_sprite_index(atlas));
+            sprite.anchor = Anchor::BottomLeft;
+            let component = dummy_component.build_default();
+            component.on_place(&position, self, &mut sprite, atlas);
+            let entity_id = commands.spawn((SpriteSheetBundle {
+                sprite: sprite,
+                transform: Transform {
+                    translation: calc_grid_pos(&grid_bottom_left, &UVec2::new(position[0] as u32, position[1] as u32)).extend(11.0),
+                    ..Default::default()
+                },
+                texture_atlas: main_atlas.handle.clone(),
+                ..Default::default()
+            },
+                GameRoot,
+                GridLink(position.clone()),
+                Name::new(format!("Component - {}", component.dummy().get_sprite_name())),
+            )).id();
+            self.grid.place_component(entity_id, component, position);
+            self.port_grid.modify_bulk(Some(Port(None)), dummy_component.ports(), &position);
+            let adjacent = helpers::get_adjacent(position, &dummy_component.get_grid_size());
+
+            for component in adjacent {
+                self.update_component(&component, component_sprites, atlas);
+            }
+
+        } else {return Err(PortGridError::CantFit);}
+
         Ok(())
     }
 
@@ -40,6 +71,18 @@ impl SimulationData {
         self.grid.remove_component(component, &position);
         self.port_grid.modify_bulk(None, component.ports(), &position);
         Ok(())
+    }
+
+    pub fn update_component(&mut self, position: &[usize; 2], component_sprites: &mut Query<&mut TextureAtlasSprite, With<GridLink>>, atlas: &TextureAtlas) -> Option<()>{
+        let cell = self.grid.grid.get(position[0])?.get(position[1])?;
+        //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, CellState::Empty);
+
+        if let CellState::Real(id, comp) = cell {
+            let mut sprite = component_sprites.get_mut(id.clone()).unwrap();
+            comp.on_place(position, self, sprite.as_mut(), atlas);
+            //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, cell);
+        }
+        Some(())
     }
 }
 
@@ -69,7 +112,7 @@ impl ComponentGrid {
                         match c {
                             CellState::Empty => {},
                             CellState::Reference(_) => {return false},
-                            CellState::Real(_) => {return false},
+                            CellState::Real(_, _) => {return false},
                         }
                     }
                 }
@@ -77,16 +120,9 @@ impl ComponentGrid {
         }
         return true;
     }
-    /// Check if component can fit and place if possible
-    pub fn add_default_component(&mut self, component: Component, position: &[usize; 2]) -> Result<(), PortGridError> {
-        if !self.can_fit(position, &component.dummy().get_grid_size()) {return Err(PortGridError::CantFit)}
-
-        self.place_component(component, position);
-        Ok(())
-    }
 
     /// Place a component in the grid, does not perform any overlap checks, these are done elsewhere. See [`Self::add_default_component()`]
-    fn place_component(&mut self, component: Component, position: &[usize; 2]) {
+    fn place_component(&mut self, entity_id: Entity, component: Component, position: &[usize; 2]) {
         let component_size = component.dummy().get_grid_size();
         let mut first = true; // Used to determin if to insert a real component or a grid reference
         for i in position[0]..(position[0] + component_size[0]) {
@@ -94,7 +130,7 @@ impl ComponentGrid {
                 match first {
                     true => {
                         first = false;
-                        self.grid[i][j] = CellState::Real(component.clone());
+                        self.grid[i][j] = CellState::Real(entity_id.clone(), component.clone());
                     },
                     false => {self.grid[i][j] = CellState::Reference(position.clone())}
                 }
@@ -129,7 +165,7 @@ pub enum CellState {
     /// Stores the grid co-ordinates for master component
     Reference([usize; 2]),
     /// Contains a master component
-    Real(Component)
+    Real(Entity, Component)
 }
 /// Each possible component for a given cell\
 /// If the cell is empty it should be expressed in the parent Option<> instead of here.
@@ -167,10 +203,11 @@ pub struct AudioEvent {
 
 }
 
-/// adsasd
+/// The trait that every Component I use should implement to be usable in the simulation
 #[enum_dispatch(Component)]
 pub trait GridComponent {
-    fn on_place(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas);
+    /// Whenever the sprite of the component should be updated
+    fn on_place(&self, own_pos: &[usize; 2], sim_data: &SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas);
     /// When assembling the simulation + setting up, what should it reset / alter\
     /// E.g. Any wire must flood fill to find its neightbours for the wire graph
     fn build(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData);
@@ -178,6 +215,7 @@ pub trait GridComponent {
     /// Should run the update on the component using itself
     fn tick(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) -> (Vec<VisualEvent>, Vec<AudioEvent>);
 
+    /// Fetch a Vec of ports for use in the port grid
     fn ports(&self) -> Vec<&([usize; 2], Side)>;
 
 }
