@@ -20,8 +20,6 @@ use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle}
 use iyes_loopless::prelude::*;
 use bevy::window::{close_on_esc, PresentMode};
 use bevy::diagnostic::{LogDiagnosticsPlugin};
-use std::fs::File;
-use std::io::Read;
 use std::time::Duration;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy_heterogeneous_texture_atlas_loader::*;
@@ -142,7 +140,7 @@ fn back_to_menu_on_esc(mut commands: Commands, kbd: Res<Input<KeyCode>>) {
 /// We can just access the `CurrentState`, and even use change detection!
 fn debug_current_state(state: Res<CurrentState<GameState>>) {
     if state.is_changed() {
-        println!("Detected state change to {state:?}!");
+        info!("Detected state change to {state:?}!");
     }
 }
 

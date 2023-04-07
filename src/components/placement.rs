@@ -163,8 +163,10 @@ fn placement_event(
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0.as_vec2() * 0.5);
     for event in place_ev.iter() {
-        dbg!(event.0);
-        sim_data.place_new_component(&mut commands, &grid_bottom_left, atlas, &main_atlas, &mut component_sprites, event.1, &event.0);
+        match sim_data.place_new_component(&mut commands, &grid_bottom_left, atlas, &main_atlas, &mut component_sprites, event.1, &event.0) {
+            Ok(_) => info!("Placed new component. {:?} at {:?}", event.1, event.0),
+            Err(_) => todo!(),
+        }
         //event.1.build_default().place()
     }
 }

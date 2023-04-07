@@ -11,11 +11,11 @@ pub struct Wire {
 
 impl GridComponent for Wire {
     // Wires do not need to tick as all communication is done intrinsically using the wire graph not graph
-    fn tick(&mut self, own_pos: &[usize; 2], grid: &mut SimulationData) -> (Vec<VisualEvent>,Vec<AudioEvent>) {
+    fn tick(&mut self, _own_pos: &[usize; 2], _grid: &mut SimulationData) -> (Vec<VisualEvent>,Vec<AudioEvent>) {
         (Vec::new(),Vec::new())
     }
 
-    fn build(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) {
+    fn build(&mut self, _own_pos: &[usize; 2], _sim_data: &mut SimulationData) {
         todo!()
     }
 
@@ -26,13 +26,13 @@ impl GridComponent for Wire {
             if a.is_none() {continue;}
             debug!("{:?}", &a);
             debug!("{:?}",check_for_wire(&a.unwrap(), &sim_data.grid) );
-            if check_for_wire(&a.unwrap(), &sim_data.grid) == true {
+            if check_for_wire(&a.unwrap(), &sim_data.grid) {
                 *state = true;
             }
         }
         let sprite_name = sides_to_sprite_name(&sides);
-        error!("{:?}",&sides);
-        error!("{}",&sprite_name);
+        //debug!("{:?}",&sides);
+        //debug!("{}",&sprite_name);
         let idx = atlas.get_texture_index(&Handle::weak(sprite_name.into())).expect("Could not find correct wire varient");
         sprite.index = idx;
     }
@@ -69,7 +69,7 @@ fn check_for_wire_option(pos: &[usize; 2], grid: &ComponentGrid) -> Option<()> {
 }
 
 fn check_for_wire(pos: &[usize; 2], grid: &ComponentGrid) -> bool {
-    return check_for_wire_option(pos, grid).is_some()
+    check_for_wire_option(pos, grid).is_some()
 }
 
 fn sides_to_sprite_name(map: &EnumMap<Side, bool>) -> String {

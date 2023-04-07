@@ -1,7 +1,7 @@
 use std::sync::{Arc, atomic::AtomicU8};
-use enum_map::{EnumMap, Enum, enum_map};
-use strum_macros::EnumIter;
-use strum::IntoEnumIterator;
+use enum_map::{EnumMap, enum_map};
+
+
 
 use super::helpers::Side;
 
@@ -100,17 +100,17 @@ impl PortGrid {
     /// Get a cell from the [PortGrid] accounting for any offsets as a result of the size+1 stuff
     fn get_mut(&mut self, position: &[usize; 2]) -> Result<&mut PortGridData, PortGridError> {
         let column = self.0.get_mut(position[0]).ok_or(PortGridError::PositionOutOfBounds)?;
-        let mut item = column.get_mut(position[1] + 1).ok_or(PortGridError::PositionOutOfBounds)?;
+        let item = column.get_mut(position[1] + 1).ok_or(PortGridError::PositionOutOfBounds)?;
         Ok(item)
     }
 
     /// Clones target inserting it into the correct edge
     pub fn modify_bulk(&mut self, target: Option<Port>, list: Vec<&([usize; 2], Side)>, offset: &[usize; 2]) {
         for (pos, side) in list {
-            dbg!(pos);
-            dbg!([pos[0]+offset[0], pos[1]+offset[1]]);
-            dbg!(side);
-            self.insert(&[pos[0]+offset[0], pos[1]+offset[1]], side.clone(), target.clone()).expect("Attempted to execute modify outside of grid");
+            //dbg!(pos);
+            //dbg!([pos[0]+offset[0], pos[1]+offset[1]]);
+            //dbg!(side);
+            self.insert(&[pos[0]+offset[0], pos[1]+offset[1]], *side, target.clone()).expect("Attempted to execute modify outside of grid");
         }
     }
 

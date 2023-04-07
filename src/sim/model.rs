@@ -1,4 +1,4 @@
-use std::{cell::{RefCell, Cell}, sync::{atomic::{AtomicUsize, AtomicU8}, Arc}};
+
 // Theres afew ways to store the ports, One way would be to have a 2d grid with each cell containing the top and left edges, these would be a  [Option<Port>; 2]
 // Array of 2 due to having components feed directly into each other,
 // this would make it fast and easy to build simulation however slightly annoying due to all the references and perhaps Mutex, Rwlock needed
@@ -40,22 +40,22 @@ impl SimulationData {
             let mut sprite = TextureAtlasSprite::new(dummy_component.get_sprite_index(atlas));
             sprite.anchor = Anchor::BottomLeft;
             let component = dummy_component.build_default();
-            component.on_place(&position, self, &mut sprite, atlas);
+            component.on_place(position, self, &mut sprite, atlas);
             let entity_id = commands.spawn((SpriteSheetBundle {
-                sprite: sprite,
+                sprite,
                 transform: Transform {
-                    translation: calc_grid_pos(&grid_bottom_left, &UVec2::new(position[0] as u32, position[1] as u32)).extend(11.0),
+                    translation: calc_grid_pos(grid_bottom_left, &UVec2::new(position[0] as u32, position[1] as u32)).extend(11.0),
                     ..Default::default()
                 },
                 texture_atlas: main_atlas.handle.clone(),
                 ..Default::default()
             },
                 GameRoot,
-                GridLink(position.clone()),
+                GridLink(*position),
                 Name::new(format!("Component - {}", component.dummy().get_sprite_name())),
             )).id();
             self.grid.place_component(entity_id, component, position);
-            self.port_grid.modify_bulk(Some(Port(None)), dummy_component.ports(), &position);
+            self.port_grid.modify_bulk(Some(Port(None)), dummy_component.ports(), position);
             let adjacent = helpers::get_adjacent(position, &dummy_component.get_grid_size());
 
             for component in adjacent {
@@ -78,7 +78,7 @@ impl SimulationData {
         //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, CellState::Empty);
 
         if let CellState::Real(id, comp) = cell {
-            let mut sprite = component_sprites.get_mut(id.clone()).unwrap();
+            let mut sprite = component_sprites.get_mut(*id).unwrap();
             comp.on_place(position, self, sprite.as_mut(), atlas);
             //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, cell);
         }
@@ -118,7 +118,7 @@ impl ComponentGrid {
                 }
             }
         }
-        return true;
+        true
     }
 
     /// Place a component in the grid, does not perform any overlap checks, these are done elsewhere. See [`Self::add_default_component()`]
@@ -130,9 +130,9 @@ impl ComponentGrid {
                 match first {
                     true => {
                         first = false;
-                        self.grid[i][j] = CellState::Real(entity_id.clone(), component.clone());
+                        self.grid[i][j] = CellState::Real(entity_id, component.clone());
                     },
-                    false => {self.grid[i][j] = CellState::Reference(position.clone())}
+                    false => {self.grid[i][j] = CellState::Reference(*position)}
                 }
             }
         }

@@ -13,17 +13,17 @@ pub struct SignalCopy {
 }
 
 impl GridComponent for SignalCopy {
-    fn tick(&mut self, own_pos: &[usize; 2], grid: &mut SimulationData) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _own_pos: &[usize; 2], _grid: &mut SimulationData) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         // output = input
         todo!()
     }
 
-    fn build(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData) {
+    fn build(&mut self, _own_pos: &[usize; 2], _sim_data: &mut SimulationData) {
         todo!()
     }
 
-    fn on_place(&self, own_pos: &[usize; 2], sim_data: &SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas) {
-        ()
+    fn on_place(&self, _own_pos: &[usize; 2], _sim_data: &SimulationData, _sprite: &mut TextureAtlasSprite, _atlas: &TextureAtlas) {
+        
     }
     
     fn ports(&self) -> Vec<&([usize; 2], Side)> {
