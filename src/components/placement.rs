@@ -2,14 +2,15 @@ use std::fs::File;
 use std::io::Read;
 
 use bevy::prelude::*;
-use bevy::sprite::Anchor;
 use iyes_loopless::prelude::{ConditionSet, AppLooplessStateExt};
 use crate::MainTextureAtlas;
-use crate::game::{PlacementGridEntity, GRID_CELL_SIZE, GameRoot, GridSize};
+use crate::game::{PlacementGridEntity, GridSize};
 use crate::level_select::CurrentLevel;
 use crate::sim::components::*;
 use crate::sim::level::LevelData;
 use crate::sim::model::{Component as SimComponent, SimulationData, DummyComponent as DummySimComponent, CellState};
+use crate::sim::port_grid::PortGrid;
+use crate::sim::helpers::Side;
 pub struct ComponentSetupPlugin;
 
 impl Plugin for ComponentSetupPlugin {
@@ -43,12 +44,12 @@ fn setup_grid(
     let level_data: LevelData = serde_json::from_str(&s).expect("Could not parse level");
     let size = GridSize([level_data.grid_width, level_data.grid_height]);
     //occupation_grid.0 = OccupationGrid::empty_grid_from_size(&size);
-    sim_data.wire_graph = Vec::new();
     sim_data.grid.grid = vec![vec![CellState::Empty; size.0[1]]; size.0[0]];
+    sim_data.port_grid = PortGrid::new_with_size(level_data.grid_height, level_data.grid_width);
     grid_size.0 = [level_data.grid_width, level_data.grid_height];
 }
 
-fn clear_grid(mut simulation_grid: ResMut<SimulationData>, grid_size: Res<GridSize>) {
+fn clear_grid(mut simulation_grid: ResMut<SimulationData>) {
     for i in simulation_grid.grid.grid.iter_mut() {
         for mut _j in i.iter_mut() {
             _j = &mut CellState::Empty;
@@ -99,7 +100,7 @@ impl DummySimComponent {
             Self::GateAnd => "gate_and",
             Self::SignalCopy => "signal_copy",
             Self::SignalPassthrough => "signal_passthrough",
-            Self::Counter => "signal_passthrough", // TODO: Make sprite for counter
+            Self::Counter => "signal_copy", // TODO: Make sprite for counter
         };
         s
     }
@@ -125,6 +126,17 @@ impl DummySimComponent {
             Self::Counter => [1,2],
         }
     }
+
+    pub fn ports(&self) -> Vec<&([usize; 2], Side)> {
+        match self {
+            DummySimComponent::WirePiece => crate::sim::components::Wire::CONST_PORTS.values(),
+            DummySimComponent::GateNot => crate::sim::components::GateNot::CONST_PORTS.values(),
+            DummySimComponent::GateAnd => crate::sim::components::GateAnd::CONST_PORTS.values(),
+            DummySimComponent::SignalCopy => crate::sim::components::SignalCopy::CONST_PORTS.values(),
+            DummySimComponent::SignalPassthrough => crate::sim::components::SignalPassthrough::CONST_PORTS.values(),
+            DummySimComponent::Counter => crate::sim::components::Counter::CONST_PORTS.values(),
+        }.collect()
+    }
 }
 
 #[derive(Debug, Component)]
@@ -142,6 +154,7 @@ fn placement_event(
     mut place_ev: EventReader<PlaceComponentEvent>,
     mut sim_data: ResMut<SimulationData>,
     placement_grid: Query<(&Sprite, &Transform, &Size), With<PlacementGridEntity>>,
+    mut component_sprites: Query<&mut TextureAtlasSprite, With<GridLink>>,
     atlases: Res<Assets<TextureAtlas>>,
     main_atlas: Res<MainTextureAtlas>,
 ) {
@@ -150,31 +163,10 @@ fn placement_event(
     let size = grid.2;
     let grid_bottom_left = grid.1.translation.truncate() - (size.0.as_vec2() * 0.5);
     for event in place_ev.iter() {
-        if sim_data.grid.add_default_component(&event.1, &event.0).is_ok() {
-            let grid_size = event.1.get_grid_size();
-            let mut sprite = TextureAtlasSprite::new(event.1.get_sprite_index(atlas));
-            sprite.anchor = Anchor::BottomLeft;
-            commands.spawn((SpriteSheetBundle {
-                sprite: sprite,
-                transform: Transform {
-                    translation: calc_grid_pos(&grid_bottom_left, &UVec2::from_array([event.0[0] as u32, event.0[1] as u32])).extend(11.0),
-                    //scale: Vec3::splat(2.0),
-                    ..Default::default()
-                },
-                texture_atlas: main_atlas.handle.clone(),
-                ..Default::default()
-            },
-                GameRoot,
-                GridLink(event.0),
-                Name::new(format!("Component - {}", event.1.get_sprite_name())),
-            ));
+        match sim_data.place_new_component(&mut commands, &grid_bottom_left, atlas, &main_atlas, &mut component_sprites, event.1, &event.0) {
+            Ok(_) => info!("Placed new component. {:?} at {:?}", event.1, event.0),
+            Err(_) => todo!(),
         }
         //event.1.build_default().place()
     }
-}
-
-fn calc_grid_pos(grid_bottom_left: &Vec2, pos_in_grid: &UVec2) -> Vec2 {
-    let pos = *grid_bottom_left + (pos_in_grid.as_vec2() * GRID_CELL_SIZE as f32);
-    dbg!(pos);
-    pos
 }

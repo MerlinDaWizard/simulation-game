@@ -26,7 +26,7 @@
             w: 33,
             h: 65,
         ), (
-            name: "wire_none",
+            name: "wire_",
             x: 1,
             y: 102,
             w: 33,

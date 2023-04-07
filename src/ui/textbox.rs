@@ -125,7 +125,7 @@ impl CloseBox {
                         continue;
                     }
 
-                    println!("Box {} pressed", text.sections[0].value);
+                    debug!("Box {} pressed", text.sections[0].value);
                 }
             }
             //commands.entity(event.0)

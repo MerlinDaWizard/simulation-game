@@ -19,7 +19,7 @@ pub fn egui_startup(mut egui_ctx: ResMut<EguiContext>, user_config: Res<UserSett
     let mut s = String::new();
     File::open(&user_config.theme).unwrap().read_to_string(&mut s).unwrap();
     let colours: ColourScheme = serde_json::from_str(&s).expect("Could not parse user-config.toml");
-    dbg!(&colours);
+    //dbg!(&colours);
     configure_egui(egui_ctx.ctx_mut(), colours.clone(), bevy_clear_color);
 }
 
