@@ -165,7 +165,7 @@ fn placement_event(
     for event in place_ev.iter() {
         match sim_data.place_new_component(&mut commands, &grid_bottom_left, atlas, &main_atlas, &mut component_sprites, event.1, &event.0) {
             Ok(_) => info!("Placed new component. {:?} at {:?}", event.1, event.0),
-            Err(_) => todo!(),
+            Err(_) => info!("Attempted to place component in blocked position")
         }
         //event.1.build_default().place()
     }
