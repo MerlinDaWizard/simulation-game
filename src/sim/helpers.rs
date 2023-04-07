@@ -30,16 +30,6 @@ impl Side {
             Side::Right => "right",
         }
     }
-
-    /// Rotates the side clockwise 90 deg.
-    pub fn rotate(self) -> Self {
-        match self {
-            Side::Up => Side::Right,
-            Side::Down => Side::Left,
-            Side::Left => Side::Up,
-            Side::Right => Side::Down,
-        }
-    }
 }
 
 pub fn combine_offset(pos: &[usize; 2], offset: &[isize; 2]) -> Option<[usize; 2]> {
