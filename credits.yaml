@@ -17,18 +17,13 @@ pixely_font:
   link: https://www.fontspace.com/pixeboy-font-f43730
   credits: AbasCreativeID
 
-background_img2:
-  name: Asia Neon City Lights Reflections
-  desc: Streets and signs at night Shenzhen China
-  path: background2.jpg
-  link: https://www.flickr.com/photos/dcmaster/8444029086
-  credits: Chris
-
-background_img1:
-  name: Shenzhen 14
-  path: background1.jpg
-  link: https://commons.wikimedia.org/wiki/File:Shenzhen_14.jpg
-  credits: jo.sau
+background_img:
+  name: Untitled
+  path: background.jpg
+  license: Open license for any use
+  note: Generated using stable diffusion
+  link: https://pixabay.com/illustrations/cyberpunk-city-sci-fi-buildings-7774172/
+  credits: ThankYouFantasyPictures
 
 default_colour_schemes:
   name: Catppuccin

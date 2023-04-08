@@ -3,6 +3,7 @@
 #![allow(clippy::too_many_lines)]
 
 mod main_menu;
+mod main_menu2;
 mod level_select;
 mod game;
 mod components;
@@ -20,6 +21,7 @@ use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle}
 use iyes_loopless::prelude::*;
 use bevy::window::{close_on_esc, PresentMode};
 use bevy::diagnostic::{LogDiagnosticsPlugin};
+use main_menu2::MainMenuPlugin;
 use std::time::Duration;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy_heterogeneous_texture_atlas_loader::*;
@@ -29,6 +31,7 @@ use bevy_heterogeneous_texture_atlas_loader::*;
 pub enum GameState {
     Loading,
     MainMenu,
+    MainMenu2,
     LevelsMenu,
     InGame,
 }
@@ -62,6 +65,7 @@ fn main() {
         //.add_plugin(bevy_framepace::FramepacePlugin)
         .add_plugin(WorldInspectorPlugin)
         .add_plugin(TextureAtlasLoaderPlugin)
+        .add_plugin(MainMenuPlugin)
         // add out states driver
         .add_loopless_state(GameState::Loading)
         .add_loading_state(

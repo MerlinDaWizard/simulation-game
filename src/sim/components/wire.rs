@@ -1,4 +1,4 @@
-use bevy::{reflect::{Reflect, FromReflect}, sprite::{TextureAtlasSprite, TextureAtlas}, prelude::{Handle, error, debug}};
+use bevy::{reflect::{Reflect, FromReflect}, sprite::{TextureAtlasSprite, TextureAtlas}, prelude::{Handle, debug}};
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
 use crate::sim::{model::{GridComponent, SimulationData, AudioEvent, VisualEvent, ComponentGrid, CellState, Component}, helpers::Side};
