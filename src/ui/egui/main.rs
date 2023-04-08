@@ -1,7 +1,6 @@
 use bevy::prelude::*;
-use bevy_egui::EguiContext;
+use bevy_egui::{EguiContext, EguiContexts};
 use egui::{Frame, Color32};
-use iyes_loopless::{prelude::ConditionSet, state::NextState};
 
 use crate::GameState;
 pub struct LeftPanelPlugin;
@@ -9,15 +8,8 @@ pub struct LeftPanelPlugin;
 impl Plugin for LeftPanelPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiState>()
-        .add_startup_system(configure_ui_state_system);
-
-
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(crate::GameState::InGame)
-                .with_system(left_panel)
-                .into()
-        );
+            .add_startup_system(configure_ui_state_system)
+            .add_system(left_panel.run_if(in_state(GameState::InGame)));
     }
 }
 
@@ -25,7 +17,7 @@ impl Plugin for LeftPanelPlugin {
 pub fn left_panel(
     mut commands: Commands,
     mut ui_state: ResMut<UiState>,
-    mut egui_ctx: ResMut<EguiContext>,
+    mut egui_ctx: EguiContexts,
     mut rendered_texture_id: Local<egui::TextureId>,
     mut is_initialized: Local<bool>,
     images: Local<Images>,
@@ -57,9 +49,8 @@ pub fn left_panel(
         .show(egui_ctx.ctx_mut(), |ui| {
             let exit_button = ui.add(
                 egui::widgets::ImageButton::new(*rendered_texture_id, [32.0,32.0])
-                
             );
-            if exit_button.clicked() {commands.insert_resource(NextState(GameState::MainMenu))}
+            if exit_button.clicked() {commands.insert_resource(NextState(Some(GameState::MainMenu)))}
         });
 
     egui::SidePanel::left("side_panel")

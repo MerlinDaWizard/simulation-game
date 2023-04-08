@@ -1,20 +1,16 @@
 use bevy::{prelude::*, ui::FocusPolicy};
 
-use bevy_mod_picking::prelude::{*};
-use iyes_loopless::prelude::*;
-use crate::{ui::shared::*, MainTextureAtlas};
+use bevy_mod_picking::{prelude::{*}, events::{Click, EventListener, PointerEvent}};
+use crate::{ui::shared::*, MainTextureAtlas, GameState};
 
 pub struct TextboxPlugin;
 
 impl Plugin for TextboxPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(crate::GameState::InGame)
-                .with_system(drag_v2)
-                .with_system(CloseBox::handle_events)
-                .into()
-        );
+        app.add_systems((
+            drag_v2,
+            CloseBox::handle_events,
+        ).distributive_run_if(in_state(GameState::InGame)));
     }
 }
 #[derive(Component)]
@@ -72,7 +68,8 @@ impl ProgramBox {
         let box_name = commands.spawn( (Text2dBundle {
             text: Text {
                 sections: vec![TextSection::new(name, TextStyle { font: ass.load("Pixelboy.ttf"), font_size: 24.0, color: Color::WHITE })],
-                alignment: TextAlignment { vertical: VerticalAlign::Top, horizontal: HorizontalAlign::Left },
+                alignment: TextAlignment::Left,
+                linebreak_behaviour: bevy::text::BreakLineOn::AnyCharacter
             },
             transform: Transform {
                 translation: Vec3 { x: -95.0, y: 12.0, z: 200.1 },
@@ -101,7 +98,7 @@ impl ProgramBox {
 struct CloseBox(Entity);
 
 impl ForwardedEvent<PointerClick> for CloseBox {
-    fn from_data(event_data: &PointerEventData<PointerClick>) -> CloseBox {
+    fn from_data(event_data: &EventData<PointerClick>) -> CloseBox {
         CloseBox(event_data.target())
     }
 }
@@ -118,7 +115,7 @@ impl CloseBox {
                 if !children.contains(&event.0) {
                     continue;
                 }
-                visibility.is_visible = false;
+                *visibility = Visibility::Hidden;
 
                 for (bot_root_list, text) in q_titles.iter() {
                     if bot_root_list.get() != box_root {

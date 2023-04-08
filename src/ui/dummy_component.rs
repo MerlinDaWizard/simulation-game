@@ -1,23 +1,17 @@
 use bevy::sprite::Anchor;
 use bevy::{prelude::*, core::Name};
-use iyes_loopless::prelude::*;
 use strum::IntoEnumIterator;
 use crate::MainTextureAtlas;
 use crate::sim::model::DummyComponent;
 use crate::ui::shared::*;
 use crate::components::placement::Size;
+use crate::GameState;
 pub struct ComponentTrayPlugin;
 
 impl Plugin for ComponentTrayPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_enter_system(crate::GameState::InGame, enter_system)
-            .add_system_set(
-            ConditionSet::new()
-                .run_in_state(crate::GameState::InGame)
-                // .with_system(ui_example_system)
-                .into()
-        );
+            .add_system(enter_system.in_schedule(OnEnter(GameState::InGame)));
     }
 }
 

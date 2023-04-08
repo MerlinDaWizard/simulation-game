@@ -18,17 +18,16 @@ use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_mod_picking::prelude::*;
 use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle};
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
-use iyes_loopless::prelude::*;
 use bevy::window::{close_on_esc, PresentMode};
 use bevy::diagnostic::{LogDiagnosticsPlugin};
 use main_menu2::MainMenuPlugin;
-use std::time::Duration;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy_heterogeneous_texture_atlas_loader::*;
 
 /// Our Application State
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, States)]
 pub enum GameState {
+    #[default]
     Loading,
     MainMenu,
     MainMenu2,
@@ -39,18 +38,17 @@ pub enum GameState {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
-            window: WindowDescriptor {
+            primary_window: Some(Window {
                 title: "Simulation game!".to_string(),
-                width: 1920.,
-                height: 1080.,
+                resolution: (1920.,1080.).into(),
                 present_mode: PresentMode::AutoVsync,
-                mode: WindowMode::BorderlessFullscreen,
+                mode: bevy::window::WindowMode::BorderlessFullscreen,
                 ..default()
-            },
+            }),
             ..default()
         }))
         // Resources
-        .insert_resource(Msaa { samples: 1})
+        .insert_resource(Msaa::Sample2)
         .insert_resource(ClearColor(Color::rgb_u8(30, 32, 48)))
         .insert_resource(level_select::CurrentLevel(Some(1))) // TODO: Change to none + working level select
         // Plugins (foreign)
@@ -63,21 +61,16 @@ fn main() {
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(EguiPlugin)
         //.add_plugin(bevy_framepace::FramepacePlugin)
-        .add_plugin(WorldInspectorPlugin)
+        .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(TextureAtlasLoaderPlugin)
         .add_plugin(MainMenuPlugin)
         // add out states driver
-        .add_loopless_state(GameState::Loading)
+        .add_state::<GameState>()
         .add_loading_state(
             LoadingState::new(GameState::Loading)
             .continue_to_state(GameState::MainMenu)
-            .with_collection::<MainTextureAtlas>()
         )
-        .add_fixed_timestep(
-            Duration::from_millis(125),
-            // give it a label
-            "my_fixed_update",
-        )
+        .add_collection_to_loading_state::<_, MainTextureAtlas>(GameState::Loading)
         // Own plugins
         .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
@@ -86,43 +79,32 @@ fn main() {
         .add_plugin(crate::ui::egui::theming::EguiThemingPlugin)
         .add_plugin(crate::config::SettingsPlugin)
         // menu setup (state enter) systems
-        .add_enter_system(GameState::MainMenu, main_menu::setup_menu)
-        .add_enter_system(GameState::LevelsMenu, level_select::setup)
-        .add_enter_system(GameState::InGame, game::setup_screen)
+        .add_system(main_menu::setup_menu.in_schedule(OnEnter(GameState::MainMenu)))
+        .add_system(level_select::setup.in_schedule(OnEnter(GameState::LevelsMenu)))
+        .add_system(game::setup_screen.in_schedule(OnEnter(GameState::InGame)))
         // menu cleanup (state exit) systems
-        .add_exit_system(GameState::MainMenu, despawn_with::<main_menu::MainMenu>)
-        .add_exit_system(GameState::LevelsMenu, despawn_with::<level_select::LevelsMenu>)
+        .add_system(despawn_with::<main_menu::MainMenu>.in_schedule(OnExit(GameState::MainMenu)))
+        .add_system(despawn_with::<level_select::LevelsMenu>.in_schedule(OnExit(GameState::LevelsMenu)))
         // game cleanup (state exit) systems
-        .add_exit_system(GameState::InGame, despawn_with::<game::GameRoot>)
+        .add_system(despawn_with::<game::GameRoot>.in_schedule(OnExit(GameState::InGame)))
         // menu stuff
-        .add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::MainMenu)
-                .with_system(close_on_esc)
-                .with_system(main_menu::butt_interact_visual)
-                // our menu button handlers
-                .with_system(main_menu::butt_exit.run_if(main_menu::on_butt_interact::<main_menu::ExitButt>))
-                .with_system(main_menu::butt_game.run_if(main_menu::on_butt_interact::<main_menu::EnterButt>))
-                .with_system(main_menu::butt_levels.run_if(main_menu::on_butt_interact::<main_menu::LevelsButt>))
-                .into()
-        )
+        .add_systems((
+            close_on_esc,
+            main_menu::butt_interact_visual,
+            main_menu::butt_exit.run_if(main_menu::on_butt_interact::<main_menu::ExitButt>),
+            main_menu::butt_game.run_if(main_menu::on_butt_interact::<main_menu::EnterButt>),
+            main_menu::butt_levels.run_if(main_menu::on_butt_interact::<main_menu::LevelsButt>),
+        ).distributive_run_if(in_state(GameState::MainMenu)))
         // in-game stuff
-        .add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::InGame)
-                .with_system(back_to_menu_on_esc)
-                .with_system(game::get_cursor_pos)
-                .into()
-        )
-        .add_system_set(
-            ConditionSet::new()
-                .run_in_state(GameState::LevelsMenu)
-                .with_system(level_select::butt_interact_visual)
-                .with_system(level_select::on_butt_interact::<level_select::LevelButton>)
-                //.with_system(level_select::butt_levels.run_if(level_select::on_butt_interact::<level_select::LevelButton>))
-                .with_system(back_to_menu_on_esc)
-                .into()
-        )
+        .add_systems((
+            back_to_menu_on_esc,
+        ).distributive_run_if(in_state(GameState::InGame)))
+        // Levels menu
+        .add_systems((
+            level_select::butt_interact_visual,
+            level_select::on_butt_interact::<level_select::LevelButton>,
+            back_to_menu_on_esc,
+        ).distributive_run_if(in_state(GameState::LevelsMenu)))
         // our other various systems:
         .add_system(debug_current_state)
         // setup our camera globally (for UI) at startup and keep it alive at all times
@@ -137,12 +119,12 @@ pub struct GameCamera;
 /// Transition back to menu on pressing Escape
 fn back_to_menu_on_esc(mut commands: Commands, kbd: Res<Input<KeyCode>>) {
     if kbd.just_pressed(KeyCode::Escape) {
-        commands.insert_resource(NextState(GameState::MainMenu));
+        commands.insert_resource(NextState(Some(GameState::MainMenu)));
     }
 }
 
 /// We can just access the `CurrentState`, and even use change detection!
-fn debug_current_state(state: Res<CurrentState<GameState>>) {
+fn debug_current_state(state: Res<State<GameState>>) {
     if state.is_changed() {
         info!("Detected state change to {state:?}!");
     }

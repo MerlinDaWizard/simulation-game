@@ -1,27 +1,23 @@
 use bevy::{prelude::*, window::close_on_esc};
-use bevy_egui::EguiContext;
+use bevy_egui::{EguiContext, EguiContexts};
 use egui::{Frame, Color32, style::Margin};
-use iyes_loopless::prelude::ConditionSet;
 
-use crate::ui::egui::main::Images;
+use crate::{ui::egui::main::Images, GameState};
 
 pub struct MainMenuPlugin;
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
-            ConditionSet::new()
-                .run_in_state(crate::GameState::MainMenu2)
-                .with_system(close_on_esc)
-                .with_system(main_menu)
-                .into()
-        );
+        app.add_systems((
+            close_on_esc,
+            main_menu,
+        ).distributive_run_if(in_state(GameState::MainMenu2)));
     }
 }
 
 fn main_menu(
     mut commands: Commands,
-    mut egui_ctx: ResMut<EguiContext>,
+    mut egui_ctx: EguiContexts,
     images: Local<MainMenuImages>,
 ) {
     let background = egui_ctx.add_image(images.background.clone_weak());

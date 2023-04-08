@@ -43,7 +43,7 @@ pub fn drag_v2(
     mut place_event_creator: EventWriter<PlaceComponentEvent>,
 
     pointers: Res<PointerMap>,
-    windows: Res<Windows>,
+    windows: Query<(Entity, &Window)>,
     images: Res<Assets<Image>>,
     camera_query: Query<&PixelProjection, (With<Camera>, With<Camera2d>)>,
     locations: Query<&PointerLocation>,
@@ -54,7 +54,6 @@ pub fn drag_v2(
     //let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
     let grid_bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
     let grid_top_right_corner = grid.1.translation.truncate() + Vec2::new(112.0, 112.0);
-
     let pixel_zoom = camera_query.single().zoom as f32;
 
     for start in drag_start_events.iter() {

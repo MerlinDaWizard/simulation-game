@@ -2,8 +2,7 @@ use std::fs::File;
 use std::io::Read;
 
 use bevy::prelude::*;
-use iyes_loopless::prelude::{ConditionSet, AppLooplessStateExt};
-use crate::MainTextureAtlas;
+use crate::{MainTextureAtlas, GameState};
 use crate::game::{PlacementGridEntity, GridSize};
 use crate::level_select::CurrentLevel;
 use crate::sim::components::*;
@@ -20,16 +19,9 @@ impl Plugin for ComponentSetupPlugin {
             .init_resource::<SimulationData>()
             .init_resource::<GridSize>()
             .register_type::<SimulationData>()
-            .add_enter_system(crate::GameState::InGame, setup_grid)
-            .add_exit_system(crate::GameState::InGame, clear_grid)
-            //.add_enter_system(crate::GameState::InGame, enter_system)
-            .add_system_set(
-            ConditionSet::new()
-                .run_in_state(crate::GameState::InGame)
-                .with_system(placement_event)
-                // .with_system(ui_example_system)
-                .into()
-        );
+            .add_system(setup_grid.in_schedule(OnEnter(GameState::InGame)))
+            .add_system(clear_grid.in_schedule(OnExit(GameState::InGame)))
+            .add_system(placement_event.run_if(in_state(GameState::InGame)));
     }
 }
 
