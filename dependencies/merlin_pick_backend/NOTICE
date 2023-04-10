@@ -1,0 +1,11 @@
+Much of this code for this picking backend is licensed under Apache or MIT (See the respective files) at your discretion.
+Attibution to https://github.com/aevyrie, over at https://github.com/aevyrie/bevy_mod_picking/tree/f1b6997f74d6e3b7bc4c58a59e5057a113fccbdd/backends/bevy_picking_sprite
+
+Main changes are:
+    - Made it work with a pixel camera and zoom configurations
+    - Fixed some of the sprite blocking issues with small fixes / work arounds
+    - Added a very similar backend for sprites from a sprite atlas
+    - Maybe some other stuff i have forgotten
+
+Many thanks to aevyrie for the great work they do on the orginal bevy_mod_picking. Can't wait for future development with bevy's ecosystem and the merge of bevy_mod_picking beta into main!
+
