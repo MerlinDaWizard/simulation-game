@@ -1,10 +1,8 @@
 
 use bevy::prelude::*;
-use bevy::render::camera::RenderTarget;
-use bevy::window::PrimaryWindow;
 use crate::components::placement::Size;
 use crate::level_select::CurrentLevel;
-use crate::{ui, MainTextureAtlas, GameCamera};
+use crate::{ui, MainTextureAtlas};
 
 pub const GRID_CELL_SIZE: usize = 32;
 pub const GRID_CELL_AMOUNT_WIDTH: u8 = 7;

@@ -8,14 +8,15 @@ edition = "2021"
 [dependencies]
 bevy = { version = "0.10", features = ["dynamic_linking","jpeg"] }
 rand = "0.8.5"
-#bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", branch = "beta", features = ["backend_sprite", "debug"]}
-bevy_mod_picking = { path = "./dependencies/bevy_mod_picking", features = ["backend_sprite", "debug"], default-features = false}
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "f1b6997"}
+#bevy_mod_picking = { path = "./dependencies/bevy_mod_picking", features = ["debug"], default-features = false}
+merlin_pick_backend = { path = "./dependencies/merlin_pick_backend", features = ["pixel_camera", "sprite", "texture_atlas_sprite"]}
 bevy_egui = "0.20"
 strum = "0.24.1"
 strum_macros = "0.24"
 bevy_framepace = { version = "0.12", default-features = false }
 enum_dispatch = "0.3.11"
-bevy_heterogeneous_texture_atlas_loader = "0.10.0"
+bevy_heterogeneous_texture_atlas_loader = { path = "./dependencies/bevy_heterogeneous_texture_atlas_loader"}
 bevy_asset_loader = { version = "0.16" }
 bevy_pixel_camera = "0.4"
 bevy-inspector-egui = "0.18"
@@ -35,3 +36,5 @@ opt-level = 1
 opt-level = 3
 
 
+[patch.crates-io]
+bevy_sprite = { path = "./dependencies/bevy_sprite" }

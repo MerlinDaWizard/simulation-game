@@ -1,6 +1,6 @@
 use bevy::{prelude::*, ui::FocusPolicy};
 
-use bevy_mod_picking::{prelude::{*}, events::{Click, EventListener, PointerEvent}};
+use bevy_mod_picking::prelude::{*};
 use crate::{ui::shared::*, MainTextureAtlas, GameState};
 
 pub struct TextboxPlugin;
@@ -72,7 +72,7 @@ impl ProgramBox {
                 linebreak_behaviour: bevy::text::BreakLineOn::AnyCharacter
             },
             transform: Transform {
-                translation: Vec3 { x: -95.0, y: 12.0, z: 200.1 },
+                translation: Vec3 { x: -75.0, y: 0.0, z: 200.1 },
                 ..Default::default()
             },
             ..Default::default()

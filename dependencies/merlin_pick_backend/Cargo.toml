@@ -1,0 +1,15 @@
+[package]
+name = "merlin_pick_backend"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+sprite = []
+texture_atlas_sprite = []
+pixel_camera = ["dep:bevy_pixel_camera"]
+
+[dependencies]
+bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking", rev = "f1b6997"}
+bevy = { version = "0.10" }
+bevy_pixel_camera = { version = "0.4", optional = true }

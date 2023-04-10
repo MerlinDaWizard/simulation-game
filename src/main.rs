@@ -23,6 +23,7 @@ use bevy::diagnostic::{LogDiagnosticsPlugin};
 use main_menu2::MainMenuPlugin;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy_heterogeneous_texture_atlas_loader::*;
+use merlin_pick_backend::MerlinSpriteBackend;
 
 /// Our Application State
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, States)]
@@ -59,6 +60,7 @@ fn main() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPickingPlugins)
+        .add_plugin(MerlinSpriteBackend)
         .add_plugin(EguiPlugin)
         //.add_plugin(bevy_framepace::FramepacePlugin)
         .add_plugin(WorldInspectorPlugin::new())
