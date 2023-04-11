@@ -18,6 +18,7 @@ pub struct ColourScheme {
     pub subtext1: Srgba_Unmultiplied,
     pub text: Srgba_Unmultiplied,
     // Accents
+    pub maroon: Srgba_Unmultiplied,
     pub lavender: Srgba_Unmultiplied,
     pub blue: Srgba_Unmultiplied,
     pub sapphire: Srgba_Unmultiplied,
@@ -36,7 +37,7 @@ pub struct ColourScheme {
 /// An p colour in the SSrgba_Unmultiplied colour space. E.g. SSrgba_Unmultiplieda(30, 32, 48, 255)
 /// We serialise and deserialise using this instead of colour32 due to rust's no implementing traits on foreign types & the fact that Srgba_Unmultiplied contains private fields
 #[allow(non_camel_case_types)]
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub struct Srgba_Unmultiplied(pub [u8; 4]);
 
 impl From<Srgba_Unmultiplied> for Color32 {

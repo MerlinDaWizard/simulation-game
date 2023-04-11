@@ -1,8 +1,8 @@
 use std::{fs::File, io::Read};
 
 use bevy::prelude::*;
-use bevy_egui::{EguiContext, EguiContexts};
-use egui::{Color32, style::{Widgets, WidgetVisuals}, Stroke, Rounding};
+use bevy_egui::{EguiContexts};
+use egui::{Color32, style, epaint};
 
 use crate::config::UserSettings;
 use super::colours::ColourScheme;
@@ -20,56 +20,75 @@ pub fn egui_startup(mut egui_ctx: EguiContexts, user_config: Res<UserSettings>, 
     File::open(&user_config.theme).unwrap().read_to_string(&mut s).unwrap();
     let colours: ColourScheme = serde_json::from_str(&s).expect("Could not parse user-config.toml");
     //dbg!(&colours);
+    //catppuccin_egui::set_theme(&egui_ctx.ctx_mut(), catppuccin_egui::MACCHIATO);
     configure_egui(egui_ctx.ctx_mut(), colours.clone(), bevy_clear_color);
 }
 
+/// Colour bindings revamped from https://github.com/catppuccin/egui
 pub fn configure_egui(egui_ctx: &egui::Context, colours: ColourScheme, mut bevy_clear_color: ResMut<ClearColor>) {
     bevy_clear_color.0 = Color::rgba_u8(colours.base.0[0], colours.base.0[1], colours.base.0[2], colours.base.0[3]);
     let c = colours;
+    let old = egui_ctx.style().visuals.clone();
     egui_ctx.set_visuals(egui::Visuals {
-        window_rounding: 0.0.into(),
-        panel_fill: c.mantle.clone().into(),
-        code_bg_color: c.mantle.clone().into(),
-        window_fill: c.overlay0.clone().into(),
-        extreme_bg_color: c.crust.clone().into(),
-        faint_bg_color: c.crust.clone().into(),
-        hyperlink_color: c.blue.clone().into(),
-        widgets: Widgets {
-            noninteractive: WidgetVisuals {
-                bg_stroke: Stroke::new(5.0, c.crust.clone()),
-                fg_stroke: Stroke::new(1.0, c.text.clone()),
-                bg_fill: Color32::from_gray(27), // Default
-                rounding: Rounding::same(2.0),
-                expansion: 0.0,
-                weak_bg_fill: Color32::from_gray(27), // TODO: I filled this in just to stop errors, may change alter
-            },
-            inactive: WidgetVisuals {
-                bg_fill: c.surface0.clone().into(),      // checkbox background
-                bg_stroke: Default::default(),
-                fg_stroke: Stroke::new(1.0, c.text.clone()), // button text
-                rounding: Rounding::same(2.0),
-                expansion: 0.0,
-                weak_bg_fill: c.surface0.clone().into(),
-            },
-            hovered: WidgetVisuals {
-                bg_fill: c.surface1.clone().into(),
-                bg_stroke: Stroke::new(1.0, c.surface2.clone()), // e.g. hover over window edge or button
-                fg_stroke: Stroke::new(1.5, c.text.clone()),
-                rounding: Rounding::same(3.0),
-                expansion: 1.0,
-                weak_bg_fill: c.surface1.clone().into(),
-            },
-            active: WidgetVisuals {
-                bg_fill: c.surface2.clone().into(),
-                bg_stroke: Stroke::new(1.0, c.surface2.clone()),
-                fg_stroke: Stroke::new(2.0, c.text.clone()),
-                rounding: Rounding::same(2.0),
-                expansion: 1.0,
-                weak_bg_fill: c.surface2.clone().into(),
-            },
-            ..Default::default()
+        override_text_color: Some(c.text.into()),
+        hyperlink_color: c.rosewater.into(),
+        faint_bg_color: c.surface0.into(),
+        extreme_bg_color: c.crust.into(),
+        code_bg_color: c.mantle.into(),
+        warn_fg_color: c.peach.into(),
+        error_fg_color: c.maroon.into(),
+        window_fill: c.base.into(),
+        panel_fill: c.base.into(),
+        window_stroke: egui::Stroke {
+            color: c.overlay1.into(),
+            ..old.window_stroke
         },
-        ..Default::default()
+        widgets: style::Widgets {
+            noninteractive: make_widget_visual(old.widgets.noninteractive, &c, c.base.into()),
+            inactive: make_widget_visual(old.widgets.inactive, &c, c.surface0.into()),
+            hovered: make_widget_visual(old.widgets.hovered, &c, c.surface2.into()),
+            active: make_widget_visual(old.widgets.active, &c, c.surface1.into()),
+            open: make_widget_visual(old.widgets.open, &c, c.surface0.into()),
+        },
+        selection: style::Selection {
+            bg_fill:
+                (Color32::from(c.blue))
+                .linear_multiply(if c.name == "Latte" { 0.4 } else { 0.2 }),
+            stroke: egui::Stroke {
+                color: c.overlay1.into(),
+                ..old.selection.stroke
+            },
+        },
+        window_shadow: epaint::Shadow {
+            color: c.base.into(),
+            ..old.window_shadow
+        },
+        popup_shadow: epaint::Shadow {
+            color: c.base.into(),
+            ..old.popup_shadow
+        },
+        ..old
     });
     //egui_ctx.ctx_mut().set_style(style)
+}
+
+/// Refer to the catppuccin-license file.
+fn make_widget_visual(
+    old: style::WidgetVisuals,
+    theme: &ColourScheme,
+    bg_fill: egui::Color32,
+) -> style::WidgetVisuals {
+    style::WidgetVisuals {
+        bg_fill,
+        weak_bg_fill: bg_fill,
+        bg_stroke: egui::Stroke {
+            color: theme.overlay1.into(),
+            ..old.bg_stroke
+        },
+        fg_stroke: egui::Stroke {
+            color: theme.text.into(),
+            ..old.fg_stroke
+        },
+        ..old
+    }
 }

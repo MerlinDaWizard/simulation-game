@@ -1297,6 +1297,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "89b2fd2a0dcf38d7971e2194b6b6eebab45ae01067456a7fd93d5547a61b70be"
 
 [[package]]
+name = "catppuccin-egui"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c840bcad5f36bba893de10ad208359b4b6bab36c60262af8e7883f2843350475"
+dependencies = [
+ "egui",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3162,6 +3171,7 @@ dependencies = [
  "bevy_heterogeneous_texture_atlas_loader",
  "bevy_mod_picking",
  "bevy_pixel_camera",
+ "catppuccin-egui",
  "egui",
  "enum-map",
  "enum_dispatch",

@@ -10,6 +10,7 @@ mod components;
 mod ui;
 mod config;
 mod sim;
+mod settings;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
@@ -32,6 +33,7 @@ pub enum GameState {
     Loading,
     MainMenu,
     MainMenu2,
+    Settings,
     LevelsMenu,
     InGame,
 }
@@ -70,7 +72,7 @@ fn main() {
         .add_state::<GameState>()
         .add_loading_state(
             LoadingState::new(GameState::Loading)
-            .continue_to_state(GameState::MainMenu)
+            .continue_to_state(GameState::MainMenu2)
         )
         .add_collection_to_loading_state::<_, MainTextureAtlas>(GameState::Loading)
         // Own plugins
@@ -80,6 +82,7 @@ fn main() {
         .add_plugin(crate::ui::egui::main::LeftPanelPlugin)
         .add_plugin(crate::ui::egui::theming::EguiThemingPlugin)
         .add_plugin(crate::config::SettingsPlugin)
+        .add_plugin(crate::settings::SettingsMenuPlugin)
         // menu setup (state enter) systems
         .add_system(main_menu::setup_menu.in_schedule(OnEnter(GameState::MainMenu)))
         .add_system(level_select::setup.in_schedule(OnEnter(GameState::LevelsMenu)))
@@ -121,7 +124,7 @@ pub struct GameCamera;
 /// Transition back to menu on pressing Escape
 fn back_to_menu_on_esc(mut commands: Commands, kbd: Res<Input<KeyCode>>) {
     if kbd.just_pressed(KeyCode::Escape) {
-        commands.insert_resource(NextState(Some(GameState::MainMenu)));
+        commands.insert_resource(NextState(Some(GameState::MainMenu2)));
     }
 }
 
@@ -141,11 +144,7 @@ fn despawn_with<T: Component>(mut commands: Commands, q: Query<Entity, With<T>>)
 
 /// Spawn the camera & assets
 fn setup(mut commands: Commands) {
-    //commands.spawn((Camera2dBundle::default(), GameCamera));
-    //let texture_atlas: Handle<TextureAtlas> = ass.load("sprite_map.ron");
     commands.spawn((PixelCameraBundle::from_resolution(640, 360), GameCamera));
-    //commands.insert_resource(MainTextureAtlas{handle:});
-    //commands.spawn((Camera2dBundle::default(), PickingCameraBundle::default(), GameCamera));
 }
 
 #[derive(AssetCollection, Resource, Deref, DerefMut)]

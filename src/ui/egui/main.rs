@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_egui::{EguiContext, EguiContexts};
-use egui::{Frame, Color32};
+use bevy_egui::{EguiContexts};
+use egui::{Frame};
 
 use crate::GameState;
 pub struct LeftPanelPlugin;
