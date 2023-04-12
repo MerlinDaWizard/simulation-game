@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::{prelude::{Plugin, App, in_state, Commands, ResMut, Local, NextState, Handle, FromWorld, World, AssetServer, Image as BevyImage, Resource, IntoSystemConfig, Res}, time::Time};
 use bevy_egui::{EguiContexts};
-use egui::{Frame};
+use egui::{*, plot::Plot};
 
 use crate::GameState;
 pub struct LeftPanelPlugin;
@@ -14,13 +14,14 @@ impl Plugin for LeftPanelPlugin {
 }
 
 
-pub fn left_panel(
+pub fn left_panel (
     mut commands: Commands,
     mut ui_state: ResMut<UiState>,
     mut egui_ctx: EguiContexts,
     mut rendered_texture_id: Local<egui::TextureId>,
     mut is_initialized: Local<bool>,
     images: Local<Images>,
+    time: Res<Time>,
 ) { // At the moment `CurrentLevel` actually refers to the level to load
     let egui_texture_handle = ui_state
     .egui_texture_handle
@@ -96,40 +97,49 @@ pub fn left_panel(
             });
         });
 
-    egui::TopBottomPanel::bottom("bottom_panel")
+    TopBottomPanel::bottom("bottom_panel")
         .default_height(20.0)
         .resizable(true)
         .show(egui_ctx.ctx_mut(), |ui| {
-            ui.heading("Side Panel");
+            ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
+                ui.label("Lololollololll");
+                let sin: plot::PlotPoints = (0..time.elapsed_seconds_f64().floor() as usize).flat_map(|i| {
+                    //let x = i as f64 * 0.01;
+                    let n = i as f64 * 0.05;
+                    [[i as f64, (n.sin()*100.0).round()], [(i+1) as f64, (n.sin()*100.0).round()]]
+                }).collect();
+                let line = plot::Line::new(sin);
 
-            ui.horizontal(|ui| {
-                ui.label("Write something: ");
-                ui.text_edit_singleline(&mut ui_state.label);
-            });
+                let x_fmt = |x: f64, _range: &std::ops::RangeInclusive<f64>| {
+                    format!("Tick: {}", x.floor())
+                };
 
-            ui.add(egui::widgets::Image::new(
-                egui_texture_handle.id(),
-                egui_texture_handle.size_vec2(),
-            ));
+                let label_fmt = |_s: &str, val: &plot::PlotPoint| {
+                    format!(
+                        "Tick {}\n{}", val.x.floor() as usize, val.y.round() as usize
+                    )
+                };
+                
+                Plot::new("graph")
+                    .x_axis_formatter(x_fmt)
+                    .label_formatter(label_fmt)
+                    .view_aspect(3.0)
+                    //.center_y_axis(true)
+                    .include_y(100.0)
+                    .include_y(0.0)
+                    .auto_bounds_y()
+                    .legend(plot::Legend::default())
+                    .show(ui, |plot_ui|
+                        plot_ui.line(line.name("Input")
+                    ));
+                    
+            })
 
-            ui.add(egui::Slider::new(&mut ui_state.value, 0.0..=10.0).text("value"));
-            if ui.button("Increment").clicked() {
-                ui_state.value += 1.0;
-            }
-
-            ui.checkbox(&mut ui_state.is_window_open, "Window Is Open");
-
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                ui.add(egui::Hyperlink::from_label_and_url(
-                    "powered by egui",
-                    "https://github.com/emilk/egui/",
-                ));
-            });
         });
 }
 pub struct Images {
-    bevy_icon: Handle<Image>,
-    back_button: Handle<Image>,
+    bevy_icon: Handle<BevyImage>,
+    back_button: Handle<BevyImage>,
 }
 
 impl FromWorld for Images {

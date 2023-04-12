@@ -48,19 +48,19 @@ fn main_menu(
                 if button_play.clicked() {
                     commands.insert_resource(NextState(Some(GameState::InGame)));
                 }
-                ui.allocate_space(vec2(100., 100.));
+                ui.allocate_space(vec2(10., 10.));
                 let text = RichText::new("Level Select").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
                 let button_lvl = ui.add_sized(Vec2::new(350.,75.), egui::Button::new(text));
                 if button_lvl.clicked() {
                     commands.insert_resource(NextState(Some(GameState::LevelsMenu)));
                 }
-                ui.allocate_space(vec2(100., 100.));
+                ui.allocate_space(vec2(10., 10.));
                 let text = RichText::new("Settings").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
                 let button_settings = ui.add_sized(Vec2::new(350.,75.), egui::Button::new(text));
                 if button_settings.clicked() {
                     commands.insert_resource(NextState(Some(GameState::Settings)));
                 }
-                ui.allocate_space(vec2(100., 100.));
+                ui.allocate_space(vec2(10., 10.));
                 let text = RichText::new("Quit").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
                 let button_settings = ui.add_sized(Vec2::new(350.,75.), egui::Button::new(text));
                 if button_settings.clicked() {
