@@ -72,36 +72,45 @@ pub fn build_simulation(
     mut sim_data: ResMut<SimulationData>
 ) {
     let mut sim_data = sim_data.as_mut();
-    for (x, a) in sim_data.grid.grid.iter_mut().enumerate() {
-        for (y, b) in a.iter_mut().enumerate() {
-            if let CellState::Real(_, component) = b {
+    let grid = &mut sim_data.grid.grid;
+    let port_grid = &mut sim_data.port_grid;
+    for x in 0..grid.len() {
+        for y in 0..grid[x].len() {
+            let cell = std::mem::replace(&mut grid[x][y], CellState::Empty); // TODO: Revamp this code so I am never replacing the cell, this pains me to do.
+            if let CellState::Real(_, component) = cell {
                 for (offset, side) in component.ports() {
+
                     let position = [x+offset[0], y+offset[1]];
+                    let port = port_grid.get_mut_port(&position, *side).expect("Portgrid & component grid missmatch");
+                    // Unwrap it a bit mroe
+                    let port = port.as_mut().expect("Portgrid & component grid missmatch");
+                    // Exit if already checked
+                    if port.checked == true {continue;}
                     let shared = Arc::new(AtomicU8::new(0));
-                    
-                    {
-                        let port = sim_data.port_grid.get_mut_port(&position, *side).expect("Portgrid & component grid missmatch");
-                        // Unwrap it a bit mroe
-                        let port = port.as_mut().expect("Portgrid & component grid missmatch");
-                        // Exit if already checked
-                        if port.checked == true {continue}
-                        let shared = Arc::new(AtomicU8::new(0));
-                        port.val = Some(shared.clone());
-                    }
+                    port.val = Some(shared.clone());
+
                     if let Some(new_p) = helpers::combine_offset(&position, &side.as_offset()) {
-                        unsafe{flood_fill(sim_data as *mut SimulationData, shared, new_p);}
+                        flood_fill(grid, port_grid, shared, new_p);
                     } else {continue;}
 
                 }
             }
+            *grid[x][y] = cell
         }
     }
 }
 
 pub fn flood_fill(
-    mut sim_data: *mut SimulationData,
+    grid: &mut Vec<Vec<CellState>>,
+    port_grid: &mut PortGrid,
     source_arc: Arc<AtomicU8>,
     position: [usize; 2],
 ) {
-    
+    for i in grid {
+        for j in i {
+            if let CellState::Real(_, c) = j {
+                
+            }
+        }
+    }
 }
