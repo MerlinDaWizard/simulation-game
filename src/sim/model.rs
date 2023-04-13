@@ -74,7 +74,7 @@ impl SimulationData {
                 .id();
             self.grid.place_component(entity_id, component, position);
             self.port_grid
-                .modify_bulk(Some(Port(None)), dummy_component.ports(), position);
+                .modify_bulk(Some(Port::default()), dummy_component.ports(), position);
             let adjacent = helpers::get_adjacent(position, &dummy_component.get_grid_size());
 
             for component in adjacent {
