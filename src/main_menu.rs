@@ -1,5 +1,5 @@
-use bevy::{prelude::*, app::AppExit};
 use crate::GameState;
+use bevy::{app::AppExit, prelude::*};
 
 /// Marker for the main menu entity
 #[derive(Component)]
@@ -31,14 +31,13 @@ pub fn butt_interact_visual(
     for (interaction, mut color) in query.iter_mut() {
         match interaction {
             Interaction::Clicked => {
-                *color = BackgroundColor(Color::rgba(0.4, 0.4, 0.4,0.5));
+                *color = BackgroundColor(Color::rgba(0.4, 0.4, 0.4, 0.5));
             }
             Interaction::Hovered => {
-                *color = BackgroundColor(Color::rgba(0.2, 0.2, 0.2,0.5));
-                
+                *color = BackgroundColor(Color::rgba(0.2, 0.2, 0.2, 0.5));
             }
             Interaction::None => {
-                *color = BackgroundColor(Color::rgba(0.0, 0.0, 0.0,0.5));
+                *color = BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.5));
             }
         }
     }
@@ -79,7 +78,7 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
     let butt_style = Style {
         flex_direction: FlexDirection::Column,
         justify_content: JustifyContent::Center, // Text in middle Top / down
-        align_items: AlignItems::Center, // Text in middle LR
+        align_items: AlignItems::Center,         // Text in middle LR
         align_self: AlignSelf::Stretch,
         padding: UiRect::all(Val::Px(8.0)),
         margin: UiRect::all(Val::Px(4.0)),
@@ -93,32 +92,43 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
         color: Color::WHITE,
     };
 
-    let _background = commands.spawn((SpriteBundle {
-        texture: ass.load("background.jpg"),
+    let _background = commands
+        .spawn((
+            SpriteBundle {
+                texture: ass.load("background.jpg"),
 
-        ..Default::default()
-    }, MainMenu)).id();
-
-    let menu = commands
-        .spawn((NodeBundle {
-            style: Style {
-                size: Size::new(Val::Percent(25.0), Val::Percent(20.0)),
-                margin: UiRect::all(Val::Px(2.0)),
-                align_items: AlignItems::FlexStart,
-                flex_direction: FlexDirection::Column,
-                justify_content: JustifyContent::Center,
-                align_self: AlignSelf::Center,
                 ..Default::default()
             },
-            ..Default::default()
-        }, MainMenu))
+            MainMenu,
+        ))
+        .id();
+
+    let menu = commands
+        .spawn((
+            NodeBundle {
+                style: Style {
+                    size: Size::new(Val::Percent(25.0), Val::Percent(20.0)),
+                    margin: UiRect::all(Val::Px(2.0)),
+                    align_items: AlignItems::FlexStart,
+                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::Center,
+                    align_self: AlignSelf::Center,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            MainMenu,
+        ))
         .id();
 
     let butt_levels = commands
-        .spawn((ButtonBundle {
-            style: butt_style.clone(),
-            ..Default::default()
-        }, LevelsButt))
+        .spawn((
+            ButtonBundle {
+                style: butt_style.clone(),
+                ..Default::default()
+            },
+            LevelsButt,
+        ))
         .with_children(|btn| {
             btn.spawn(TextBundle {
                 text: Text::from_section("Level Select", butt_textstyle.clone()),
@@ -127,11 +137,14 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
         })
         .id();
 
-        let butt_enter = commands
-        .spawn((ButtonBundle {
-            style: butt_style.clone(),
-            ..Default::default()
-        }, EnterButt))
+    let butt_enter = commands
+        .spawn((
+            ButtonBundle {
+                style: butt_style.clone(),
+                ..Default::default()
+            },
+            EnterButt,
+        ))
         .with_children(|btn| {
             btn.spawn(TextBundle {
                 text: Text::from_section("Enter Game", butt_textstyle.clone()),
@@ -141,11 +154,14 @@ pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
         .id();
 
     let butt_exit = commands
-        .spawn((ButtonBundle {
-            background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
-            style: butt_style,
-            ..Default::default()
-        }, ExitButt))
+        .spawn((
+            ButtonBundle {
+                background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
+                style: butt_style,
+                ..Default::default()
+            },
+            ExitButt,
+        ))
         .with_children(|btn| {
             btn.spawn(TextBundle {
                 text: Text::from_section("Exit Game", butt_textstyle.clone()),

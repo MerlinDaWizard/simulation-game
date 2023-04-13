@@ -1,21 +1,24 @@
-use bevy::sprite::Anchor;
-use bevy::{prelude::*, core::Name};
-use strum::IntoEnumIterator;
-use crate::MainTextureAtlas;
+use crate::components::placement::Size;
 use crate::sim::model::DummyComponent;
 use crate::ui::shared::*;
-use crate::components::placement::Size;
 use crate::GameState;
+use crate::MainTextureAtlas;
+use bevy::sprite::Anchor;
+use bevy::{core::Name, prelude::*};
+use strum::IntoEnumIterator;
 pub struct ComponentTrayPlugin;
 
 impl Plugin for ComponentTrayPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_system(enter_system.in_schedule(OnEnter(GameState::InGame)));
+        app.add_system(enter_system.in_schedule(OnEnter(GameState::InGame)));
     }
 }
 
-fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main_atlas: Res<MainTextureAtlas>) {
+fn enter_system(
+    mut commands: Commands,
+    atlases: Res<Assets<TextureAtlas>>,
+    main_atlas: Res<MainTextureAtlas>,
+) {
     let atlas = atlases.get(&main_atlas.handle).unwrap();
     let mut current_down = -150.0;
     for comp in DummyComponent::iter() {
@@ -25,10 +28,14 @@ fn enter_system(mut commands: Commands, atlases: Res<Assets<TextureAtlas>>, main
         let mut sprite = TextureAtlasSprite::new(sprite_idx);
         sprite.anchor = Anchor::BottomLeft;
         commands.spawn((
-            SpriteSheetBundle  {
+            SpriteSheetBundle {
                 sprite: sprite,
                 transform: Transform {
-                    translation: Vec3 { x: 225.0, y: current_down, z: 20.0},
+                    translation: Vec3 {
+                        x: 225.0,
+                        y: current_down,
+                        z: 20.0,
+                    },
                     //scale: Vec3::splat(SCALE),
                     ..Default::default()
                 },
@@ -55,13 +62,14 @@ pub struct TrayComponent;
 pub struct ComponentLink(pub DummyComponent);
 
 #[derive(Component)]
-pub struct GridLock{
-    pub grab_part: Vec2
+pub struct GridLock {
+    pub grab_part: Vec2,
 }
 
 impl GridLock {
     pub fn new() -> Self {
-        GridLock { grab_part: Vec2::ZERO }
+        GridLock {
+            grab_part: Vec2::ZERO,
+        }
     }
-
 }

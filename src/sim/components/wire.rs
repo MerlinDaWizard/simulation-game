@@ -1,31 +1,50 @@
-use bevy::{reflect::{Reflect, FromReflect}, sprite::{TextureAtlasSprite, TextureAtlas}, prelude::{Handle, debug}};
+use crate::sim::helpers;
+use crate::sim::{
+    helpers::Side,
+    model::{
+        AudioEvent, CellState, Component, ComponentGrid, GridComponent, SimulationData, VisualEvent,
+    },
+};
+use bevy::{
+    prelude::{debug, Handle},
+    reflect::{FromReflect, Reflect},
+    sprite::{TextureAtlas, TextureAtlasSprite},
+};
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
-use crate::sim::{model::{GridComponent, SimulationData, AudioEvent, VisualEvent, ComponentGrid, CellState, Component}, helpers::Side};
-use crate::sim::helpers;
 
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
-pub struct Wire {
-
-}
+pub struct Wire {}
 
 impl GridComponent for Wire {
     // Wires do not need to tick as all communication is done intrinsically using the wire graph not graph
-    fn tick(&mut self, _own_pos: &[usize; 2], _grid: &mut SimulationData) -> (Vec<VisualEvent>,Vec<AudioEvent>) {
-        (Vec::new(),Vec::new())
+    fn tick(
+        &mut self,
+        _own_pos: &[usize; 2],
+        _grid: &mut SimulationData,
+    ) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+        (Vec::new(), Vec::new())
     }
 
     fn build(&mut self, _own_pos: &[usize; 2], _sim_data: &mut SimulationData) {
         todo!()
     }
 
-    fn on_place(&self, own_pos: &[usize; 2], sim_data: &SimulationData, sprite: &mut TextureAtlasSprite, atlas: &TextureAtlas) {
+    fn on_place(
+        &self,
+        own_pos: &[usize; 2],
+        sim_data: &SimulationData,
+        sprite: &mut TextureAtlasSprite,
+        atlas: &TextureAtlas,
+    ) {
         let mut sides = sim_data.port_grid.get_sides(own_pos);
         for (side, state) in sides.iter_mut() {
             let a = helpers::combine_offset(own_pos, &side.as_offset());
-            if a.is_none() {continue;}
+            if a.is_none() {
+                continue;
+            }
             debug!("{:?}", &a);
-            debug!("{:?}",check_for_wire(&a.unwrap(), &sim_data.grid) );
+            debug!("{:?}", check_for_wire(&a.unwrap(), &sim_data.grid));
             if check_for_wire(&a.unwrap(), &sim_data.grid) {
                 *state = true;
             }
@@ -33,7 +52,9 @@ impl GridComponent for Wire {
         let sprite_name = sides_to_sprite_name(&sides);
         //debug!("{:?}",&sides);
         //debug!("{}",&sprite_name);
-        let idx = atlas.get_texture_index(&Handle::weak(sprite_name.into())).expect("Could not find correct wire varient");
+        let idx = atlas
+            .get_texture_index(&Handle::weak(sprite_name.into()))
+            .expect("Could not find correct wire varient");
         sprite.index = idx;
     }
 
@@ -62,7 +83,7 @@ fn check_for_wire_option(pos: &[usize; 2], grid: &ComponentGrid) -> Option<()> {
     let cell = grid.grid.get(pos[0])?.get(pos[1])?;
     if let CellState::Real(_, a) = cell {
         if let Component::WirePiece(_) = a {
-            return Some(())
+            return Some(());
         }
     }
     None

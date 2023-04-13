@@ -1,16 +1,15 @@
 use bevy::{prelude::*, ui::FocusPolicy};
 
-use bevy_mod_picking::prelude::{*};
-use crate::{ui::shared::*, MainTextureAtlas, GameState};
+use crate::{ui::shared::*, GameState, MainTextureAtlas};
+use bevy_mod_picking::prelude::*;
 
 pub struct TextboxPlugin;
 
 impl Plugin for TextboxPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems((
-            drag_v2,
-            CloseBox::handle_events,
-        ).distributive_run_if(in_state(GameState::InGame)));
+        app.add_systems(
+            (drag_v2, CloseBox::handle_events).distributive_run_if(in_state(GameState::InGame)),
+        );
     }
 }
 #[derive(Component)]
@@ -45,52 +44,102 @@ pub struct ProgramBox {
 }
 
 impl ProgramBox {
-    pub fn new<S: Into<String>, T: Component>(commands: &mut Commands, ass: &Res<AssetServer>, atlases: &Res<Assets<TextureAtlas>>, main_atlas: &Res<MainTextureAtlas>, name: S, root_type: T) -> Self {
+    pub fn new<S: Into<String>, T: Component>(
+        commands: &mut Commands,
+        ass: &Res<AssetServer>,
+        atlases: &Res<Assets<TextureAtlas>>,
+        main_atlas: &Res<MainTextureAtlas>,
+        name: S,
+        root_type: T,
+    ) -> Self {
         let name: String = name.into();
         let texture_atlas = atlases.get(&main_atlas.handle).unwrap();
-        let box_top = commands.spawn((BoxRootBundle {
-            sprite: SpriteSheetBundle {
-                sprite: TextureAtlasSprite::new(texture_atlas.get_texture_index(&Handle::weak("box_root".into())).unwrap()),
-                transform: Transform {
-                    translation: Vec3 { x: 0.0, y: 0.0, z: 200.0 },
+        let box_top = commands
+            .spawn((
+                BoxRootBundle {
+                    sprite: SpriteSheetBundle {
+                        sprite: TextureAtlasSprite::new(
+                            texture_atlas
+                                .get_texture_index(&Handle::weak("box_root".into()))
+                                .unwrap(),
+                        ),
+                        transform: Transform {
+                            translation: Vec3 {
+                                x: 0.0,
+                                y: 0.0,
+                                z: 200.0,
+                            },
+                            ..Default::default()
+                        },
+                        texture_atlas: main_atlas.handle.clone(),
+                        ..Default::default()
+                    },
+                    box_root: BoxRoot,
+                },
+                root_type,
+                Draggable::new(),
+                Name::new(format!("Box - {}", &name)),
+            ))
+            .id();
+
+        let box_name = commands
+            .spawn((
+                Text2dBundle {
+                    text: Text {
+                        sections: vec![TextSection::new(
+                            name,
+                            TextStyle {
+                                font: ass.load("Pixelboy.ttf"),
+                                font_size: 24.0,
+                                color: Color::WHITE,
+                            },
+                        )],
+                        alignment: TextAlignment::Left,
+                        linebreak_behaviour: bevy::text::BreakLineOn::AnyCharacter,
+                    },
+                    transform: Transform {
+                        translation: Vec3 {
+                            x: -75.0,
+                            y: 0.0,
+                            z: 200.1,
+                        },
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
-                texture_atlas: main_atlas.handle.clone(),
-                ..Default::default()
-            },
-            box_root: BoxRoot,
-        },
-        root_type,
-        Draggable::new(),
-        Name::new(format!("Box - {}", &name))
-    )).id();
-    
-        let box_name = commands.spawn( (Text2dBundle {
-            text: Text {
-                sections: vec![TextSection::new(name, TextStyle { font: ass.load("Pixelboy.ttf"), font_size: 24.0, color: Color::WHITE })],
-                alignment: TextAlignment::Left,
-                linebreak_behaviour: bevy::text::BreakLineOn::AnyCharacter
-            },
-            transform: Transform {
-                translation: Vec3 { x: -75.0, y: 0.0, z: 200.1 },
-                ..Default::default()
-            },
-            ..Default::default()
-        }, BoxTitle)).id();
-        
-        let box_exit = commands.spawn(( SpriteBundle {
-            texture: ass.load("exit_button.png"),
-            transform: Transform {
-                translation: Vec3 { x: 83.0, y: 0.0, z: 200.2 },
-                ..Default::default()
-            },
-            ..Default::default()
-        }, BoxCloseButton, FocusPolicy::Block, PickableBundle::default()))
+                BoxTitle,
+            ))
+            .id();
+
+        let box_exit = commands
+            .spawn((
+                SpriteBundle {
+                    texture: ass.load("exit_button.png"),
+                    transform: Transform {
+                        translation: Vec3 {
+                            x: 83.0,
+                            y: 0.0,
+                            z: 200.2,
+                        },
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                BoxCloseButton,
+                FocusPolicy::Block,
+                PickableBundle::default(),
+            ))
             .forward_events::<PointerClick, CloseBox>()
             .id();
 
-        commands.entity(box_top).push_children(&[box_name, box_exit]);
-        ProgramBox { root: box_top, name_text: box_name, exit_button: box_exit}
+        commands
+            .entity(box_top)
+            .push_children(&[box_name, box_exit]);
+        ProgramBox {
+            root: box_top,
+            name_text: box_name,
+            exit_button: box_exit,
+        }
     }
 }
 

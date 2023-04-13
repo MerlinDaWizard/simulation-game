@@ -1,6 +1,12 @@
-use bevy::{prelude::{Plugin, App, in_state, Commands, ResMut, Local, NextState, Handle, FromWorld, World, AssetServer, Image as BevyImage, Resource, IntoSystemConfig, Res}, time::Time};
-use bevy_egui::{EguiContexts};
-use egui::{*, plot::Plot};
+use bevy::{
+    prelude::{
+        in_state, App, AssetServer, Commands, FromWorld, Handle, Image as BevyImage,
+        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World,
+    },
+    time::Time,
+};
+use bevy_egui::EguiContexts;
+use egui::{plot::Plot, *};
 
 use crate::GameState;
 pub struct LeftPanelPlugin;
@@ -13,8 +19,7 @@ impl Plugin for LeftPanelPlugin {
     }
 }
 
-
-pub fn left_panel (
+pub fn left_panel(
     mut commands: Commands,
     mut ui_state: ResMut<UiState>,
     mut egui_ctx: EguiContexts,
@@ -22,15 +27,18 @@ pub fn left_panel (
     mut is_initialized: Local<bool>,
     images: Local<Images>,
     time: Res<Time>,
-) { // At the moment `CurrentLevel` actually refers to the level to load
+) {
+    // At the moment `CurrentLevel` actually refers to the level to load
     let egui_texture_handle = ui_state
-    .egui_texture_handle
-    .get_or_insert_with(|| {
-        egui_ctx
-            .ctx_mut()
-            .load_texture("example", egui::ColorImage::example(), Default::default())
-    })
-    .clone();
+        .egui_texture_handle
+        .get_or_insert_with(|| {
+            egui_ctx.ctx_mut().load_texture(
+                "example",
+                egui::ColorImage::example(),
+                Default::default(),
+            )
+        })
+        .clone();
 
     let mut load = false;
     let mut remove = false;
@@ -46,13 +54,15 @@ pub fn left_panel (
         .resizable(false)
         .show(egui_ctx.ctx_mut(), |ui| {});
 
-    egui::TopBottomPanel::top("top_panel")
-        .show(egui_ctx.ctx_mut(), |ui| {
-            let exit_button = ui.add(
-                egui::widgets::ImageButton::new(*rendered_texture_id, [32.0,32.0])
-            );
-            if exit_button.clicked() {commands.insert_resource(NextState(Some(GameState::MainMenu)))}
-        });
+    egui::TopBottomPanel::top("top_panel").show(egui_ctx.ctx_mut(), |ui| {
+        let exit_button = ui.add(egui::widgets::ImageButton::new(
+            *rendered_texture_id,
+            [32.0, 32.0],
+        ));
+        if exit_button.clicked() {
+            commands.insert_resource(NextState(Some(GameState::MainMenu)))
+        }
+    });
 
     egui::SidePanel::left("side_panel")
         .default_width(200.0)
@@ -103,23 +113,32 @@ pub fn left_panel (
         .show(egui_ctx.ctx_mut(), |ui| {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                 ui.label("Lololollololll");
-                let sin: plot::PlotPoints = (0..time.elapsed_seconds_f64().floor() as usize).flat_map(|i| {
-                    //let x = i as f64 * 0.01;
-                    let n = i as f64 * 0.05;
-                    [[i as f64, (n.sin()*100.0).round()], [(i+1) as f64, (n.sin()*100.0).round()]]
-                }).collect();
+                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(100.0, 100.0))
+                    .frame(true);
+                ui.add(button);
+                let sin: plot::PlotPoints = (0..time.elapsed_seconds_f64().floor() as usize)
+                    .flat_map(|i| {
+                        //let x = i as f64 * 0.01;
+                        let n = i as f64 * 0.05;
+                        [
+                            [i as f64, (n.sin() * 100.0).round()],
+                            [(i + 1) as f64, (n.sin() * 100.0).round()],
+                        ]
+                    })
+                    .collect();
                 let line = plot::Line::new(sin);
 
-                let x_fmt = |x: f64, _range: &std::ops::RangeInclusive<f64>| {
-                    format!("Tick: {}", x.floor())
-                };
+                let x_fmt =
+                    |x: f64, _range: &std::ops::RangeInclusive<f64>| format!("Tick: {}", x.floor());
 
                 let label_fmt = |_s: &str, val: &plot::PlotPoint| {
                     format!(
-                        "Tick {}\n{}", val.x.floor() as usize, val.y.round() as usize
+                        "Tick {}\n{}",
+                        val.x.floor() as usize,
+                        val.y.round() as usize
                     )
                 };
-                
+
                 Plot::new("graph")
                     .x_axis_formatter(x_fmt)
                     .label_formatter(label_fmt)
@@ -129,12 +148,8 @@ pub fn left_panel (
                     .include_y(0.0)
                     .auto_bounds_y()
                     .legend(plot::Legend::default())
-                    .show(ui, |plot_ui|
-                        plot_ui.line(line.name("Input")
-                    ));
-                    
+                    .show(ui, |plot_ui| plot_ui.line(line.name("Input")));
             })
-
         });
 }
 pub struct Images {

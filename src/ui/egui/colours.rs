@@ -51,4 +51,3 @@ impl From<Color32> for Srgba_Unmultiplied {
         Srgba_Unmultiplied(item.to_srgba_unmultiplied())
     }
 }
-

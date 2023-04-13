@@ -1,7 +1,7 @@
-use std::{path::PathBuf, fs::File, io::Read};
+use std::{fs::File, io::Read, path::PathBuf};
 
 use bevy::prelude::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub struct SettingsPlugin;
 
@@ -14,14 +14,17 @@ impl Plugin for SettingsPlugin {
 /// Struct to store user settings. E.g. Theme
 #[derive(Resource, Debug, Serialize, Deserialize)]
 pub struct UserSettings {
-    pub theme: PathBuf
+    pub theme: PathBuf,
 }
 
 /// Lets us use .init_resource instead of a start up system.
 impl FromWorld for UserSettings {
     fn from_world(_: &mut World) -> Self {
         let mut s = String::new();
-        File::open("data/user-config.toml").unwrap().read_to_string(&mut s).unwrap();
+        File::open("data/user-config.toml")
+            .unwrap()
+            .read_to_string(&mut s)
+            .unwrap();
         let config: UserSettings = toml::from_str(&s).expect("Could not parse user-config.toml");
         config
     }

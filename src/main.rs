@@ -2,31 +2,32 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::too_many_lines)]
 
+mod components;
+mod config;
+mod game;
+mod level_select;
 mod main_menu;
 mod main_menu2;
-mod level_select;
-mod game;
-mod components;
-mod ui;
-mod config;
-mod sim;
 mod settings;
+mod sim;
+mod ui;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use bevy_egui::{EguiPlugin};
+use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_mod_picking::prelude::*;
-use bevy_pixel_camera::{PixelCameraPlugin, PixelBorderPlugin, PixelCameraBundle};
+use bevy_pixel_camera::{PixelBorderPlugin, PixelCameraBundle, PixelCameraPlugin};
 //use bevy_mod_picking::{DefaultPickingPlugins, DebugEventsPickingPlugin, PickingCameraBundle};
-use bevy::window::{close_on_esc, PresentMode};
-use bevy::diagnostic::{LogDiagnosticsPlugin};
-use main_menu2::MainMenuPlugin;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
+use bevy::diagnostic::LogDiagnosticsPlugin;
+use bevy::window::{close_on_esc, PresentMode};
 use bevy_heterogeneous_texture_atlas_loader::*;
+use main_menu2::MainMenuPlugin;
 use merlin_pick_backend::MerlinSpriteBackend;
 
-/// Our Application State
+/// Main application state
+/// Typically refers to the type of screen and rough file type.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, States)]
 pub enum GameState {
     #[default]
@@ -40,16 +41,20 @@ pub enum GameState {
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()).set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "Simulation game!".to_string(),
-                resolution: (1920.,1080.).into(),
-                present_mode: PresentMode::AutoVsync,
-                mode: bevy::window::WindowMode::BorderlessFullscreen,
-                ..default()
-            }),
-            ..default()
-        }))
+        .add_plugins(
+            DefaultPlugins
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Simulation game!".to_string(),
+                        resolution: (1920., 1080.).into(),
+                        present_mode: PresentMode::AutoVsync,
+                        mode: bevy::window::WindowMode::BorderlessFullscreen,
+                        ..default()
+                    }),
+                    ..default()
+                }),
+        )
         // Resources
         .insert_resource(Msaa::Sample2)
         .insert_resource(ClearColor(Color::rgb_u8(30, 32, 48)))
@@ -71,8 +76,7 @@ fn main() {
         // add out states driver
         .add_state::<GameState>()
         .add_loading_state(
-            LoadingState::new(GameState::Loading)
-            .continue_to_state(GameState::MainMenu2)
+            LoadingState::new(GameState::Loading).continue_to_state(GameState::MainMenu2),
         )
         .add_collection_to_loading_state::<_, MainTextureAtlas>(GameState::Loading)
         // Own plugins
@@ -89,27 +93,33 @@ fn main() {
         .add_system(game::setup_screen.in_schedule(OnEnter(GameState::InGame)))
         // menu cleanup (state exit) systems
         .add_system(despawn_with::<main_menu::MainMenu>.in_schedule(OnExit(GameState::MainMenu)))
-        .add_system(despawn_with::<level_select::LevelsMenu>.in_schedule(OnExit(GameState::LevelsMenu)))
+        .add_system(
+            despawn_with::<level_select::LevelsMenu>.in_schedule(OnExit(GameState::LevelsMenu)),
+        )
         // game cleanup (state exit) systems
         .add_system(despawn_with::<game::GameRoot>.in_schedule(OnExit(GameState::InGame)))
         // menu stuff
-        .add_systems((
-            close_on_esc,
-            main_menu::butt_interact_visual,
-            main_menu::butt_exit.run_if(main_menu::on_butt_interact::<main_menu::ExitButt>),
-            main_menu::butt_game.run_if(main_menu::on_butt_interact::<main_menu::EnterButt>),
-            main_menu::butt_levels.run_if(main_menu::on_butt_interact::<main_menu::LevelsButt>),
-        ).distributive_run_if(in_state(GameState::MainMenu)))
+        .add_systems(
+            (
+                close_on_esc,
+                main_menu::butt_interact_visual,
+                main_menu::butt_exit.run_if(main_menu::on_butt_interact::<main_menu::ExitButt>),
+                main_menu::butt_game.run_if(main_menu::on_butt_interact::<main_menu::EnterButt>),
+                main_menu::butt_levels.run_if(main_menu::on_butt_interact::<main_menu::LevelsButt>),
+            )
+                .distributive_run_if(in_state(GameState::MainMenu)),
+        )
         // in-game stuff
-        .add_systems((
-            back_to_menu_on_esc,
-        ).distributive_run_if(in_state(GameState::InGame)))
+        .add_systems((back_to_menu_on_esc,).distributive_run_if(in_state(GameState::InGame)))
         // Levels menu
-        .add_systems((
-            level_select::butt_interact_visual,
-            level_select::on_butt_interact::<level_select::LevelButton>,
-            back_to_menu_on_esc,
-        ).distributive_run_if(in_state(GameState::LevelsMenu)))
+        .add_systems(
+            (
+                level_select::butt_interact_visual,
+                level_select::on_butt_interact::<level_select::LevelButton>,
+                back_to_menu_on_esc,
+            )
+                .distributive_run_if(in_state(GameState::LevelsMenu)),
+        )
         // our other various systems:
         .add_system(debug_current_state)
         // setup our camera globally (for UI) at startup and keep it alive at all times
@@ -148,7 +158,7 @@ fn setup(mut commands: Commands) {
 }
 
 #[derive(AssetCollection, Resource, Deref, DerefMut)]
-pub struct MainTextureAtlas{
+pub struct MainTextureAtlas {
     #[asset(path = "sprite_map.ron")]
-    handle: Handle<TextureAtlas>
+    handle: Handle<TextureAtlas>,
 }
