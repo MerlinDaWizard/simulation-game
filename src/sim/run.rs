@@ -9,10 +9,21 @@ pub enum SimState {
     Active,
 }
 
-#[derive(Debug, Resource, Clone, Copy, Default)]
+#[derive(Debug, Resource, Clone, Default)]
 pub enum RunType {
     #[default]
     None,
     Step(u32),
     Continuous,
+}
+
+impl RunType {
+    pub fn tick(&mut self) -> bool {
+        match self {
+            RunType::None => todo!(),
+            RunType::Step(_) => todo!(),
+            RunType::Continuous => todo!(),
+
+        }
+    }
 }
