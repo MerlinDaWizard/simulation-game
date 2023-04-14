@@ -49,7 +49,7 @@ impl SimulationData {
         {
             let mut sprite = TextureAtlasSprite::new(dummy_component.get_sprite_index(atlas));
             sprite.anchor = Anchor::BottomLeft;
-            let component = dummy_component.build_default();
+            let mut component = dummy_component.build_default();
             component.on_place(position, self, &mut sprite, atlas);
             let entity_id = commands
                 .spawn((
@@ -106,12 +106,17 @@ impl SimulationData {
         component_sprites: &mut Query<&mut TextureAtlasSprite, With<GridLink>>,
         atlas: &TextureAtlas,
     ) -> Option<()> {
-        let cell = self.grid.grid.get(position[0])?.get(position[1])?;
+        let cell = self.grid.grid.get_mut(position[0])?.get_mut(position[1])?;
         //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, CellState::Empty);
 
         if let CellState::Real(id, comp) = cell {
             let mut sprite = component_sprites.get_mut(*id).unwrap();
-            comp.on_place(position, self, sprite.as_mut(), atlas);
+            let mut current = std::mem::replace(comp, Component::SignalPassthrough(SignalPassthrough::default()));
+            let comp = comp as *mut Component;
+            current.on_place(position, self, sprite.as_mut(), atlas); // TODO:
+            unsafe{let comp_mut: &mut Component = &mut *comp; // This is a HACKY solution and I MEAN HACKY
+            std::mem::replace(comp_mut, current);
+            }
             //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, cell);
         }
         Some(())
@@ -239,7 +244,7 @@ pub struct AudioEvent {
 pub trait GridComponent {
     /// Whenever the sprite of the component should be updated
     fn on_place(
-        &self,
+        &mut self,
         own_pos: &[usize; 2],
         sim_data: &SimulationData,
         sprite: &mut TextureAtlasSprite,

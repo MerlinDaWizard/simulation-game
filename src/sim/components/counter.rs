@@ -36,7 +36,7 @@ impl GridComponent for Counter {
     }
 
     fn on_place(
-        &self,
+        &mut self,
         _own_pos: &[usize; 2],
         _sim_data: &SimulationData,
         _sprite: &mut TextureAtlasSprite,

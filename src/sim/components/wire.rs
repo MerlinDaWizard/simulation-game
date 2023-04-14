@@ -16,8 +16,14 @@ use bevy::{
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
 
+
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
-pub struct Wire {}
+pub struct Wire {
+    #[reflect(ignore)]
+    pub connected_sides: EnumMap<helpers::Side, bool>,
+    #[reflect(ignore)]
+    pub disabled_sides: EnumMap<helpers::Side, EnabledOrDisabled>
+}
 
 impl GridComponent for Wire {
     // Wires do not need to tick as all communication is done intrinsically using the wire graph not graph
@@ -34,7 +40,7 @@ impl GridComponent for Wire {
     }
 
     fn on_place(
-        &self,
+        &mut self,
         own_pos: &[usize; 2],
         sim_data: &SimulationData,
         sprite: &mut TextureAtlasSprite,
@@ -43,6 +49,7 @@ impl GridComponent for Wire {
         dbg!(own_pos);
         let mut sides = sim_data.port_grid.get_sides(own_pos);
         for (side, state) in sides.iter_mut() {
+            if self.disabled_sides[side] == EnabledOrDisabled::Disabled {*state = false; continue;}
             let a = helpers::combine_offset(own_pos, &side.as_offset());
             if a.is_none() {
                 continue;
@@ -60,6 +67,7 @@ impl GridComponent for Wire {
             .get_texture_index(&Handle::weak(sprite_name.into()))
             .expect("Could not find correct wire varient");
         sprite.index = idx;
+        self.connected_sides = sides;
     }
 
     fn ports(&self) -> Vec<&([usize; 2], Side)> {
@@ -79,10 +87,11 @@ impl Wire {
 #[derive(Debug, Enum)]
 pub enum WirePorts {}
 
-enum ConnectionStatus {
-    Connected,
-    Floating,
-    /// Allow disabling of certain connections to allow wires running in parallel and such
+
+#[derive(Clone, Copy, Reflect, FromReflect, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub enum EnabledOrDisabled {
+    #[default]
+    Enabled,
     Disabled,
 }
 

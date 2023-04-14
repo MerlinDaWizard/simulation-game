@@ -1,10 +1,11 @@
-use bevy::prelude::{UVec2, Vec2};
+use bevy::{prelude::{UVec2, Vec2}, reflect::{FromReflect, Reflect}};
 use enum_map::Enum;
+use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
 
 use crate::game::GRID_CELL_SIZE;
 
-#[derive(Clone, Copy, Debug, EnumIter, Enum, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, EnumIter, Enum, PartialEq, Eq, Reflect, FromReflect, Serialize, Deserialize)]
 pub enum Side {
     Up,
     Down,
@@ -42,6 +43,8 @@ impl Side {
 }
 
 pub fn combine_offset(pos: &[usize; 2], offset: &[isize; 2]) -> Option<[usize; 2]> {
+    dbg!(&pos);
+    dbg!(&offset);
     let new_pos = [
         pos[0].checked_add_signed(offset[0]),
         pos[1].checked_add_signed(offset[1]),

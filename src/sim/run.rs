@@ -37,7 +37,6 @@ pub enum AfterFixedUpdate {
     FixedUpdateFlush
 }
 
-
 /// Simulation State
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Default, States)]
 pub enum SimState {
@@ -86,35 +85,26 @@ pub fn build_simulation(
     let sim_data = sim_data.as_mut();
     let grid = &mut sim_data.grid.grid;
     let port_grid = &mut sim_data.port_grid;
-    
+    let mut checked_grid = vec![vec![false; grid[0].len()]; grid.len()];
     for x in 0..grid.len() {
         for y in 0..grid[x].len() {
-            let mut cell = std::mem::replace(&mut grid[x][y], CellState::Empty); // TODO: Revamp this code so I am never replacing the cell, this pains me to do.
+            let mut cell = &mut grid[x][y];
+            //let mut cell = std::mem::replace(&mut grid[x][y], CellState::Empty); // TODO: Revamp this code so I am never replacing the cell, this pains me to do.
             if let CellState::Real(s, component) = &mut cell {
-                for (offset, side) in component.ports() {
+                let ports: Vec<([usize; 2], Side)> = component.ports().iter().map(|(pos, side)| {(pos.clone(), side.clone())}).collect();
+                for (offset, side) in ports {
 
                     let position = [x+offset[0], y+offset[1]];
-                    dbg!(&s);
-                    dbg!(position);
-                    dbg!(side);
-                    dbg!(port_grid.get_sides(&position));
                     if let Some(side_pos) = helpers::combine_offset(&position, &side.as_offset()) {
-                        // let port = port_grid.get_mut_port(&side_pos, side.reverse()).expect("Portgrid & component grid missmatch");
-                        // dbg!(&port);
-                        // // Unwrap it a bit mroe
-                        // let port = port.as_mut().expect("Portgrid & component grid missmatch");
-                        // // Exit if already checked
-                        // if port.checked == true {continue;}
                         let shared = Arc::new(AtomicU8::new(0));
-                        // port.val = Some(shared.clone());
-                        // component.set_port(offset.clone(), side.clone(), shared.clone());
-                        let mut checked_grid = vec![vec![false; grid[0].len()]; grid.len()];
+                        dbg!("Orginal Pos:");
+                        dbg!(&side_pos);
                         flood_fill(grid, port_grid, shared, side_pos, side.reverse(), &mut checked_grid);
                     } else {continue;}
 
                 }
             }
-            grid[x][y] = cell;
+            //grid[x][y] = cell;
         }
     }
     dbg!(grid);
@@ -126,67 +116,44 @@ pub fn flood_fill(
     source_arc: Arc<AtomicU8>,
     position: [usize; 2],
     origin_side: Side,
-    checked_grid: &mut Vec<Vec<bool>>
-) -> Result<(),FloodFillReturns> {
-    // Found a component port
-    if let Ok(bounds) = port_grid.get_mut_port_inside(&position, origin_side) {
-        if let Some(port) = bounds {
-            port.checked = true;
-            port.val = Some(source_arc.clone());
-            checked_grid[position[0]][position[1]] = true;
-            let cell = &mut grid[position[0]][position[1]];
+    has_propagated: &mut Vec<Vec<bool>>
+) {
+    let mut call_on_sides: Vec<Side> = Vec::new();
+    if let Some(c) = grid.get_mut(position[0]) {
+        dbg!(&c);
+        if let Some(cell) = c.get_mut(position[1]) {
+            dbg!(&cell);
             match cell {
-                CellState::Empty => {return Err(FloodFillReturns::Empty)},
-                CellState::Reference(real_pos) => {
-                    let real_pos = real_pos.clone();
-                    if let CellState::Real(_,c) = &mut grid[real_pos[0]][real_pos[1]] {
-                        c.set_port(get_difference(&position, &real_pos), origin_side, source_arc.clone()).expect("Portgrid & component grid missmatch");
+                CellState::Empty => {return;},
+                CellState::Reference(_) => todo!(),
+                CellState::Real(_, component) => {
+                    if let Component::WirePiece(piece) = component {
+                        if has_propagated[position[0]][position[1]] == false {
+                            has_propagated[position[0]][position[1]] = true;
+                            dbg!(piece.connected_sides);
+                            let connected_sides = piece.connected_sides.iter().filter(|(side, connected)| {**connected}).map(|(side, _)| {side});
+                            call_on_sides.extend(connected_sides);
+                        }
+                    } else {
+                        if let Ok(p) = dbg!(port_grid.get_mut_port_inside(&position, origin_side)) {
+                            if let Some(port) = p.as_mut() {
+                                dbg!("potato");
+                                port.checked = true;
+                                port.val = Some(source_arc.clone());
+                                component.set_port([0,0], origin_side, source_arc.clone()).expect("Component grid and port grid missmatch");
+                            }
+                        }
                     }
                 },
-                CellState::Real(_, c) => {
-                    // dbg!(&position);
-                    // dbg!(origin_side);
-                    // dbg!(&c);
-                    c.set_port([0,0], origin_side, source_arc.clone()).expect("Portgrid & component grid missmatch");
-                },
-            }
-            //return;
-        }
-    }
-
-    // let cell = &mut grid.get(position[0]).get(position[1])?;
-    
-    let cell = {
-        if let Some(c) = grid.get(position[0]) {
-            if let Some(cell) = c.get(position[1]) {
-                cell
-            } else {return Err(FloodFillReturns::IndexOutOfBounds)}
-        } else {return Err(FloodFillReturns::IndexOutOfBounds)}
-    };
-
-    if let CellState::Real(_, c) = cell {
-        if let Component::WirePiece(_) = c {
-            if checked_grid[position[0]][position[1]] == false {
-                checked_grid[position[0]][position[1]] = true;
-                for dir in helpers::Side::iter() {
-                    //if dir == origin_side {continue} // Just dont immediatally bounce back (theoretically this wouldnt be an issue anyway)
-                    if let Some(new_p) = helpers::combine_offset(&position, &dir.as_offset()) {
-                        #[allow(unused_must_use)] // Just to silence the warning from clippy about the result
-                        {flood_fill(grid, port_grid, source_arc.clone(), new_p, dir.reverse(), checked_grid);}
-                    } else {continue;}
-                }
             }
         }
     }
-    return Ok(());
-
-}
-
-pub enum FloodFillReturns {
-    IndexOutOfBounds,
-    NotWire,
-    Empty,
-
+    dbg!(&call_on_sides);
+    for dir in call_on_sides {
+        if let Some(new_p) = helpers::combine_offset(&position, &dir.as_offset()) {
+            flood_fill(grid, port_grid, source_arc.clone(), dbg!(new_p), dbg!(dir.reverse()), has_propagated);
+        }
+    }
 }
 
 fn get_difference(larger: &[usize; 2], smaller: &[usize; 2]) -> [usize; 2] {
