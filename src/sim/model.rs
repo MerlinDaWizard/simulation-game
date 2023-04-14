@@ -7,6 +7,8 @@
 // Would require extra code for P2P (port to port) connections not through a wire
 // Can already get a mental map for this
 
+use std::sync::{Arc, atomic::AtomicU8};
+
 // Improvement: We add a new 'reference' component which just redirects any calls onto the actual cell the component is in.
 // This means that instead of going through every component for ports we just go through the ones which are adjacent
 use super::{
@@ -256,4 +258,6 @@ pub trait GridComponent {
 
     /// Fetch a Vec of ports for use in the port grid
     fn ports(&self) -> Vec<&([usize; 2], Side)>;
+
+    fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),() >;
 }

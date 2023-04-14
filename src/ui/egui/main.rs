@@ -1,14 +1,14 @@
 use bevy::{
     prelude::{
         in_state, App, AssetServer, Commands, FromWorld, Handle, Image as BevyImage,
-        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World,
+        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World, debug,
     },
     time::Time,
 };
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::GameState;
+use crate::{GameState, sim::run::{SimState, RunType}};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
@@ -115,7 +115,13 @@ pub fn left_panel(
                 ui.label("Lololollololll");
                 let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(100.0, 100.0))
                     .frame(true);
-                ui.add(button);
+                let start_test = ui.add(button);
+                if start_test.clicked() {
+                    commands.insert_resource(NextState(Some(SimState::Building)));
+                    commands.insert_resource(RunType::Step(100));
+                    println!("CLICKED");
+                    debug!("CLICKED");
+                }
                 let sin: plot::PlotPoints = (0..time.elapsed_seconds_f64().floor() as usize)
                     .flat_map(|i| {
                         //let x = i as f64 * 0.01;

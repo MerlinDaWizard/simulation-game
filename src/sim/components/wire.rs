@@ -1,3 +1,6 @@
+use std::sync::Arc;
+use std::sync::atomic::AtomicU8;
+
 use crate::sim::helpers;
 use crate::sim::{
     helpers::Side,
@@ -37,6 +40,7 @@ impl GridComponent for Wire {
         sprite: &mut TextureAtlasSprite,
         atlas: &TextureAtlas,
     ) {
+        dbg!(own_pos);
         let mut sides = sim_data.port_grid.get_sides(own_pos);
         for (side, state) in sides.iter_mut() {
             let a = helpers::combine_offset(own_pos, &side.as_offset());
@@ -60,6 +64,10 @@ impl GridComponent for Wire {
 
     fn ports(&self) -> Vec<&([usize; 2], Side)> {
         Vec::new()
+    }
+
+    fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),()> {
+        Err(())
     }
 }
 

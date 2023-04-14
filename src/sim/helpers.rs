@@ -4,7 +4,7 @@ use strum_macros::EnumIter;
 
 use crate::game::GRID_CELL_SIZE;
 
-#[derive(Clone, Copy, Debug, EnumIter, Enum)]
+#[derive(Clone, Copy, Debug, EnumIter, Enum, PartialEq, Eq)]
 pub enum Side {
     Up,
     Down,
@@ -28,6 +28,15 @@ impl Side {
             Side::Down => "down",
             Side::Left => "left",
             Side::Right => "right",
+        }
+    }
+
+    pub fn reverse(self) -> Self {
+        match self {
+            Side::Up => Side::Down,
+            Side::Down => Side::Up,
+            Side::Left => Side::Right,
+            Side::Right => Side::Left,
         }
     }
 }

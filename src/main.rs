@@ -25,6 +25,7 @@ use bevy::window::{close_on_esc, PresentMode};
 use bevy_heterogeneous_texture_atlas_loader::*;
 use main_menu2::MainMenuPlugin;
 use merlin_pick_backend::MerlinSpriteBackend;
+use sim::run::SimRunPlugin;
 
 /// Main application state
 /// Typically refers to the type of screen and rough file type.
@@ -73,6 +74,7 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(TextureAtlasLoaderPlugin)
         .add_plugin(MainMenuPlugin)
+        .add_plugin(SimRunPlugin)
         // add out states driver
         .add_state::<GameState>()
         .add_loading_state(

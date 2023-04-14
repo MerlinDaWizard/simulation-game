@@ -45,6 +45,16 @@ impl GridComponent for SignalCopy {
     fn ports(&self) -> Vec<&([usize; 2], Side)> {
         return Self::CONST_PORTS.values().collect();
     }
+
+    fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),()> {
+        for (varient, (self_offset, self_side)) in Self::CONST_PORTS.iter() {
+            if offset == *self_offset && side == *self_side {
+                self.ports[varient] = Some(set_to);
+                return Ok(());
+            }
+        }
+        Err(())
+    }
 }
 
 impl SignalCopy {
