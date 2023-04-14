@@ -222,6 +222,21 @@ impl PortGrid {
             .ok_or(PortGridError::PositionOutOfBounds)?;
         Ok(item)
     }
+
+    pub fn get_mut_port_inside(&mut self, position: &[usize; 2], side: Side) -> Result<&mut Option<Port>, PortGridError> {
+        match side {
+            Side::Up => Ok(&mut self.get_mut(position)?.top.origin_down),
+            Side::Down => Ok(&mut self
+                .get_mut(&[position[0], position[1].checked_sub(1).ok_or(PortGridError::PositionOutOfBounds)?])?
+                .top
+                .origin_up),
+            Side::Left => Ok(&mut self.get_mut(position)?.left.origin_right),
+            Side::Right => Ok(&mut self
+                .get_mut(&[position[0] + 1, position[1]])?
+                .left
+                .origin_left),
+        }
+    }
 }
 
 #[derive(Debug)]
