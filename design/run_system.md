@@ -22,3 +22,16 @@ OnEnter --> Halted, reset sim
 
 
 On exit InGame, move SimState to halted
+
+
+
+# Combining Ports
+
+1. Repeat up down left right,
+    2. Match cellState
+        - Empty => Return
+        - Reference => Go to step #
+        - Real =>
+            1. Check if wire, it it is a wire, repeat on up down left right sides.
+            2. If not a wire, check on the origin of call side for port in port grid
+            
