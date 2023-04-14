@@ -91,9 +91,10 @@ pub fn build_simulation(
             let mut cell = &mut grid[x][y];
             //let mut cell = std::mem::replace(&mut grid[x][y], CellState::Empty); // TODO: Revamp this code so I am never replacing the cell, this pains me to do.
             if let CellState::Real(s, component) = &mut cell {
+                // We do these map shenanigans as the .ports returns the [usize; 2]  REFERENCES, this meant that component had to be kept in scope even after the .ports has finished
+                // As a solution we just convert a Vec<&[usize; 2], Side> into a Vec<[usize; 2], Side>
                 let ports: Vec<([usize; 2], Side)> = component.ports().iter().map(|(pos, side)| {(pos.clone(), side.clone())}).collect();
                 for (offset, side) in ports {
-
                     let position = [x+offset[0], y+offset[1]];
                     if let Some(side_pos) = helpers::combine_offset(&position, &side.as_offset()) {
                         let shared = Arc::new(AtomicU8::new(0));
@@ -125,7 +126,12 @@ pub fn flood_fill(
             dbg!(&cell);
             match cell {
                 CellState::Empty => {return;},
-                CellState::Reference(_) => todo!(),
+                CellState::Reference(real_pos) => {
+                    let real_pos = real_pos.clone();
+                    if let CellState::Real(_,c) = &mut grid[real_pos[0]][real_pos[1]] {
+                        c.set_port(get_difference(&position, &real_pos), origin_side, source_arc.clone()).expect("Portgrid & component grid missmatch");
+                    }
+                },
                 CellState::Real(_, component) => {
                     if let Component::WirePiece(piece) = component {
                         if has_propagated[position[0]][position[1]] == false {
