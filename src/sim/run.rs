@@ -1,6 +1,6 @@
 use std::sync::{Arc, atomic::AtomicU8};
 use strum::IntoEnumIterator;
-use bevy::prelude::*;
+use bevy::{prelude::*};
 
 use super::{model::{SimulationData, CellState, GridComponent, Component}, helpers::{self, Side}, port_grid::PortGrid, components::Wire};
 
@@ -86,7 +86,7 @@ pub fn build_simulation(
     let sim_data = sim_data.as_mut();
     let grid = &mut sim_data.grid.grid;
     let port_grid = &mut sim_data.port_grid;
-    let mut checked_grid = vec![vec![false; grid[0].len()]; grid.len()];
+    
     for x in 0..grid.len() {
         for y in 0..grid[x].len() {
             let mut cell = std::mem::replace(&mut grid[x][y], CellState::Empty); // TODO: Revamp this code so I am never replacing the cell, this pains me to do.
@@ -108,6 +108,7 @@ pub fn build_simulation(
                         let shared = Arc::new(AtomicU8::new(0));
                         // port.val = Some(shared.clone());
                         // component.set_port(offset.clone(), side.clone(), shared.clone());
+                        let mut checked_grid = vec![vec![false; grid[0].len()]; grid.len()];
                         flood_fill(grid, port_grid, shared, side_pos, side.reverse(), &mut checked_grid);
                     } else {continue;}
 
@@ -126,7 +127,7 @@ pub fn flood_fill(
     position: [usize; 2],
     origin_side: Side,
     checked_grid: &mut Vec<Vec<bool>>
-) {
+) -> Result<(),FloodFillReturns> {
     // Found a component port
     if let Ok(bounds) = port_grid.get_mut_port_inside(&position, origin_side) {
         if let Some(port) = bounds {
@@ -135,7 +136,7 @@ pub fn flood_fill(
             checked_grid[position[0]][position[1]] = true;
             let cell = &mut grid[position[0]][position[1]];
             match cell {
-                CellState::Empty => {return},
+                CellState::Empty => {return Err(FloodFillReturns::Empty)},
                 CellState::Reference(real_pos) => {
                     let real_pos = real_pos.clone();
                     if let CellState::Real(_,c) = &mut grid[real_pos[0]][real_pos[1]] {
@@ -143,9 +144,9 @@ pub fn flood_fill(
                     }
                 },
                 CellState::Real(_, c) => {
-                    dbg!(&position);
-                    dbg!(origin_side);
-                    dbg!(&c);
+                    // dbg!(&position);
+                    // dbg!(origin_side);
+                    // dbg!(&c);
                     c.set_port([0,0], origin_side, source_arc.clone()).expect("Portgrid & component grid missmatch");
                 },
             }
@@ -153,7 +154,16 @@ pub fn flood_fill(
         }
     }
 
-    let cell = &mut grid[position[0]][position[1]];
+    // let cell = &mut grid.get(position[0]).get(position[1])?;
+    
+    let cell = {
+        if let Some(c) = grid.get(position[0]) {
+            if let Some(cell) = c.get(position[1]) {
+                cell
+            } else {return Err(FloodFillReturns::IndexOutOfBounds)}
+        } else {return Err(FloodFillReturns::IndexOutOfBounds)}
+    };
+
     if let CellState::Real(_, c) = cell {
         if let Component::WirePiece(_) = c {
             if checked_grid[position[0]][position[1]] == false {
@@ -161,12 +171,21 @@ pub fn flood_fill(
                 for dir in helpers::Side::iter() {
                     //if dir == origin_side {continue} // Just dont immediatally bounce back (theoretically this wouldnt be an issue anyway)
                     if let Some(new_p) = helpers::combine_offset(&position, &dir.as_offset()) {
-                        flood_fill(grid, port_grid, source_arc.clone(), new_p, dir.reverse(), checked_grid);
+                        #[allow(unused_must_use)] // Just to silence the warning from clippy about the result
+                        {flood_fill(grid, port_grid, source_arc.clone(), new_p, dir.reverse(), checked_grid);}
                     } else {continue;}
                 }
             }
         }
     }
+    return Ok(());
+
+}
+
+pub enum FloodFillReturns {
+    IndexOutOfBounds,
+    NotWire,
+    Empty,
 
 }
 

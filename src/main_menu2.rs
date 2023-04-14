@@ -76,7 +76,7 @@ fn main_menu(
                             }
 
                             ui.allocate_space(vec2(10., 10.));
-                            let text = RichText::new("Settings").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let text = RichText::new("Quit").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
                             let button_quit = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
                             if button_quit.clicked() {
                                 exit.send(AppExit);

@@ -68,7 +68,7 @@ impl GateAnd {
 
 #[derive(Debug, Enum)]
 pub enum GateAndPorts {
-    Input,
-    OutputA,
-    OutputB,
+    InputA,
+    Output,
+    InputB,
 }
