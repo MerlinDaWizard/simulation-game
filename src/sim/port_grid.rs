@@ -1,4 +1,5 @@
 use enum_map::{enum_map, EnumMap};
+use serde::{Serialize, Deserialize};
 use std::sync::{atomic::AtomicU8, Arc};
 
 use super::helpers::Side;
@@ -245,9 +246,8 @@ pub enum PortGridError {
     IncorrectOrigin,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Port {
-    pub val: Option<Arc<AtomicU8>>,
     pub checked: bool,
 }
 

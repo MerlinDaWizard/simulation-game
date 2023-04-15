@@ -43,8 +43,6 @@ impl Side {
 }
 
 pub fn combine_offset(pos: &[usize; 2], offset: &[isize; 2]) -> Option<[usize; 2]> {
-    dbg!(&pos);
-    dbg!(&offset);
     let new_pos = [
         pos[0].checked_add_signed(offset[0]),
         pos[1].checked_add_signed(offset[1]),

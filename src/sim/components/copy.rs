@@ -1,10 +1,10 @@
 use crate::sim::{
     helpers::Side,
-    model::{AudioEvent, GridComponent, SimulationData, VisualEvent},
+    model::{AudioEvent, GridComponent, SimulationData, VisualEvent, ComponentPortData},
 };
 use bevy::{
     reflect::{FromReflect, Reflect},
-    sprite::{TextureAtlas, TextureAtlasSprite},
+    sprite::{TextureAtlas, TextureAtlasSprite}, prelude::World,
 };
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
@@ -16,22 +16,18 @@ use std::sync::{atomic::AtomicU8, Arc};
 pub struct SignalCopy {
     #[reflect(ignore)]
     #[serde(skip)]
-    ports: EnumMap<SignalCopyPorts, Option<Arc<AtomicU8>>>,
+    ports: EnumMap<SignalCopyPorts, ComponentPortData>,
 }
 
 impl GridComponent for SignalCopy {
-    fn tick(
-        &mut self,
-        _own_pos: &[usize; 2],
-        _grid: &mut SimulationData,
-    ) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
-        // output = input
-        todo!()
+    fn tick(&mut self, _: [usize; 2], _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+        let input = self.ports[SignalCopyPorts::Input].get();
+        self.ports[SignalCopyPorts::OutputA].set(input);
+        self.ports[SignalCopyPorts::OutputB].set(input);
+        (Vec::new(), Vec::new())
     }
 
-    fn build(&mut self, _own_pos: &[usize; 2], _sim_data: &mut SimulationData) {
-        todo!()
-    }
+    fn build(&mut self) {}
 
     fn on_place(
         &mut self,
@@ -49,7 +45,7 @@ impl GridComponent for SignalCopy {
     fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),()> {
         for (varient, (self_offset, self_side)) in Self::CONST_PORTS.iter() {
             if offset == *self_offset && side == *self_side {
-                self.ports[varient] = Some(set_to);
+                self.ports[varient].set_link(Some(set_to));
                 return Ok(());
             }
         }

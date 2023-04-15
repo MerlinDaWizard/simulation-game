@@ -8,6 +8,7 @@ use crate::sim::{
         AudioEvent, CellState, Component, ComponentGrid, GridComponent, SimulationData, VisualEvent,
     },
 };
+use bevy::prelude::World;
 use bevy::{
     prelude::{debug, Handle},
     reflect::{FromReflect, Reflect},
@@ -27,17 +28,11 @@ pub struct Wire {
 
 impl GridComponent for Wire {
     // Wires do not need to tick as all communication is done intrinsically using the wire graph not graph
-    fn tick(
-        &mut self,
-        _own_pos: &[usize; 2],
-        _grid: &mut SimulationData,
-    ) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _: [usize; 2], _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         (Vec::new(), Vec::new())
     }
 
-    fn build(&mut self, _own_pos: &[usize; 2], _sim_data: &mut SimulationData) {
-        todo!()
-    }
+    fn build(&mut self) {}
 
     fn on_place(
         &mut self,
@@ -46,7 +41,7 @@ impl GridComponent for Wire {
         sprite: &mut TextureAtlasSprite,
         atlas: &TextureAtlas,
     ) {
-        dbg!(own_pos);
+        //dbg!(own_pos);
         let mut sides = sim_data.port_grid.get_sides(own_pos);
         for (side, state) in sides.iter_mut() {
             if self.disabled_sides[side] == EnabledOrDisabled::Disabled {*state = false; continue;}
@@ -74,7 +69,7 @@ impl GridComponent for Wire {
         Vec::new()
     }
 
-    fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),()> {
+    fn set_port(&mut self, _: [usize; 2], _: Side, _: Arc<AtomicU8>) -> Result<(),()> {
         Err(())
     }
 }

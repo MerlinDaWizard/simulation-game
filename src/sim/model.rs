@@ -7,13 +7,13 @@
 // Would require extra code for P2P (port to port) connections not through a wire
 // Can already get a mental map for this
 
-use std::sync::{Arc, atomic::AtomicU8};
+use std::sync::{Arc, atomic::{AtomicU8, Ordering}};
 
 // Improvement: We add a new 'reference' component which just redirects any calls onto the actual cell the component is in.
 // This means that instead of going through every component for ports we just go through the ones which are adjacent
 use super::{
     helpers::{self, calc_grid_pos, Side},
-    port_grid::{Port, PortGrid},
+    port_grid::{{Port as PortGridPort}, PortGrid},
 };
 use crate::{
     components::placement::GridLink, game::GameRoot, sim::components::*, MainTextureAtlas,
@@ -76,7 +76,7 @@ impl SimulationData {
                 .id();
             self.grid.place_component(entity_id, component, position);
             self.port_grid
-                .modify_bulk(Some(Port::default()), dummy_component.ports(), position);
+                .modify_bulk(Some(PortGridPort::default()), dummy_component.ports(), position);
             let adjacent = helpers::get_adjacent(position, &dummy_component.get_grid_size());
 
             for component in adjacent {
@@ -114,8 +114,9 @@ impl SimulationData {
             let mut current = std::mem::replace(comp, Component::SignalPassthrough(SignalPassthrough::default()));
             let comp = comp as *mut Component;
             current.on_place(position, self, sprite.as_mut(), atlas); // TODO:
-            unsafe{let comp_mut: &mut Component = &mut *comp; // This is a HACKY solution and I MEAN HACKY
-            std::mem::replace(comp_mut, current);
+            unsafe{
+                let comp_mut: &mut Component = &mut *comp; // This is a HACKY solution and I MEAN HACKY
+                std::mem::replace(comp_mut, current);
             }
             //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, cell);
         }
@@ -251,18 +252,45 @@ pub trait GridComponent {
         atlas: &TextureAtlas,
     );
     /// When assembling the simulation + setting up, what should it reset / alter\
-    /// E.g. Any wire must flood fill to find its neightbours for the wire graph
-    fn build(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData);
+    fn build(&mut self);
 
     /// Should run the update on the component using itself
-    fn tick(
-        &mut self,
-        own_pos: &[usize; 2],
-        sim_data: &mut SimulationData,
-    ) -> (Vec<VisualEvent>, Vec<AudioEvent>);
+    fn tick(&mut self, own_pos: [usize; 2], world: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>);
 
     /// Fetch a Vec of ports for use in the port grid
     fn ports(&self) -> Vec<&([usize; 2], Side)>;
 
     fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),() >;
+}
+
+
+/// Each component which has ports should store an EnumMap<[ITS OWN PORTS], ComponentPortData>\
+/// .get() to read\
+/// .set() to write
+#[derive(Default, Clone, Debug)]
+pub struct ComponentPortData(Option<Arc<AtomicU8>>);
+
+impl ComponentPortData {
+    /// Read the value of a port, if no connection return the default value (0).
+    pub fn get(&self) -> u8 {
+        match &self.0 {
+            None => 0,
+            Some(p) => p.load(Ordering::Relaxed),
+        }
+    }
+
+    /// Set the value of a port, if no connection ignore.
+    pub fn set(&self, val: u8) {
+        match &self.0 {
+            None => {},
+            Some(p) => {
+                p.store(val, Ordering::Relaxed);
+            }
+        }
+    }
+
+    /// Take in an [Option<Arc<AtomicU8>>] and sets the internal state.
+    pub fn set_link(&mut self, link: Option<Arc<AtomicU8>>) {
+        self.0 = link;
+    }
 }
