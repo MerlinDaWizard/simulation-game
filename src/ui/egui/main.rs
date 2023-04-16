@@ -1,5 +1,5 @@
 use std::path::PathBuf;
-
+use glob::glob;
 use bevy::{
     prelude::{
         in_state, App, AssetServer, Commands, FromWorld, Handle, Image as BevyImage,
@@ -10,18 +10,17 @@ use bevy::{
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}}};
+use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}}, level_select::CurrentLevel};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiState>()
-            .add_startup_system(configure_ui_state_system)
-            .add_system(left_panel.run_if(in_state(GameState::InGame)));
+            .add_system(main_panels.run_if(in_state(GameState::InGame)));
     }
 }
 
-pub fn left_panel(
+pub fn main_panels(
     mut commands: Commands,
     mut ui_state: ResMut<UiState>,
     mut egui_ctx: EguiContexts,
@@ -29,25 +28,11 @@ pub fn left_panel(
     mut is_initialized: Local<bool>,
     images: Local<Images>,
     time: Res<Time>,
+    cur_level: Res<CurrentLevel>,
     mut save_writer: EventWriter<SaveEvent>,
     mut load_writer: EventWriter<LoadEvent>,
 ) {
     // At the moment `CurrentLevel` actually refers to the level to load
-    let egui_texture_handle = ui_state
-        .egui_texture_handle
-        .get_or_insert_with(|| {
-            egui_ctx.ctx_mut().load_texture(
-                "example",
-                egui::ColorImage::example(),
-                Default::default(),
-            )
-        })
-        .clone();
-
-    let mut load = false;
-    let mut remove = false;
-    let mut invert = false;
-
     if !*is_initialized {
         *is_initialized = true;
         *rendered_texture_id = egui_ctx.add_image(images.bevy_icon.clone_weak());
@@ -59,60 +44,53 @@ pub fn left_panel(
         .show(egui_ctx.ctx_mut(), |ui| {});
 
     egui::TopBottomPanel::top("top_panel").show(egui_ctx.ctx_mut(), |ui| {
-        let exit_button = ui.add(egui::widgets::ImageButton::new(
-            *rendered_texture_id,
-            [32.0, 32.0],
-        ));
-        if exit_button.clicked() {
-            commands.insert_resource(NextState(Some(GameState::MainMenu)))
-        }
-    });
-
-    egui::SidePanel::left("side_panel")
-        .default_width(200.0)
-        .show(egui_ctx.ctx_mut(), |ui| {
-            ui.heading("Side Panel");
-
-            ui.horizontal(|ui| {
-                ui.label("Write something: ");
-                ui.text_edit_singleline(&mut ui_state.label);
-            });
-
-            ui.add(egui::widgets::Image::new(
-                egui_texture_handle.id(),
-                egui_texture_handle.size_vec2(),
+        ui.horizontal_centered(|ui| {
+            let exit_button = ui.add(egui::widgets::ImageButton::new(
+                *rendered_texture_id,
+                [32.0, 32.0],
             ));
-
-            ui.add(egui::Slider::new(&mut ui_state.value, 0.0..=10.0).text("value"));
-            if ui.button("Increment").clicked() {
-                ui_state.value += 1.0;
+            if exit_button.clicked() {
+                commands.insert_resource(NextState(Some(GameState::MainMenu2)))
             }
 
-            ui.allocate_space(egui::Vec2::new(1.0, 100.0));
-            ui.horizontal(|ui| {
-                load = ui.button("Load").clicked();
-                invert = ui.button("Invert").clicked();
-                remove = ui.button("Remove").clicked();
+
+            ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
+                let resp = containers::ComboBox::from_id_source("save_dropdown")
+                    .width(300.0)
+                    .selected_text(
+                        RichText::new(match &ui_state.selected_file {
+                            None => "create new",
+                            Some(p) => p.file_name().unwrap().to_str().unwrap()
+                        }).size(28.0)
+                        .family(FontFamily::Monospace)
+                    )
+                    .show_ui(ui, |ui| {
+                        ui.style_mut().wrap = Some(false);
+                        ui.set_min_width(60.0);
+                        ui.selectable_value(&mut ui_state.selected_file, None, "Create new");
+                        for file_path in ui_state.files.clone() {
+                            ui.selectable_value(&mut ui_state.selected_file, Some(file_path.clone()), file_path.file_name().unwrap().to_str().unwrap());
+                        }
+                    }).response;
+
+                if resp.clicked_by(PointerButton::Primary) {
+                    if let Ok(paths) = glob(&format!("data/levels/user/{}/*.save", cur_level.0.unwrap())) {
+                        let p: Vec<PathBuf> = paths.filter_map(|p| p.ok()).collect();
+                        ui_state.files = p;
+                    }
+                }
             });
+        });
+    });
 
-            ui.add(egui::widgets::Image::new(
-                *rendered_texture_id,
-                [256.0, 256.0],
-            ));
-
-            ui.allocate_space(egui::Vec2::new(1.0, 10.0));
-            ui.checkbox(&mut ui_state.is_window_open, "Window Is Open");
-
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
-                ui.add(egui::Hyperlink::from_label_and_url(
-                    "powered by egui",
-                    "https://github.com/emilk/egui/",
-                ));
-            });
+    egui::SidePanel::left("left_panel")
+        .default_width(200.0)
+        .show(egui_ctx.ctx_mut(), |ui| {
         });
 
     TopBottomPanel::bottom("bottom_panel")
-        .default_height(20.0)
+        .default_height(200.0)
+        .min_height(200.0)
         .resizable(true)
         .show(egui_ctx.ctx_mut(), |ui| {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
@@ -130,7 +108,7 @@ pub fn left_panel(
                 }
 
                 let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(50.0, 50.0)).frame(true);
-                let load = ui.add(button);
+                let load = ui.add_enabled(true, button);
                 if load.clicked() {
                     load_writer.send(LoadEvent(PathBuf::from("data/levels/test.json")))
                 }
@@ -160,7 +138,7 @@ pub fn left_panel(
                 Plot::new("graph")
                     .x_axis_formatter(x_fmt)
                     .label_formatter(label_fmt)
-                    .view_aspect(3.0)
+                    // .view_aspect(3.0)
                     //.center_y_axis(true)
                     .include_y(100.0)
                     .include_y(0.0)
@@ -185,15 +163,10 @@ impl FromWorld for Images {
     }
 }
 
-pub fn configure_ui_state_system(mut ui_state: ResMut<UiState>) {
-    ui_state.is_window_open = true;
-}
-
 #[derive(Default, Resource)]
 pub struct UiState {
-    pub label: String,
-    pub value: f32,
-    pub inverted: bool,
     pub egui_texture_handle: Option<egui::TextureHandle>,
-    pub is_window_open: bool,
+    pub back_button: Option<egui::TextureHandle>,
+    pub files: Vec<PathBuf>,
+    pub selected_file: Option<PathBuf>,
 }

@@ -1,6 +1,7 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::too_many_lines)]
+extern crate glob;
 
 mod components;
 mod config;

@@ -3204,6 +3204,7 @@ dependencies = [
  "enum-map",
  "enum_dispatch",
  "flate2",
+ "glob",
  "lazy_static",
  "merlin_pick_backend",
  "rand",
