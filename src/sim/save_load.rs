@@ -1,5 +1,6 @@
 use std::{path::PathBuf, fs::File, io::{Read, Write}};
 
+use base64::write::EncoderWriter;
 use bevy::{prelude::*, ecs::system::SystemState};
 use flate2::{write::ZlibEncoder, Compression};
 use serde::{Deserialize, Serialize};
@@ -79,7 +80,7 @@ fn save_listener(
         let mut uncompressed_file = File::create("data/levels/uncompressed.json").expect("Cannot create / recreate file");
         uncompressed_file.write(&vec).expect("Could not write file");
         let compressed_file = File::create(path).expect("Cannot create / recreate file");
-        let mut encoder = ZlibEncoder::new(compressed_file, Compression::new(9));
+        let mut encoder = ZlibEncoder::new(EncoderWriter::new(compressed_file, &base64::prelude::BASE64_STANDARD_NO_PAD), Compression::new(9));
         encoder.write(&vec).expect("Could not compress save");
         encoder.finish().expect("Could not write file");
     }
