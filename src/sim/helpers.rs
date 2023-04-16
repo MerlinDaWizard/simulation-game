@@ -1,10 +1,13 @@
-use bevy::prelude::{UVec2, Vec2};
+use bevy::{prelude::{UVec2, Vec2, Commands, Entity, Transform, Name}, reflect::{FromReflect, Reflect}, sprite::{SpriteSheetBundle, TextureAtlasSprite}};
 use enum_map::Enum;
+use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
 
-use crate::game::GRID_CELL_SIZE;
+use crate::{game::{GRID_CELL_SIZE, GameRoot}, components::placement::GridLink, MainTextureAtlas};
 
-#[derive(Clone, Copy, Debug, EnumIter, Enum)]
+use super::model::{Component, DummyComponent};
+
+#[derive(Clone, Copy, Debug, EnumIter, Enum, PartialEq, Eq, Reflect, FromReflect, Serialize, Deserialize)]
 pub enum Side {
     Up,
     Down,
@@ -28,6 +31,15 @@ impl Side {
             Side::Down => "down",
             Side::Left => "left",
             Side::Right => "right",
+        }
+    }
+
+    pub fn reverse(self) -> Self {
+        match self {
+            Side::Up => Side::Down,
+            Side::Down => Side::Up,
+            Side::Left => Side::Right,
+            Side::Right => Side::Left,
         }
     }
 }
@@ -93,4 +105,30 @@ pub fn calc_grid_pos(grid_bottom_left: &Vec2, pos_in_grid: &UVec2) -> Vec2 {
     let pos = *grid_bottom_left + (pos_in_grid.as_vec2() * GRID_CELL_SIZE as f32);
     //dbg!(pos);
     pos
+}
+
+pub fn spawn_component_sprite(commands: &mut Commands, sprite: TextureAtlasSprite, grid_bottom_left: &Vec2, position: &[usize; 2], main_atlas: &MainTextureAtlas, dummy_component: DummyComponent) -> Entity {
+    commands
+        .spawn((
+            SpriteSheetBundle {
+                sprite,
+                transform: Transform {
+                    translation: calc_grid_pos(
+                        grid_bottom_left,
+                        &UVec2::new(position[0] as u32, position[1] as u32),
+                    )
+                    .extend(11.0),
+                    ..Default::default()
+                },
+                texture_atlas: main_atlas.handle.clone(),
+                ..Default::default()
+            },
+            GameRoot,
+            GridLink(*position),
+            Name::new(format!(
+                "Component - {}",
+                dummy_component.get_sprite_name()
+            )),
+        ))
+        .id()
 }

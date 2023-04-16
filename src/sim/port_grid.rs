@@ -1,4 +1,5 @@
 use enum_map::{enum_map, EnumMap};
+use serde::{Serialize, Deserialize};
 use std::sync::{atomic::AtomicU8, Arc};
 
 use super::helpers::Side;
@@ -10,7 +11,7 @@ use super::helpers::Side;
 /// As a result of this the length needs to be + 1 for each direction\
 /// and must have offsets applied to help it work
 /// Refer to design:
-pub struct PortGrid(Vec<Vec<PortGridData>>);
+pub struct PortGrid(pub Vec<Vec<PortGridData>>);
 
 /// The data stored inside each real port grid cell.
 #[derive(Debug, Clone)]
@@ -58,8 +59,6 @@ impl LeftEdge {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct Port(pub Option<Arc<AtomicU8>>);
 
 impl PortGrid {
     /// Size refers to the size of the corrisponding component grid.\
@@ -165,36 +164,53 @@ impl PortGrid {
 
     pub fn get_sides(&self, position: &[usize; 2]) -> EnumMap<Side, bool> {
         enum_map! {
-            Side::Up => self.get_side(position, Side::Up).unwrap_or(false),
-            Side::Down => self.get_side(position, Side::Down).unwrap_or(false),
-            Side::Left => self.get_side(position, Side::Left).unwrap_or(false),
-            Side::Right => self.get_side(position, Side::Right).unwrap_or(false),
+            Side::Up => self.get_side_existance(position, Side::Up).unwrap_or(false),
+            Side::Down => self.get_side_existance(position, Side::Down).unwrap_or(false),
+            Side::Left => self.get_side_existance(position, Side::Left).unwrap_or(false),
+            Side::Right => self.get_side_existance(position, Side::Right).unwrap_or(false),
         }
     }
 
     /// Get side based of component grid position\
     /// Ignores ports from its own position
-    pub fn get_side(&self, position: &[usize; 2], side: Side) -> Result<bool, PortGridError> {
+    pub fn get_side_existance(&self, position: &[usize; 2], side: Side) -> Result<bool, PortGridError> {
+        self.get_port(position, side).and_then(|a| Ok(a.is_some()))
+    }
+
+    /// Get side based of component grid position\
+    /// Ignores ports from its own position
+    pub fn get_mut_port(&mut self, position: &[usize; 2], side: Side) -> Result<&mut Option<Port>, PortGridError> {
         match side {
-            Side::Up => Ok(self.get(position)?.top.origin_up.is_some()),
-            Side::Down => Ok(self
-                .get(&[
-                    position[0],
-                    position[1]
-                        .checked_sub(1)
-                        .ok_or(PortGridError::PositionOutOfBounds)?,
-                ])?
+            Side::Up => Ok(&mut self.get_mut(position)?.top.origin_up),
+            Side::Down => Ok(&mut self
+                .get_mut(&[position[0], position[1].checked_sub(1).ok_or(PortGridError::PositionOutOfBounds)?])?
                 .top
-                .origin_down
-                .is_some()),
-            Side::Left => Ok(self.get(position)?.left.origin_left.is_some()),
-            Side::Right => Ok(self
-                .get(&[position[0] + 1, position[1]])?
+                .origin_down),
+            Side::Left => Ok(&mut self.get_mut(position)?.left.origin_left),
+            Side::Right => Ok(&mut self
+                .get_mut(&[position[0] + 1, position[1]])?
                 .left
-                .origin_right
-                .is_some()),
+                .origin_right),
         }
     }
+
+    /// Get side based of component grid position\
+    /// Ignores ports from its own position
+    pub fn get_port(&self, position: &[usize; 2], side: Side) -> Result<&Option<Port>, PortGridError> {
+        match side {
+            Side::Up => Ok(&self.get(position)?.top.origin_up),
+            Side::Down => Ok(&self
+                .get(&[position[0], position[1].checked_sub(1).ok_or(PortGridError::PositionOutOfBounds)?])?
+                .top
+                .origin_down),
+            Side::Left => Ok(&self.get(position)?.left.origin_left),
+            Side::Right => Ok(&self
+                .get(&[position[0] + 1, position[1]])?
+                .left
+                .origin_right),
+        }
+    }
+
 
     /// Get a cell from the [PortGrid] accounting for any offsets as a result of the size+1 stuff
     pub fn get(&self, position: &[usize; 2]) -> Result<&PortGridData, PortGridError> {
@@ -207,10 +223,36 @@ impl PortGrid {
             .ok_or(PortGridError::PositionOutOfBounds)?;
         Ok(item)
     }
+
+    pub fn get_mut_port_inside(&mut self, position: &[usize; 2], side: Side) -> Result<&mut Option<Port>, PortGridError> {
+        match side {
+            Side::Up => Ok(&mut self.get_mut(position)?.top.origin_down),
+            Side::Down => Ok(&mut self
+                .get_mut(&[position[0], position[1].checked_sub(1).ok_or(PortGridError::PositionOutOfBounds)?])?
+                .top
+                .origin_up),
+            Side::Left => Ok(&mut self.get_mut(position)?.left.origin_right),
+            Side::Right => Ok(&mut self
+                .get_mut(&[position[0] + 1, position[1]])?
+                .left
+                .origin_left),
+        }
+    }
 }
 
 #[derive(Debug)]
 pub enum PortGridError {
     PositionOutOfBounds,
     IncorrectOrigin,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct Port {
+    pub checked: bool,
+}
+
+impl Port {
+    pub fn mark_checked(&mut self, checked: bool) {
+        self.checked = checked;
+    }
 }

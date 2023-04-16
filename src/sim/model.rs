@@ -7,17 +7,20 @@
 // Would require extra code for P2P (port to port) connections not through a wire
 // Can already get a mental map for this
 
+use std::sync::{Arc, atomic::{AtomicU8, Ordering}};
+
 // Improvement: We add a new 'reference' component which just redirects any calls onto the actual cell the component is in.
 // This means that instead of going through every component for ports we just go through the ones which are adjacent
 use super::{
-    helpers::{self, calc_grid_pos, Side},
-    port_grid::{Port, PortGrid},
+    helpers::{self, Side, spawn_component_sprite},
+    port_grid::{{Port as PortGridPort}, PortGrid},
 };
 use crate::{
-    components::placement::GridLink, game::GameRoot, sim::components::*, MainTextureAtlas,
+    components::placement::GridLink, sim::components::*, MainTextureAtlas,
 };
 use bevy::{prelude::*, sprite::Anchor};
 use enum_dispatch::enum_dispatch;
+use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
 
 /// The type  that wires should store using
@@ -41,40 +44,16 @@ impl SimulationData {
         dummy_component: DummyComponent,
         position: &[usize; 2],
     ) -> Result<(), PortGridError> {
-        if self
-            .grid
-            .can_fit(position, &dummy_component.get_grid_size())
+        if self.grid.can_fit(position, &dummy_component.get_grid_size())
         {
             let mut sprite = TextureAtlasSprite::new(dummy_component.get_sprite_index(atlas));
             sprite.anchor = Anchor::BottomLeft;
-            let component = dummy_component.build_default();
+            let mut component = dummy_component.build_default();
             component.on_place(position, self, &mut sprite, atlas);
-            let entity_id = commands
-                .spawn((
-                    SpriteSheetBundle {
-                        sprite,
-                        transform: Transform {
-                            translation: calc_grid_pos(
-                                grid_bottom_left,
-                                &UVec2::new(position[0] as u32, position[1] as u32),
-                            )
-                            .extend(11.0),
-                            ..Default::default()
-                        },
-                        texture_atlas: main_atlas.handle.clone(),
-                        ..Default::default()
-                    },
-                    GameRoot,
-                    GridLink(*position),
-                    Name::new(format!(
-                        "Component - {}",
-                        component.dummy().get_sprite_name()
-                    )),
-                ))
-                .id();
+            let entity_id = spawn_component_sprite(commands, sprite, grid_bottom_left, position, main_atlas.as_ref(), dummy_component);
             self.grid.place_component(entity_id, component, position);
             self.port_grid
-                .modify_bulk(Some(Port(None)), dummy_component.ports(), position);
+                .modify_bulk(Some(PortGridPort::default()), dummy_component.ports(), position);
             let adjacent = helpers::get_adjacent(position, &dummy_component.get_grid_size());
 
             for component in adjacent {
@@ -85,6 +64,32 @@ impl SimulationData {
         }
 
         Ok(())
+    }
+
+    /// When given a [Component] it should do all the port stuff but should not update surroundings\
+    /// Doesnt bother checking can_fit
+    pub fn load_component (
+        &mut self,
+        commands: &mut Commands,
+         component: Component,
+        grid_bottom_left: &Vec2,
+        atlas: &TextureAtlas,
+        main_atlas: &MainTextureAtlas,
+        grid_position: &[usize; 2]
+    ) {
+        let dummy_component = component.dummy();
+        let mut sprite = match &component {
+            Component::WirePiece(w) => {
+                let sprite_name = super::components::wire::sides_to_sprite_name(&w.connected_sides);
+                let index = atlas.get_texture_index(&Handle::weak(sprite_name.into())).expect("Could not find correct wire varient");
+                TextureAtlasSprite::new(index)
+            }
+            _ => TextureAtlasSprite::new(component.dummy().get_sprite_index(atlas))
+        };
+        sprite.anchor = Anchor::BottomLeft;
+        let entity_id = spawn_component_sprite(commands, sprite, grid_bottom_left, grid_position, main_atlas, dummy_component);
+        self.grid.place_component(entity_id, component, grid_position);
+        self.port_grid.modify_bulk(Some(PortGridPort::default()), dummy_component.ports(), grid_position);
     }
 
     pub fn remove_component(
@@ -104,12 +109,18 @@ impl SimulationData {
         component_sprites: &mut Query<&mut TextureAtlasSprite, With<GridLink>>,
         atlas: &TextureAtlas,
     ) -> Option<()> {
-        let cell = self.grid.grid.get(position[0])?.get(position[1])?;
+        let cell = self.grid.grid.get_mut(position[0])?.get_mut(position[1])?;
         //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, CellState::Empty);
 
         if let CellState::Real(id, comp) = cell {
             let mut sprite = component_sprites.get_mut(*id).unwrap();
-            comp.on_place(position, self, sprite.as_mut(), atlas);
+            let mut current = std::mem::replace(comp, Component::SignalPassthrough(SignalPassthrough::default()));
+            let comp = comp as *mut Component;
+            current.on_place(position, self, sprite.as_mut(), atlas); // TODO:
+            unsafe{
+                let comp_mut: &mut Component = &mut *comp; // This is a HACKY solution and I MEAN HACKY
+                std::mem::replace(comp_mut, current);
+            }
             //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, cell);
         }
         Some(())
@@ -117,7 +128,7 @@ impl SimulationData {
 }
 
 /// The 2d grid of components
-#[derive(Debug, Default, Reflect)]
+#[derive(Debug, Default, Reflect, Serialize, Deserialize, Clone)]
 pub struct ComponentGrid {
     pub grid: Vec<Vec<CellState>>,
 }
@@ -188,18 +199,24 @@ pub enum DummyComponent {
     Counter,
 }
 
-#[derive(Debug, Clone, Reflect, FromReflect)]
+#[derive(Debug, Clone, Reflect, FromReflect, Serialize, Deserialize)]
 pub enum CellState {
     /// An empty cell
+    #[serde(rename = "E")]
     Empty,
     /// Stores the grid co-ordinates for master component
-    Reference([usize; 2]),
+    #[serde(rename = "Ref")]
+    Reference(#[serde(skip)] [usize; 2]),
     /// Contains a master component
-    Real(Entity, Component),
+    Real(#[serde(skip, default = "default_entity_fix")] Entity, Component),
+}
+
+fn default_entity_fix() -> Entity {
+    Entity::PLACEHOLDER
 }
 /// Each possible component for a given cell\
 /// If the cell is empty it should be expressed in the parent Option<> instead of here.
-#[derive(Debug, Clone, Reflect, FromReflect)]
+#[derive(Debug, Clone, Reflect, FromReflect, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum Component {
     WirePiece(Wire),
@@ -237,23 +254,52 @@ pub struct AudioEvent {
 pub trait GridComponent {
     /// Whenever the sprite of the component should be updated
     fn on_place(
-        &self,
+        &mut self,
         own_pos: &[usize; 2],
         sim_data: &SimulationData,
         sprite: &mut TextureAtlasSprite,
         atlas: &TextureAtlas,
     );
     /// When assembling the simulation + setting up, what should it reset / alter\
-    /// E.g. Any wire must flood fill to find its neightbours for the wire graph
-    fn build(&mut self, own_pos: &[usize; 2], sim_data: &mut SimulationData);
+    fn build(&mut self);
 
     /// Should run the update on the component using itself
-    fn tick(
-        &mut self,
-        own_pos: &[usize; 2],
-        sim_data: &mut SimulationData,
-    ) -> (Vec<VisualEvent>, Vec<AudioEvent>);
+    fn tick(&mut self, own_pos: [usize; 2], tick_num: usize, world: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>);
 
     /// Fetch a Vec of ports for use in the port grid
     fn ports(&self) -> Vec<&([usize; 2], Side)>;
+
+    fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),() >;
+}
+
+
+/// Each component which has ports should store an EnumMap<[ITS OWN PORTS], ComponentPortData>\
+/// .get() to read\
+/// .set() to write
+#[derive(Default, Clone, Debug)]
+pub struct ComponentPortData(Option<Arc<AtomicU8>>);
+
+impl ComponentPortData {
+    /// Read the value of a port, if no connection return the default value (0).
+    pub fn get(&self) -> u8 {
+        match &self.0 {
+            None => 0,
+            Some(p) => p.load(Ordering::Relaxed),
+        }
+    }
+
+    /// Set the value of a port, if no connection ignore.
+    pub fn set(&self, val: u8) {
+        match &self.0 {
+            None => {},
+            Some(p) => {
+                p.store(val, Ordering::Relaxed);
+            }
+        }
+    }
+
+    /// Take in an [Option<Arc<AtomicU8>>] and sets the internal state.
+    pub fn set_link(&mut self, link: Option<Arc<AtomicU8>>) {
+        self.0 = link;
+    }
 }

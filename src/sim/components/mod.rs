@@ -1,9 +1,9 @@
-mod and;
-mod copy;
-mod counter;
-mod not;
-mod passthrough;
-mod wire;
+pub mod and;
+pub mod copy;
+pub mod counter;
+pub mod not;
+pub mod passthrough;
+pub mod wire;
 
 pub use and::GateAnd;
 pub use copy::SignalCopy;

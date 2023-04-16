@@ -2,13 +2,14 @@ use crate::components::placement::Size;
 use crate::level_select::CurrentLevel;
 use crate::{ui, MainTextureAtlas};
 use bevy::prelude::*;
+use serde::{Serialize, Deserialize};
 
 pub const GRID_CELL_SIZE: usize = 32;
 pub const GRID_CELL_AMOUNT_WIDTH: u8 = 7;
 pub const GRID_CELL_AMOUNT_HEIGHT: u8 = 7;
 
 /// Resource to facilitate changing grid sizes
-#[derive(Resource, Debug)]
+#[derive(Resource, Debug, Serialize, Deserialize, Clone)]
 pub struct GridSize(pub [usize; 2]);
 
 impl Default for GridSize {

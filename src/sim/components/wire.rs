@@ -1,3 +1,6 @@
+use std::sync::Arc;
+use std::sync::atomic::AtomicU8;
+
 use crate::sim::helpers;
 use crate::sim::{
     helpers::Side,
@@ -5,6 +8,7 @@ use crate::sim::{
         AudioEvent, CellState, Component, ComponentGrid, GridComponent, SimulationData, VisualEvent,
     },
 };
+use bevy::prelude::World;
 use bevy::{
     prelude::{debug, Handle},
     reflect::{FromReflect, Reflect},
@@ -13,32 +17,34 @@ use bevy::{
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
 
+
 #[derive(Debug, Default, Serialize, Deserialize, Clone, Reflect, FromReflect)]
-pub struct Wire {}
+pub struct Wire {
+    #[reflect(ignore)]
+    pub connected_sides: EnumMap<helpers::Side, bool>,
+    #[reflect(ignore)]
+    pub disabled_sides: EnumMap<helpers::Side, EnabledOrDisabled>
+}
 
 impl GridComponent for Wire {
     // Wires do not need to tick as all communication is done intrinsically using the wire graph not graph
-    fn tick(
-        &mut self,
-        _own_pos: &[usize; 2],
-        _grid: &mut SimulationData,
-    ) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _: [usize; 2], _: usize, _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         (Vec::new(), Vec::new())
     }
 
-    fn build(&mut self, _own_pos: &[usize; 2], _sim_data: &mut SimulationData) {
-        todo!()
-    }
+    fn build(&mut self) {}
 
     fn on_place(
-        &self,
+        &mut self,
         own_pos: &[usize; 2],
         sim_data: &SimulationData,
         sprite: &mut TextureAtlasSprite,
         atlas: &TextureAtlas,
     ) {
+        //dbg!(own_pos);
         let mut sides = sim_data.port_grid.get_sides(own_pos);
         for (side, state) in sides.iter_mut() {
+            if self.disabled_sides[side] == EnabledOrDisabled::Disabled {*state = false; continue;}
             let a = helpers::combine_offset(own_pos, &side.as_offset());
             if a.is_none() {
                 continue;
@@ -56,10 +62,15 @@ impl GridComponent for Wire {
             .get_texture_index(&Handle::weak(sprite_name.into()))
             .expect("Could not find correct wire varient");
         sprite.index = idx;
+        self.connected_sides = sides;
     }
 
     fn ports(&self) -> Vec<&([usize; 2], Side)> {
         Vec::new()
+    }
+
+    fn set_port(&mut self, _: [usize; 2], _: Side, _: Arc<AtomicU8>) -> Result<(),()> {
+        Err(())
     }
 }
 
@@ -71,10 +82,11 @@ impl Wire {
 #[derive(Debug, Enum)]
 pub enum WirePorts {}
 
-enum ConnectionStatus {
-    Connected,
-    Floating,
-    /// Allow disabling of certain connections to allow wires running in parallel and such
+
+#[derive(Clone, Copy, Reflect, FromReflect, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub enum EnabledOrDisabled {
+    #[default]
+    Enabled,
     Disabled,
 }
 
@@ -93,7 +105,7 @@ fn check_for_wire(pos: &[usize; 2], grid: &ComponentGrid) -> bool {
     check_for_wire_option(pos, grid).is_some()
 }
 
-fn sides_to_sprite_name(map: &EnumMap<Side, bool>) -> String {
+pub fn sides_to_sprite_name(map: &EnumMap<Side, bool>) -> String {
     let mut path = "wire_".to_string();
     let mut sides = Vec::with_capacity(4);
     for (side, state) in map {

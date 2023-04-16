@@ -47,59 +47,38 @@ fn main_menu(
                     ui.vertical_centered(|ui| {
                         ui.scope(|ui| {
                             ui.style_mut().visuals.override_text_color = None;
-                            ui.style_mut().visuals.widgets.inactive.weak_bg_fill =
-                                Color32::DARK_BLUE;
-                            ui.style_mut().visuals.widgets.inactive.fg_stroke = Stroke {
-                                width: 3.0,
-                                color: Color32::LIGHT_GREEN,
-                            };
-                            ui.style_mut().visuals.widgets.hovered.weak_bg_fill =
-                                Color32::from_rgb(0, 0, 100);
-                            ui.style_mut().visuals.widgets.hovered.fg_stroke = Stroke {
-                                width: 3.0,
-                                color: Color32::LIGHT_GREEN,
-                            };
+                            ui.style_mut().visuals.widgets.inactive.weak_bg_fill = Color32::DARK_BLUE;
+                            ui.style_mut().visuals.widgets.inactive.fg_stroke = Stroke { width: 3.0, color: Color32::LIGHT_GREEN };
 
-                            ui.style_mut().visuals.widgets.active.weak_bg_fill =
-                                Color32::from_rgb(0, 0, 62);
+                            ui.style_mut().visuals.widgets.hovered.weak_bg_fill =Color32::from_rgb(0, 0, 100);
+                            ui.style_mut().visuals.widgets.hovered.fg_stroke = Stroke { width: 3.0, color: Color32::LIGHT_GREEN };
 
-                            let text = RichText::new("Play").font(egui::FontId {
-                                size: 46.,
-                                family: egui::FontFamily::Monospace,
-                            });
-                            let button_play =
-                                ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
+                            ui.style_mut().visuals.widgets.active.weak_bg_fill = Color32::from_rgb(0, 0, 62);
+
+                            let text = RichText::new("Play").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let button_play = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
                             if button_play.clicked() {
                                 commands.insert_resource(NextState(Some(GameState::InGame)));
                             }
+
                             ui.allocate_space(vec2(10., 10.));
-                            let text = RichText::new("Level Select").font(egui::FontId {
-                                size: 46.,
-                                family: egui::FontFamily::Monospace,
-                            });
-                            let button_lvl =
-                                ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
+                            let text = RichText::new("Level Select").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let button_lvl = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
                             if button_lvl.clicked() {
                                 commands.insert_resource(NextState(Some(GameState::LevelsMenu)));
                             }
+
                             ui.allocate_space(vec2(10., 10.));
-                            let text = RichText::new("Settings").font(egui::FontId {
-                                size: 46.,
-                                family: egui::FontFamily::Monospace,
-                            });
-                            let button_settings =
-                                ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
+                            let text = RichText::new("Settings").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let button_settings = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
                             if button_settings.clicked() {
                                 commands.insert_resource(NextState(Some(GameState::Settings)));
                             }
+
                             ui.allocate_space(vec2(10., 10.));
-                            let text = RichText::new("Quit").font(egui::FontId {
-                                size: 46.,
-                                family: egui::FontFamily::Monospace,
-                            });
-                            let button_settings =
-                                ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
-                            if button_settings.clicked() {
+                            let text = RichText::new("Quit").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let button_quit = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
+                            if button_quit.clicked() {
                                 exit.send(AppExit);
                             }
                         })
