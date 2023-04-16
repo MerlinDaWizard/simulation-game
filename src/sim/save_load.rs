@@ -1,17 +1,18 @@
-use std::{path::PathBuf, fs::File, io::{Read, Write}};
-
-use base64::write::EncoderWriter;
+use std::{path::PathBuf, fs::File, io::{Read, Write, BufReader}};
+use base64::{write::EncoderWriter, read::DecoderReader};
 use bevy::{prelude::*, ecs::system::SystemState};
-use flate2::{write::ZlibEncoder, Compression};
+use flate2::{write::ZlibEncoder, Compression, bufread::ZlibDecoder};
 use serde::{Deserialize, Serialize};
-use crate::{game::{GridSize, PlacementGridEntity}, MainTextureAtlas, components::placement::Size};
+use crate::{game::{GridSize, PlacementGridEntity}, MainTextureAtlas, components::placement::{Size, GridLink}, GameState};
 use super::{run::SimState, model::{SimulationData, ComponentGrid, CellState}, port_grid::PortGrid};
 pub struct SimLoadPlugin;
 
 impl Plugin for SimLoadPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SaveEvent>()
-        .add_system(save_listener);
+        .add_event::<LoadEvent>()
+        .add_system(save_listener.run_if(in_state(GameState::InGame)))
+        .add_system(load_listener.run_if(in_state(GameState::InGame)));
     }
 }
 
@@ -52,7 +53,7 @@ impl LevelData {
 
         for x in 0..self.component_grid.grid.len() {
             for y in 0..self.component_grid.grid[x].len() {
-                if let CellState::Real(_, component) = self.component_grid.grid[x].swap_remove(y) {
+                if let CellState::Real(_, component) = self.component_grid.grid[x][y].clone() {
                     sim_data.load_component(commands, component, &grid_bottom_left, atlas, main_atlas, &[x,y])
                 }
             }
@@ -62,6 +63,7 @@ impl LevelData {
 }
 
 pub struct SaveEvent(pub PathBuf);
+pub struct LoadEvent(pub PathBuf);
 
 /// Listens for [SaveEvent] and saves the simulation data to the corrisponding path buf.
 fn save_listener(
@@ -87,20 +89,28 @@ fn save_listener(
 }
 
 fn load_listener(
-    mut listener: EventReader<SaveEvent>,
+    mut listener: EventReader<LoadEvent>,
     mut commands: Commands,
     mut sim_data: ResMut<SimulationData>,
     mut size: ResMut<GridSize>,
     placement_grid: Query<(&Sprite, &Transform, &Size), With<PlacementGridEntity>>,
     atlases: Res<Assets<TextureAtlas>>,
     main_atlas: Res<MainTextureAtlas>,
+    despawns: Query<Entity, With<GridLink>>
 ) {
     for ev in listener.iter() {
-        let mut s = String::new();
-        File::open(&ev.0).expect("Could not find level file")
-            .read_to_string(&mut s).unwrap();
+        // Clear all pre-existing sprites.
+        for entity in despawns.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
 
-        let level_data: LevelData = serde_json::from_str(&s).expect("Could not parse level");
+        let file = File::open(&ev.0).expect("Could not find level file");
+        // First use the buffered base64 decoder, create a buffered reader using that
+        // Then use that with Zlib to decode that into the json
+        let reader = ZlibDecoder::new(BufReader::new(DecoderReader::new(file, &base64::prelude::BASE64_STANDARD_NO_PAD)));
+
+        let level_data: LevelData = serde_json::from_reader(reader).expect("Could not parse level");
+        // Recreate [SimulationData] etc.
         let (new_sim_data, new_size) = level_data.create_world(&mut commands, atlases.get(&main_atlas.handle).unwrap(), main_atlas.as_ref(), &placement_grid);
         *sim_data = new_sim_data;
         *size = new_size;

@@ -71,14 +71,21 @@ impl SimulationData {
     pub fn load_component (
         &mut self,
         commands: &mut Commands,
-        component: Component,
+         component: Component,
         grid_bottom_left: &Vec2,
         atlas: &TextureAtlas,
         main_atlas: &MainTextureAtlas,
         grid_position: &[usize; 2]
     ) {
         let dummy_component = component.dummy();
-        let mut sprite = TextureAtlasSprite::new(component.dummy().get_sprite_index(atlas));
+        let mut sprite = match &component {
+            Component::WirePiece(w) => {
+                let sprite_name = super::components::wire::sides_to_sprite_name(&w.connected_sides);
+                let index = atlas.get_texture_index(&Handle::weak(sprite_name.into())).expect("Could not find correct wire varient");
+                TextureAtlasSprite::new(index)
+            }
+            _ => TextureAtlasSprite::new(component.dummy().get_sprite_index(atlas))
+        };
         sprite.anchor = Anchor::BottomLeft;
         let entity_id = spawn_component_sprite(commands, sprite, grid_bottom_left, grid_position, main_atlas, dummy_component);
         self.grid.place_component(entity_id, component, grid_position);
@@ -195,7 +202,7 @@ pub enum DummyComponent {
 #[derive(Debug, Clone, Reflect, FromReflect, Serialize, Deserialize)]
 pub enum CellState {
     /// An empty cell
-    #[serde(rename = "")]
+    #[serde(rename = "E")]
     Empty,
     /// Stores the grid co-ordinates for master component
     #[serde(rename = "Ref")]

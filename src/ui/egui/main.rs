@@ -10,7 +10,7 @@ use bevy::{
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::{GameState, sim::{run::{SimState, RunType}, save_load::SaveEvent}};
+use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}}};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
@@ -30,6 +30,7 @@ pub fn left_panel(
     images: Local<Images>,
     time: Res<Time>,
     mut save_writer: EventWriter<SaveEvent>,
+    mut load_writer: EventWriter<LoadEvent>,
 ) {
     // At the moment `CurrentLevel` actually refers to the level to load
     let egui_texture_handle = ui_state
@@ -121,13 +122,17 @@ pub fn left_panel(
                 if start_test.clicked() {
                     commands.insert_resource(NextState(Some(SimState::Building)));
                     commands.insert_resource(RunType::Step(100));
-                    println!("CLICKED");
-                    debug!("CLICKED");
                 }
-                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(100.0, 100.0)).frame(true);
+                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(50.0, 50.0)).frame(true);
                 let save = ui.add(button);
                 if save.clicked() {
                     save_writer.send(SaveEvent(PathBuf::from("data/levels/test.json")))
+                }
+
+                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(50.0, 50.0)).frame(true);
+                let load = ui.add(button);
+                if load.clicked() {
+                    load_writer.send(LoadEvent(PathBuf::from("data/levels/test.json")))
                 }
                 let sin: plot::PlotPoints = (0..time.elapsed_seconds_f64().floor() as usize)
                     .flat_map(|i| {

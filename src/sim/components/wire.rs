@@ -105,7 +105,7 @@ fn check_for_wire(pos: &[usize; 2], grid: &ComponentGrid) -> bool {
     check_for_wire_option(pos, grid).is_some()
 }
 
-fn sides_to_sprite_name(map: &EnumMap<Side, bool>) -> String {
+pub fn sides_to_sprite_name(map: &EnumMap<Side, bool>) -> String {
     let mut path = "wire_".to_string();
     let mut sides = Vec::with_capacity(4);
     for (side, state) in map {
