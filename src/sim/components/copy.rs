@@ -20,7 +20,7 @@ pub struct SignalCopy {
 }
 
 impl GridComponent for SignalCopy {
-    fn tick(&mut self, _: [usize; 2], _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _: [usize; 2], _: usize, _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         let input = self.ports[SignalCopyPorts::Input].get();
         self.ports[SignalCopyPorts::OutputA].set(input);
         self.ports[SignalCopyPorts::OutputB].set(input);

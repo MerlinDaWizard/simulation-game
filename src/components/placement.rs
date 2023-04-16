@@ -5,11 +5,11 @@ use crate::game::{GridSize, PlacementGridEntity};
 use crate::level_select::CurrentLevel;
 use crate::sim::components::*;
 use crate::sim::helpers::Side;
-use crate::sim::level::LevelData;
 use crate::sim::model::{
     CellState, Component as SimComponent, DummyComponent as DummySimComponent, SimulationData,
 };
 use crate::sim::port_grid::PortGrid;
+use crate::sim::save_load::LevelData;
 use crate::{GameState, MainTextureAtlas};
 use bevy::prelude::*;
 pub struct ComponentSetupPlugin;
@@ -38,11 +38,12 @@ fn setup_grid(
         .read_to_string(&mut s)
         .unwrap();
     let level_data: LevelData = serde_json::from_str(&s).expect("Could not parse level");
-    let size = GridSize([level_data.grid_width, level_data.grid_height]);
+    let size = level_data.grid_size;
     //occupation_grid.0 = OccupationGrid::empty_grid_from_size(&size);
     sim_data.grid.grid = vec![vec![CellState::Empty; size.0[1]]; size.0[0]];
-    sim_data.port_grid = PortGrid::new_with_size(level_data.grid_height, level_data.grid_width);
-    grid_size.0 = [level_data.grid_width, level_data.grid_height];
+    sim_data.port_grid = PortGrid::new_with_size(size.0[0], size.0[1]);
+    grid_size.0 = size.0;
+    //grid_size.0 = [level_data.grid_width, level_data.grid_height];
 }
 
 fn clear_grid(mut simulation_grid: ResMut<SimulationData>) {

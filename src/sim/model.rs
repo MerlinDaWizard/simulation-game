@@ -12,14 +12,15 @@ use std::sync::{Arc, atomic::{AtomicU8, Ordering}};
 // Improvement: We add a new 'reference' component which just redirects any calls onto the actual cell the component is in.
 // This means that instead of going through every component for ports we just go through the ones which are adjacent
 use super::{
-    helpers::{self, calc_grid_pos, Side},
+    helpers::{self, Side, spawn_component_sprite},
     port_grid::{{Port as PortGridPort}, PortGrid},
 };
 use crate::{
-    components::placement::GridLink, game::GameRoot, sim::components::*, MainTextureAtlas,
+    components::placement::GridLink, sim::components::*, MainTextureAtlas,
 };
 use bevy::{prelude::*, sprite::Anchor};
 use enum_dispatch::enum_dispatch;
+use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
 
 /// The type  that wires should store using
@@ -43,37 +44,13 @@ impl SimulationData {
         dummy_component: DummyComponent,
         position: &[usize; 2],
     ) -> Result<(), PortGridError> {
-        if self
-            .grid
-            .can_fit(position, &dummy_component.get_grid_size())
+        if self.grid.can_fit(position, &dummy_component.get_grid_size())
         {
             let mut sprite = TextureAtlasSprite::new(dummy_component.get_sprite_index(atlas));
             sprite.anchor = Anchor::BottomLeft;
             let mut component = dummy_component.build_default();
             component.on_place(position, self, &mut sprite, atlas);
-            let entity_id = commands
-                .spawn((
-                    SpriteSheetBundle {
-                        sprite,
-                        transform: Transform {
-                            translation: calc_grid_pos(
-                                grid_bottom_left,
-                                &UVec2::new(position[0] as u32, position[1] as u32),
-                            )
-                            .extend(11.0),
-                            ..Default::default()
-                        },
-                        texture_atlas: main_atlas.handle.clone(),
-                        ..Default::default()
-                    },
-                    GameRoot,
-                    GridLink(*position),
-                    Name::new(format!(
-                        "Component - {}",
-                        component.dummy().get_sprite_name()
-                    )),
-                ))
-                .id();
+            let entity_id = spawn_component_sprite(commands, sprite, grid_bottom_left, position, main_atlas.as_ref(), dummy_component);
             self.grid.place_component(entity_id, component, position);
             self.port_grid
                 .modify_bulk(Some(PortGridPort::default()), dummy_component.ports(), position);
@@ -87,6 +64,25 @@ impl SimulationData {
         }
 
         Ok(())
+    }
+
+    /// When given a [Component] it should do all the port stuff but should not update surroundings\
+    /// Doesnt bother checking can_fit
+    pub fn load_component (
+        &mut self,
+        commands: &mut Commands,
+        component: Component,
+        grid_bottom_left: &Vec2,
+        atlas: &TextureAtlas,
+        main_atlas: &MainTextureAtlas,
+        grid_position: &[usize; 2]
+    ) {
+        let dummy_component = component.dummy();
+        let mut sprite = TextureAtlasSprite::new(component.dummy().get_sprite_index(atlas));
+        sprite.anchor = Anchor::BottomLeft;
+        let entity_id = spawn_component_sprite(commands, sprite, grid_bottom_left, grid_position, main_atlas, dummy_component);
+        self.grid.place_component(entity_id, component, grid_position);
+        self.port_grid.modify_bulk(Some(PortGridPort::default()), dummy_component.ports(), grid_position);
     }
 
     pub fn remove_component(
@@ -125,7 +121,7 @@ impl SimulationData {
 }
 
 /// The 2d grid of components
-#[derive(Debug, Default, Reflect)]
+#[derive(Debug, Default, Reflect, Serialize, Deserialize, Clone)]
 pub struct ComponentGrid {
     pub grid: Vec<Vec<CellState>>,
 }
@@ -196,18 +192,24 @@ pub enum DummyComponent {
     Counter,
 }
 
-#[derive(Debug, Clone, Reflect, FromReflect)]
+#[derive(Debug, Clone, Reflect, FromReflect, Serialize, Deserialize)]
 pub enum CellState {
     /// An empty cell
+    #[serde(rename = "")]
     Empty,
     /// Stores the grid co-ordinates for master component
-    Reference([usize; 2]),
+    #[serde(rename = "Ref")]
+    Reference(#[serde(skip)] [usize; 2]),
     /// Contains a master component
-    Real(Entity, Component),
+    Real(#[serde(skip, default = "default_entity_fix")] Entity, Component),
+}
+
+fn default_entity_fix() -> Entity {
+    Entity::PLACEHOLDER
 }
 /// Each possible component for a given cell\
 /// If the cell is empty it should be expressed in the parent Option<> instead of here.
-#[derive(Debug, Clone, Reflect, FromReflect)]
+#[derive(Debug, Clone, Reflect, FromReflect, Serialize, Deserialize)]
 #[enum_dispatch]
 pub enum Component {
     WirePiece(Wire),
@@ -255,7 +257,7 @@ pub trait GridComponent {
     fn build(&mut self);
 
     /// Should run the update on the component using itself
-    fn tick(&mut self, own_pos: [usize; 2], world: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>);
+    fn tick(&mut self, own_pos: [usize; 2], tick_num: usize, world: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>);
 
     /// Fetch a Vec of ports for use in the port grid
     fn ports(&self) -> Vec<&([usize; 2], Side)>;

@@ -11,6 +11,7 @@ impl Plugin for SimRunPlugin {
     fn build(&self, app: &mut App) {
         app
         .init_resource::<RunType>()
+        .init_resource::<TickCounter>()
         .add_state::<SimState>()
         .configure_sets(
             (
@@ -56,12 +57,22 @@ pub enum RunType {
     Continuous,
 }
 
+#[derive(Resource, Debug, Default, Clone, Copy)]
+pub struct TickCounter(usize);
+
+impl TickCounter {
+    pub fn increment(&mut self) {
+        self.0 += 1;
+    }
+}
+
 /// Variable interval tick event for the simulation. Can run multiple times per frame if necessary.\
 /// Contains check against [RunType]\
 /// An exclusive system meaning that components can do ANYTHING IN THE WORLD in their tick method
 pub fn sim_tick(
     world: &mut World
 ) {
+    let tick_count = world.get_resource::<TickCounter>().unwrap().0;
     let mut run_type = world.get_resource_mut::<RunType>().unwrap();
     // Stop tick action depending on [RunType]
     match run_type.as_mut() {
@@ -89,12 +100,15 @@ pub fn sim_tick(
                     CellState::Empty => {continue;},
                     CellState::Reference(_) => {continue;},
                     CellState::Real(_, comp) => {
-                        comp.tick([x,y], raw_world.as_mut().unwrap());
+                        comp.tick([x,y], tick_count, raw_world.as_mut().unwrap());
                     },
                 }
             }
         }
     }
+
+    // Increment tick counter
+    world.get_resource_mut::<TickCounter>().unwrap().increment();
 }
 
 pub fn build_simulation(

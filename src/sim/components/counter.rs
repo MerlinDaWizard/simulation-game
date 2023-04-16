@@ -21,7 +21,7 @@ pub struct Counter {
 }
 
 impl GridComponent for Counter {
-    fn tick(&mut self, _: [usize; 2], _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _: [usize; 2], _: usize, _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         let input = self.ports[CounterPorts::Input].get();
         let input_clk = self.ports[CounterPorts::InputClk].get();
         if input_clk >= 255u8 && input >= 255u8 {

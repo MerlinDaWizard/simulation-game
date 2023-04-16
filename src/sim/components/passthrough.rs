@@ -20,7 +20,7 @@ pub struct SignalPassthrough {
 
 impl GridComponent for SignalPassthrough {
     // Not gate basic funtionality
-    fn tick(&mut self, _: [usize; 2], _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _: [usize; 2], _: usize, _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         let input = self.ports[SignalPassthroughPorts::Input].get();
         self.ports[SignalPassthroughPorts::Output].set(input);
         (Vec::new(), Vec::new())

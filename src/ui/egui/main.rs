@@ -1,14 +1,16 @@
+use std::path::PathBuf;
+
 use bevy::{
     prelude::{
         in_state, App, AssetServer, Commands, FromWorld, Handle, Image as BevyImage,
-        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World, debug,
+        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World, debug, EventWriter,
     },
     time::Time,
 };
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::{GameState, sim::run::{SimState, RunType}};
+use crate::{GameState, sim::{run::{SimState, RunType}, save_load::SaveEvent}};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
@@ -27,6 +29,7 @@ pub fn left_panel(
     mut is_initialized: Local<bool>,
     images: Local<Images>,
     time: Res<Time>,
+    mut save_writer: EventWriter<SaveEvent>,
 ) {
     // At the moment `CurrentLevel` actually refers to the level to load
     let egui_texture_handle = ui_state
@@ -113,14 +116,18 @@ pub fn left_panel(
         .show(egui_ctx.ctx_mut(), |ui| {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
                 ui.label("Lololollololll");
-                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(100.0, 100.0))
-                    .frame(true);
+                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(100.0, 100.0)).frame(true);
                 let start_test = ui.add(button);
                 if start_test.clicked() {
                     commands.insert_resource(NextState(Some(SimState::Building)));
                     commands.insert_resource(RunType::Step(100));
                     println!("CLICKED");
                     debug!("CLICKED");
+                }
+                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(100.0, 100.0)).frame(true);
+                let save = ui.add(button);
+                if save.clicked() {
+                    save_writer.send(SaveEvent(PathBuf::from("data/levels/test.json")))
                 }
                 let sin: plot::PlotPoints = (0..time.elapsed_seconds_f64().floor() as usize)
                     .flat_map(|i| {

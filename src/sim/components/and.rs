@@ -21,7 +21,7 @@ pub struct GateAnd {
 
 impl GridComponent for GateAnd {
     // And gate basic funtionality
-    fn tick(&mut self, _: [usize; 2], _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _: [usize; 2], _: usize, _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         let input_a = self.ports[GateAndPorts::InputA].get();
         let input_b = self.ports[GateAndPorts::InputA].get();
         if input_a >= 255 && input_b >= 255 {

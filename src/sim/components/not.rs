@@ -20,7 +20,7 @@ pub struct GateNot {
 
 impl GridComponent for GateNot {
     // Not gate basic funtionality
-    fn tick(&mut self, _: [usize; 2], _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _: [usize; 2], _: usize, _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         let input = self.ports[NotPorts::Input].get();
         let output  = 255u8 - input;
         self.ports[NotPorts::Output].set(output);

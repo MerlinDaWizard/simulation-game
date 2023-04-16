@@ -28,7 +28,7 @@ pub struct Wire {
 
 impl GridComponent for Wire {
     // Wires do not need to tick as all communication is done intrinsically using the wire graph not graph
-    fn tick(&mut self, _: [usize; 2], _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
+    fn tick(&mut self, _: [usize; 2], _: usize, _: &mut World) -> (Vec<VisualEvent>, Vec<AudioEvent>) {
         (Vec::new(), Vec::new())
     }
 
