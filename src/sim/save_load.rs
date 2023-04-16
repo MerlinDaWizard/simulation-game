@@ -1,6 +1,7 @@
-use std::{path::PathBuf, fs::File, io::Read};
+use std::{path::PathBuf, fs::File, io::{Read, Write}};
 
 use bevy::{prelude::*, ecs::system::SystemState};
+use flate2::{write::ZlibEncoder, Compression};
 use serde::{Deserialize, Serialize};
 use crate::{game::{GridSize, PlacementGridEntity}, MainTextureAtlas, components::placement::Size};
 use super::{run::SimState, model::{SimulationData, ComponentGrid, CellState}, port_grid::PortGrid};
@@ -73,9 +74,14 @@ fn save_listener(
     }
     
     for path in paths {
-        let file = File::create(path).expect("Cannot create / recreate file");
         let data = LevelData::from_world(world);
-        serde_json::to_writer(file, &data).expect("Couldn't write to file :(");
+        let vec = serde_json::to_vec(&data).expect("Couldn't write to file :(");
+        let mut uncompressed_file = File::create("data/levels/uncompressed.json").expect("Cannot create / recreate file");
+        uncompressed_file.write(&vec).expect("Could not write file");
+        let compressed_file = File::create(path).expect("Cannot create / recreate file");
+        let mut encoder = ZlibEncoder::new(compressed_file, Compression::new(9));
+        encoder.write(&vec).expect("Could not compress save");
+        encoder.finish().expect("Could not write file");
     }
 }
 
