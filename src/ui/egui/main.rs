@@ -55,8 +55,8 @@ pub fn main_panels(
                 commands.insert_resource(NextState(Some(GameState::MainMenu2)))
             }
 
-            let enabled = false;
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
+                let mut save_dropdown_changed = false;
                 let save_dropdown = containers::ComboBox::from_id_source("save_dropdown")
                     .width(300.0)
                     .selected_text(
@@ -72,7 +72,10 @@ pub fn main_panels(
                         ui.add_enabled_ui( sim_halted, |ui| {
                             ui.selectable_value(&mut ui_state.selected_file, None, "Create new");
                             for file_path in ui_state.files.clone() {
-                                ui.selectable_value(&mut ui_state.selected_file, Some(file_path.clone()), file_path.file_name().unwrap().to_str().unwrap());
+                                let val_resp = ui.selectable_value(&mut ui_state.selected_file, Some(file_path.clone()), file_path.file_name().unwrap().to_str().unwrap());
+                                if val_resp.changed() {
+                                    save_dropdown_changed = true;
+                                }
                             }
                         });
                     }).response;
@@ -84,9 +87,8 @@ pub fn main_panels(
                     }
                 }
 
-                if save_dropdown.changed() {
+                if save_dropdown_changed {
                     if let Some(path) = &ui_state.selected_file {
-                        dbg!(&path);
                         load_writer.send(LoadEvent(path.clone()))
                     }
                 }
