@@ -3,7 +3,7 @@ use glob::glob;
 use bevy::{
     prelude::{
         in_state, App, AssetServer, Commands, FromWorld, Handle, Image as BevyImage,
-        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World, debug, EventWriter,
+        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World, debug, EventWriter, State,
     },
     time::Time,
 };
@@ -28,10 +28,12 @@ pub fn main_panels(
     mut is_initialized: Local<bool>,
     images: Local<Images>,
     time: Res<Time>,
+    sim_state: Res<State<SimState>>,
     cur_level: Res<CurrentLevel>,
     mut save_writer: EventWriter<SaveEvent>,
     mut load_writer: EventWriter<LoadEvent>,
 ) {
+    let sim_halted = sim_state.0 == SimState::Halted;
     // At the moment `CurrentLevel` actually refers to the level to load
     if !*is_initialized {
         *is_initialized = true;
@@ -53,9 +55,9 @@ pub fn main_panels(
                 commands.insert_resource(NextState(Some(GameState::MainMenu2)))
             }
 
-
+            let enabled = false;
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
-                let resp = containers::ComboBox::from_id_source("save_dropdown")
+                let save_dropdown = containers::ComboBox::from_id_source("save_dropdown")
                     .width(300.0)
                     .selected_text(
                         RichText::new(match &ui_state.selected_file {
@@ -67,16 +69,25 @@ pub fn main_panels(
                     .show_ui(ui, |ui| {
                         ui.style_mut().wrap = Some(false);
                         ui.set_min_width(60.0);
-                        ui.selectable_value(&mut ui_state.selected_file, None, "Create new");
-                        for file_path in ui_state.files.clone() {
-                            ui.selectable_value(&mut ui_state.selected_file, Some(file_path.clone()), file_path.file_name().unwrap().to_str().unwrap());
-                        }
+                        ui.add_enabled_ui( sim_halted, |ui| {
+                            ui.selectable_value(&mut ui_state.selected_file, None, "Create new");
+                            for file_path in ui_state.files.clone() {
+                                ui.selectable_value(&mut ui_state.selected_file, Some(file_path.clone()), file_path.file_name().unwrap().to_str().unwrap());
+                            }
+                        });
                     }).response;
 
-                if resp.clicked_by(PointerButton::Primary) {
+                if save_dropdown.clicked_by(PointerButton::Primary) {
                     if let Ok(paths) = glob(&format!("data/levels/user/{}/*.save", cur_level.0.unwrap())) {
                         let p: Vec<PathBuf> = paths.filter_map(|p| p.ok()).collect();
                         ui_state.files = p;
+                    }
+                }
+
+                if save_dropdown.changed() {
+                    if let Some(path) = &ui_state.selected_file {
+                        dbg!(&path);
+                        load_writer.send(LoadEvent(path.clone()))
                     }
                 }
             });
