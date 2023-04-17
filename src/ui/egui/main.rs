@@ -8,7 +8,7 @@ use bevy::{
     time::Time,
 };
 use bevy_egui::EguiContexts;
-use egui::{plot::Plot, *};
+use egui::{plot::Plot, *, text::LayoutJob};
 
 use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}}, level_select::CurrentLevel};
 pub struct LeftPanelPlugin;
@@ -16,7 +16,8 @@ pub struct LeftPanelPlugin;
 impl Plugin for LeftPanelPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiState>()
-            .add_system(main_panels.run_if(in_state(GameState::InGame)));
+            .add_system(main_panels.run_if(in_state(GameState::InGame)))
+            .add_system(window_popup.run_if(in_state(GameState::InGame)));
     }
 }
 
@@ -38,6 +39,7 @@ pub fn main_panels(
     if !*is_initialized {
         *is_initialized = true;
         *rendered_texture_id = egui_ctx.add_image(images.bevy_icon.clone_weak());
+        
     }
     egui::SidePanel::right("right_panel")
         .exact_width(250.0)
@@ -56,6 +58,16 @@ pub fn main_panels(
             }
 
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
+                let save_button = ui.add_enabled(sim_halted, egui::widgets::ImageButton::new(
+                    *rendered_texture_id,
+                    [32.0, 32.0],
+                ));
+
+                let load_button = ui.add_enabled(sim_halted && ui_state.selected_file.is_some(), egui::widgets::ImageButton::new(
+                    *rendered_texture_id,
+                    [32.0, 32.0],
+                ));
+
                 let mut save_dropdown_changed = false;
                 let save_dropdown = containers::ComboBox::from_id_source("save_dropdown")
                     .width(300.0)
@@ -90,6 +102,22 @@ pub fn main_panels(
                 if save_dropdown_changed {
                     if let Some(path) = &ui_state.selected_file {
                         load_writer.send(LoadEvent(path.clone()))
+                    }
+                }
+
+                if save_button.clicked_by(PointerButton::Primary) {
+                    match &ui_state.selected_file {
+                        Some(path) => {save_writer.send(SaveEvent(path.clone()))}
+                        None => {
+                            // Popup for name of file.
+                            todo!()
+                        }
+                    }
+                }
+
+                if load_button.clicked_by(PointerButton::Primary) {
+                    if let Some(path) = &ui_state.selected_file {
+                        load_writer.send(LoadEvent(path.clone()));
                     }
                 }
             });
@@ -164,6 +192,7 @@ pub fn main_panels(
 pub struct Images {
     bevy_icon: Handle<BevyImage>,
     back_button: Handle<BevyImage>,
+    save_button: Handle<BevyImage>,
 }
 
 impl FromWorld for Images {
@@ -172,6 +201,7 @@ impl FromWorld for Images {
         Self {
             bevy_icon: asset_server.load("bavy.png"),
             back_button: asset_server.load("egui/back.png"),
+            save_button: asset_server.load("egui/save_button.png"),
         }
     }
 }
@@ -180,6 +210,38 @@ impl FromWorld for Images {
 pub struct UiState {
     pub egui_texture_handle: Option<egui::TextureHandle>,
     pub back_button: Option<egui::TextureHandle>,
+    pub save_button: Option<egui::TextureHandle>,
     pub files: Vec<PathBuf>,
     pub selected_file: Option<PathBuf>,
+}
+
+fn window_popup(
+    mut commands: Commands,
+    mut ui_state: ResMut<UiState>,
+    current_level: Res<CurrentLevel>,
+    mut egui_ctx: EguiContexts,
+    mut file_name: Local<String>,
+    mut save_writer: EventWriter<SaveEvent>,
+) {
+    egui::Window::new("Save Window").show(egui_ctx.ctx_mut(), |ui| {
+        ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
+            ui.label("Name:");
+            ui.text_edit_singleline(&mut *file_name);
+        });
+        
+        let mut text = LayoutJob::default();
+        text.halign = Align::Center;
+        text.append("Save", 0.0, TextFormat {
+            font_id: FontId { size: 20.0, family: FontFamily::Monospace },
+            valign: Align::Center,
+            ..Default::default()
+        });
+        let resp = ui.add(Button::new(text).min_size(Vec2::new(ui.available_width(), 20.0)));
+        if resp.clicked() {
+            let dir = PathBuf::from(format!("data/levels/user/{}", current_level.0.unwrap()));
+            let mut location = dir.join(&*file_name);
+            location.set_extension("save");
+            save_writer.send(SaveEvent(location));
+        }
+    });
 }
