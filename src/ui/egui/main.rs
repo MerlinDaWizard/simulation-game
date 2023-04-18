@@ -223,20 +223,15 @@ fn window_popup(
     mut file_name: Local<String>,
     mut save_writer: EventWriter<SaveEvent>,
 ) {
-    egui::Window::new("Save Window").show(egui_ctx.ctx_mut(), |ui| {
+    egui::Window::new("Save Window").fixed_size(Vec2::new(200.0, 50.0)).show(egui_ctx.ctx_mut(), |ui| {
         ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-            ui.label("Name:");
+            ui.label("Save name:");
             ui.text_edit_singleline(&mut *file_name);
         });
-        
-        let mut text = LayoutJob::default();
-        text.halign = Align::Center;
-        text.append("Save", 0.0, TextFormat {
-            font_id: FontId { size: 20.0, family: FontFamily::Monospace },
-            valign: Align::Center,
-            ..Default::default()
-        });
-        let resp = ui.add(Button::new(text).min_size(Vec2::new(ui.available_width(), 20.0)));
+        ui.separator();
+        //ui.allocate_space(Vec2::new(10.0,4.0));
+        let text = RichText::new("Save").font(FontId { size: 20.0, family: FontFamily::Monospace });
+        let resp = ui.add_sized(ui.available_size(), Button::new(text));
         if resp.clicked() {
             let dir = PathBuf::from(format!("data/levels/user/{}", current_level.0.unwrap()));
             let mut location = dir.join(&*file_name);
