@@ -221,10 +221,11 @@ fn window_popup(
     mut save_menu_state: ResMut<SaveMenuState>,
     mut main_ui_state: ResMut<UiState>,
     mut egui_ctx: EguiContexts,
+    sim_state: Res<State<SimState>>,
     mut file_name: Local<String>,
     mut save_writer: EventWriter<SaveEvent>,
 ) {
-
+    let sim_halted = sim_state.0 == SimState::Halted;
     let mut should_close_window = false;
     // Super high default position to make it into the top right.
     egui::Window::new("Save Window").default_pos(Pos2::new(10000.0,0.0)).fixed_size(Vec2::new(200.0, 50.0)).open(&mut save_menu_state.open).show(egui_ctx.ctx_mut(), |ui| {
@@ -234,24 +235,25 @@ fn window_popup(
         });
         ui.separator(); // Do the line across
         let text = RichText::new("Save").font(FontId { size: 20.0, family: FontFamily::Monospace });
-        let resp = ui.add_sized(ui.available_size(), Button::new(text));
-        if resp.clicked() {
-            if file_name.len() > 0 {
-                let options = sanitize_filename::Options {
-                    replacement: "-",
-                    ..Default::default()
-                };
+        ui.add_enabled_ui(sim_halted, |ui| {
+            let resp = ui.add_sized(ui.available_size(), Button::new(text));
+            if resp.clicked() {
+                if file_name.len() > 0 {
+                    let options = sanitize_filename::Options {
+                        replacement: "-",
+                        ..Default::default()
+                    };
 
-                let dir = PathBuf::from(format!("data/levels/user/{}", current_level.0.unwrap()));
-                let mut location = dir.join(sanitize_filename::sanitize_with_options(&*file_name, options));
-                location.set_extension("save"); // Check valid path
+                    let dir = PathBuf::from(format!("data/levels/user/{}", current_level.0.unwrap()));
+                    let mut location = dir.join(sanitize_filename::sanitize_with_options(&*file_name, options));
+                    location.set_extension("save"); // Check valid path
 
-                main_ui_state.selected_file = Some(location.clone()); // Select in dropdown
-                save_writer.send(SaveEvent(location)); // Send event
-                should_close_window = true; // Close window
+                    main_ui_state.selected_file = Some(location.clone()); // Select in dropdown
+                    save_writer.send(SaveEvent(location)); // Send event
+                    should_close_window = true; // Close window
+                }
             }
-
-        }
+        })
     });
 
     if should_close_window {save_menu_state.open = false;} // 2 step due to cant mutably borrow save_menu_state while in loop due to double mut borrow

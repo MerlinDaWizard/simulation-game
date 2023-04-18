@@ -119,7 +119,7 @@ impl SimulationData {
             current.on_place(position, self, sprite.as_mut(), atlas); // TODO:
             unsafe{
                 let comp_mut: &mut Component = &mut *comp; // This is a HACKY solution and I MEAN HACKY
-                std::mem::replace(comp_mut, current);
+                *comp_mut = current;
             }
             //let cell = std::mem::replace(self.grid.grid.get_mut(position[0])?.get_mut(position[1])?, cell);
         }
