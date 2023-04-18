@@ -31,6 +31,7 @@ catppuccin-egui = "2.0.1"
 flate2 = "1.0.25"
 base64 = "0.21.0"
 glob = "0.3.1"
+sanitize-filename = "0.4.0"
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1

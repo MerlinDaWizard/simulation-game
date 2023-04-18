@@ -3,12 +3,12 @@ use glob::glob;
 use bevy::{
     prelude::{
         in_state, App, AssetServer, Commands, FromWorld, Handle, Image as BevyImage,
-        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World, debug, EventWriter, State,
+        IntoSystemConfig, Local, NextState, Plugin, Res, ResMut, Resource, World, EventWriter, State,
     },
     time::Time,
 };
 use bevy_egui::EguiContexts;
-use egui::{plot::Plot, *, text::LayoutJob};
+use egui::{plot::Plot, *};
 
 use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}}, level_select::CurrentLevel};
 pub struct LeftPanelPlugin;
@@ -237,12 +237,18 @@ fn window_popup(
         let resp = ui.add_sized(ui.available_size(), Button::new(text));
         if resp.clicked() {
             if file_name.len() > 0 {
+                let options = sanitize_filename::Options {
+                    replacement: "-",
+                    ..Default::default()
+                };
+
                 let dir = PathBuf::from(format!("data/levels/user/{}", current_level.0.unwrap()));
-                let mut location = dir.join(&*file_name); // Todo: Prevent file path traversal.
+                let mut location = dir.join(sanitize_filename::sanitize_with_options(&*file_name, options));
                 location.set_extension("save"); // Check valid path
-                main_ui_state.selected_file = Some(location.clone());
-                save_writer.send(SaveEvent(location));
-                should_close_window = true;
+
+                main_ui_state.selected_file = Some(location.clone()); // Select in dropdown
+                save_writer.send(SaveEvent(location)); // Send event
+                should_close_window = true; // Close window
             }
 
         }
