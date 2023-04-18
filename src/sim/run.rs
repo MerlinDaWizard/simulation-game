@@ -1,10 +1,8 @@
 use std::sync::{Arc, atomic::AtomicU8};
-use strum::IntoEnumIterator;
 use bevy::{prelude::*};
 
-use super::{model::{SimulationData, CellState, GridComponent, Component}, helpers::{self, Side}, port_grid::PortGrid, components::Wire};
+use super::{model::{SimulationData, CellState, GridComponent, Component}, helpers::{self, Side}, port_grid::PortGrid};
 
-pub const PORT_UNWRAP_MSG: &str = "No Arc on port connection during tick";
 pub struct SimRunPlugin;
 
 impl Plugin for SimRunPlugin {
@@ -118,6 +116,14 @@ pub fn build_simulation(
     let sim_data = sim_data.as_mut();
     let grid = &mut sim_data.grid.grid;
     let port_grid = &mut sim_data.port_grid;
+
+    for x in &mut port_grid.0 {
+        for y in x {
+            y.left.reset_build();
+            y.top.reset_build();
+        }
+    }
+
     let mut checked_grid = vec![vec![false; grid[0].len()]; grid.len()];
     for x in 0..grid.len() {
         for y in 0..grid[x].len() {
@@ -131,10 +137,14 @@ pub fn build_simulation(
                 for (offset, side) in ports {
                     let position = [x+offset[0], y+offset[1]];
                     if let Some(side_pos) = helpers::combine_offset(&position, &side.as_offset()) {
-                        let shared = Arc::new(AtomicU8::new(0));
-                        //dbg!("Orginal Pos:");
-                        //dbg!(&side_pos);
-                        flood_fill(grid, port_grid, shared, side_pos, side.reverse(), &mut checked_grid);
+                        if let Ok(pp) = port_grid.get_mut_port(&side_pos, side.reverse()) {
+                            if let Some(p) = pp {
+                                if p.checked == false {
+                                    let shared = Arc::new(AtomicU8::new(0)); // If statement mountain.
+                                    flood_fill(grid, port_grid, shared, side_pos, side.reverse(), &mut checked_grid);
+                                }
+                            }
+                        }
                     } else {continue;}
 
                 }
@@ -163,6 +173,12 @@ pub fn flood_fill(
                     if let CellState::Real(_,c) = &mut grid[real_pos[0]][real_pos[1]] {
                         c.set_port(get_difference(&position, &real_pos), origin_side, source_arc.clone()).expect("Portgrid & component grid missmatch");
                     }
+
+                    if let Ok(p) = port_grid.get_mut_port_inside(&position, origin_side) {
+                        if let Some(port) = p.as_mut() {
+                            port.mark_checked(true);
+                        }
+                    }
                 },
                 CellState::Real(_, component) => {
                     if let Component::WirePiece(piece) = component {
@@ -175,7 +191,7 @@ pub fn flood_fill(
                     } else {
                         if let Ok(p) = port_grid.get_mut_port_inside(&position, origin_side) {
                             if let Some(port) = p.as_mut() {
-                                port.checked = true;
+                                port.mark_checked(true);
                                 component.set_port([0,0], origin_side, source_arc.clone()).expect("Component grid and port grid missmatch");
                             }
                         }

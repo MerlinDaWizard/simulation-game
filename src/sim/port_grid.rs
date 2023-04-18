@@ -1,7 +1,5 @@
 use enum_map::{enum_map, EnumMap};
 use serde::{Serialize, Deserialize};
-use std::sync::{atomic::AtomicU8, Arc};
-
 use super::helpers::Side;
 
 #[derive(Debug, Clone, Default)]
@@ -48,6 +46,16 @@ impl TopEdge {
             origin_down: None,
         }
     }
+
+    pub fn reset_build(&mut self) {
+        if let Some(p) = &mut self.origin_up {
+            p.mark_checked(false);
+        }
+
+        if let Some(p) = &mut self.origin_down {
+            p.mark_checked(false);
+        }
+    }
 }
 
 impl LeftEdge {
@@ -55,6 +63,16 @@ impl LeftEdge {
         LeftEdge {
             origin_left: None,
             origin_right: None,
+        }
+    }
+
+    pub fn reset_build(&mut self) {
+        if let Some(p) = &mut self.origin_left {
+            p.mark_checked(false);
+        }
+
+        if let Some(p) = &mut self.origin_right {
+            p.mark_checked(false);
         }
     }
 }

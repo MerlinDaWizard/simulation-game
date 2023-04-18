@@ -5,7 +5,7 @@ use strum_macros::EnumIter;
 
 use crate::{game::{GRID_CELL_SIZE, GameRoot}, components::placement::GridLink, MainTextureAtlas};
 
-use super::model::{Component, DummyComponent};
+use super::model::{DummyComponent};
 
 #[derive(Clone, Copy, Debug, EnumIter, Enum, PartialEq, Eq, Reflect, FromReflect, Serialize, Deserialize)]
 pub enum Side {
