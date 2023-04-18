@@ -16,12 +16,13 @@ pub struct LeftPanelPlugin;
 impl Plugin for LeftPanelPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiState>()
+            .init_resource::<SaveMenuState>()
             .add_system(main_panels.run_if(in_state(GameState::InGame)))
             .add_system(window_popup.run_if(in_state(GameState::InGame)));
     }
 }
 
-pub fn main_panels(
+fn main_panels(
     mut commands: Commands,
     mut ui_state: ResMut<UiState>,
     mut egui_ctx: EguiContexts,
@@ -31,6 +32,7 @@ pub fn main_panels(
     time: Res<Time>,
     sim_state: Res<State<SimState>>,
     cur_level: Res<CurrentLevel>,
+    mut save_menu_state: ResMut<SaveMenuState>,
     mut save_writer: EventWriter<SaveEvent>,
     mut load_writer: EventWriter<LoadEvent>,
 ) {
@@ -101,7 +103,8 @@ pub fn main_panels(
 
                 if save_dropdown_changed {
                     if let Some(path) = &ui_state.selected_file {
-                        load_writer.send(LoadEvent(path.clone()))
+                        load_writer.send(LoadEvent(path.clone()));
+                        save_menu_state.open = false;
                     }
                 }
 
@@ -109,8 +112,7 @@ pub fn main_panels(
                     match &ui_state.selected_file {
                         Some(path) => {save_writer.send(SaveEvent(path.clone()))}
                         None => {
-                            // Popup for name of file.
-                            todo!()
+                            save_menu_state.open = true;
                         }
                     }
                 }
@@ -216,27 +218,41 @@ pub struct UiState {
 }
 
 fn window_popup(
-    mut commands: Commands,
-    mut ui_state: ResMut<UiState>,
     current_level: Res<CurrentLevel>,
+    mut save_menu_state: ResMut<SaveMenuState>,
+    mut main_ui_state: ResMut<UiState>,
     mut egui_ctx: EguiContexts,
     mut file_name: Local<String>,
     mut save_writer: EventWriter<SaveEvent>,
 ) {
-    egui::Window::new("Save Window").fixed_size(Vec2::new(200.0, 50.0)).show(egui_ctx.ctx_mut(), |ui| {
+
+    let mut should_close_window = false;
+    // Super high default position to make it into the top right.
+    egui::Window::new("Save Window").default_pos(Pos2::new(10000.0,0.0)).fixed_size(Vec2::new(200.0, 50.0)).open(&mut save_menu_state.open).show(egui_ctx.ctx_mut(), |ui| {
         ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
             ui.label("Save name:");
             ui.text_edit_singleline(&mut *file_name);
         });
-        ui.separator();
-        //ui.allocate_space(Vec2::new(10.0,4.0));
+        ui.separator(); // Do the line across
         let text = RichText::new("Save").font(FontId { size: 20.0, family: FontFamily::Monospace });
         let resp = ui.add_sized(ui.available_size(), Button::new(text));
         if resp.clicked() {
-            let dir = PathBuf::from(format!("data/levels/user/{}", current_level.0.unwrap()));
-            let mut location = dir.join(&*file_name);
-            location.set_extension("save");
-            save_writer.send(SaveEvent(location));
+            if file_name.len() > 0 {
+                let dir = PathBuf::from(format!("data/levels/user/{}", current_level.0.unwrap()));
+                let mut location = dir.join(&*file_name); // Todo: Prevent file path traversal.
+                location.set_extension("save"); // Check valid path
+                main_ui_state.selected_file = Some(location.clone());
+                save_writer.send(SaveEvent(location));
+                should_close_window = true;
+            }
+
         }
     });
+
+    if should_close_window {save_menu_state.open = false;} // 2 step due to cant mutably borrow save_menu_state while in loop due to double mut borrow
+}
+
+#[derive(Resource, Debug, Default)]
+struct SaveMenuState {
+    open: bool,
 }
