@@ -1,176 +1,101 @@
 use crate::GameState;
-use bevy::{app::AppExit, prelude::*};
+use bevy::{
+    app::AppExit,
+    prelude::{
+        in_state, App, AssetServer, Commands, EventWriter, FromWorld, Handle, Image,
+        IntoSystemConfigs, Local, NextState, Plugin, World,
+    },
+    window::close_on_esc,
+};
+use bevy_egui::EguiContexts;
+use egui::{
+    pos2, style::Margin, vec2, Align2, Color32, Frame, Rect as EguiRect, RichText, Stroke, Vec2,
+};
 
-/// Marker for the main menu entity
-#[derive(Component)]
-pub struct MainMenu;
+pub struct MainMenuPlugin;
 
-/// Marker for the "Exit App" button
-#[derive(Component)]
-pub struct ExitButt;
+impl Plugin for MainMenuPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(
+            (close_on_esc, main_menu).distributive_run_if(in_state(GameState::MainMenu2)),
+        );
+    }
+}
 
-#[derive(Component)]
-pub struct LevelsButt;
-
-/// Marker for the "Enter Game" button
-#[derive(Component)]
-pub struct EnterButt;
-
-/// Marker for the "Enter Game" button
-#[derive(Component)]
-pub struct TestButt;
-
-/// Marker for the Background image
-#[derive(Component)]
-pub struct Background;
-
-/// Change button color on interaction
-pub fn butt_interact_visual(
-    mut query: Query<(&Interaction, &mut BackgroundColor), (Changed<Interaction>, With<Button>)>,
+fn main_menu(
+    mut commands: Commands,
+    mut egui_ctx: EguiContexts,
+    images: Local<MainMenuImages>,
+    mut exit: EventWriter<AppExit>,
 ) {
-    for (interaction, mut color) in query.iter_mut() {
-        match interaction {
-            Interaction::Clicked => {
-                *color = BackgroundColor(Color::rgba(0.4, 0.4, 0.4, 0.5));
-            }
-            Interaction::Hovered => {
-                *color = BackgroundColor(Color::rgba(0.2, 0.2, 0.2, 0.5));
-            }
-            Interaction::None => {
-                *color = BackgroundColor(Color::rgba(0.0, 0.0, 0.0, 0.5));
-            }
+    let background = egui_ctx.add_image(images.background.clone_weak());
+    let ctx_mut = egui_ctx.ctx_mut();
+
+    egui::CentralPanel::default()
+        .frame(Frame::default().outer_margin(Margin::same(0.0)))
+        .show(ctx_mut, |ui| {
+            let uv = EguiRect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0));
+            ui.painter().image(
+                background,
+                ui.available_rect_before_wrap(),
+                uv,
+                Color32::WHITE,
+            );
+            egui::Area::new("buttons")
+                .anchor(Align2::CENTER_CENTER, vec2(0.0, 0.0))
+                .show(ctx_mut, |ui| {
+                    ui.vertical_centered(|ui| {
+                        ui.scope(|ui| {
+                            ui.style_mut().visuals.override_text_color = None;
+                            ui.style_mut().visuals.widgets.inactive.weak_bg_fill = Color32::DARK_BLUE;
+                            ui.style_mut().visuals.widgets.inactive.fg_stroke = Stroke { width: 3.0, color: Color32::LIGHT_GREEN };
+
+                            ui.style_mut().visuals.widgets.hovered.weak_bg_fill =Color32::from_rgb(0, 0, 100);
+                            ui.style_mut().visuals.widgets.hovered.fg_stroke = Stroke { width: 3.0, color: Color32::LIGHT_GREEN };
+
+                            ui.style_mut().visuals.widgets.active.weak_bg_fill = Color32::from_rgb(0, 0, 62);
+
+                            let text = RichText::new("Play").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let button_play = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
+                            if button_play.clicked() {
+                                commands.insert_resource(NextState(Some(GameState::InGame)));
+                            }
+
+                            ui.allocate_space(vec2(10., 10.));
+                            let text = RichText::new("Level Select").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let button_lvl = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
+                            if button_lvl.clicked() {
+                                commands.insert_resource(NextState(Some(GameState::LevelsMenu)));
+                            }
+
+                            ui.allocate_space(vec2(10., 10.));
+                            let text = RichText::new("Settings").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let button_settings = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
+                            if button_settings.clicked() {
+                                commands.insert_resource(NextState(Some(GameState::Settings)));
+                            }
+
+                            ui.allocate_space(vec2(10., 10.));
+                            let text = RichText::new("Quit").font(egui::FontId { size: 46., family: egui::FontFamily::Monospace });
+                            let button_quit = ui.add_sized(Vec2::new(350., 75.), egui::Button::new(text));
+                            if button_quit.clicked() {
+                                exit.send(AppExit);
+                            }
+                        })
+                    });
+                });
+        });
+}
+
+struct MainMenuImages {
+    pub background: Handle<Image>,
+}
+
+impl FromWorld for MainMenuImages {
+    fn from_world(world: &mut World) -> Self {
+        let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
+        Self {
+            background: asset_server.load("background.jpg"),
         }
     }
-}
-
-/// Condition to help with handling multiple buttons
-///
-/// Returns true when a button identified by a given component is clicked.
-pub fn on_butt_interact<B: Component>(
-    query: Query<&Interaction, (Changed<Interaction>, With<Button>, With<B>)>,
-) -> bool {
-    for interaction in query.iter() {
-        if *interaction == Interaction::Clicked {
-            return true;
-        }
-    }
-
-    false
-}
-
-/// Handler for the Exit Game button
-pub fn butt_exit(mut ev: EventWriter<AppExit>) {
-    ev.send(AppExit);
-}
-
-/// Handler for the Enter Game button
-pub fn butt_game(mut commands: Commands) {
-    // queue state transition
-    commands.insert_resource(NextState(Some(GameState::InGame)));
-}
-
-pub fn butt_levels(mut commands: Commands) {
-    commands.insert_resource(NextState(Some(GameState::LevelsMenu)));
-}
-
-/// Construct the main menu UI
-pub fn setup_menu(mut commands: Commands, ass: Res<AssetServer>) {
-    let butt_style = Style {
-        flex_direction: FlexDirection::Column,
-        justify_content: JustifyContent::Center, // Text in middle Top / down
-        align_items: AlignItems::Center,         // Text in middle LR
-        align_self: AlignSelf::Stretch,
-        padding: UiRect::all(Val::Px(8.0)),
-        margin: UiRect::all(Val::Px(4.0)),
-        flex_grow: 1.0,
-        ..Default::default()
-    };
-
-    let butt_textstyle = TextStyle {
-        font: ass.load("JetBrainsMono/JetBrainsMono-ExtraBold.ttf"),
-        font_size: 32.0,
-        color: Color::WHITE,
-    };
-
-    let _background = commands
-        .spawn((
-            SpriteBundle {
-                texture: ass.load("background.jpg"),
-
-                ..Default::default()
-            },
-            MainMenu,
-        ))
-        .id();
-
-    let menu = commands
-        .spawn((
-            NodeBundle {
-                style: Style {
-                    size: Size::new(Val::Percent(25.0), Val::Percent(20.0)),
-                    margin: UiRect::all(Val::Px(2.0)),
-                    align_items: AlignItems::FlexStart,
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::Center,
-                    align_self: AlignSelf::Center,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            MainMenu,
-        ))
-        .id();
-
-    let butt_levels = commands
-        .spawn((
-            ButtonBundle {
-                style: butt_style.clone(),
-                ..Default::default()
-            },
-            LevelsButt,
-        ))
-        .with_children(|btn| {
-            btn.spawn(TextBundle {
-                text: Text::from_section("Level Select", butt_textstyle.clone()),
-                ..Default::default()
-            });
-        })
-        .id();
-
-    let butt_enter = commands
-        .spawn((
-            ButtonBundle {
-                style: butt_style.clone(),
-                ..Default::default()
-            },
-            EnterButt,
-        ))
-        .with_children(|btn| {
-            btn.spawn(TextBundle {
-                text: Text::from_section("Enter Game", butt_textstyle.clone()),
-                ..Default::default()
-            });
-        })
-        .id();
-
-    let butt_exit = commands
-        .spawn((
-            ButtonBundle {
-                background_color: BackgroundColor(Color::rgba(1.0, 0.0, 0.0, 0.75)),
-                style: butt_style,
-                ..Default::default()
-            },
-            ExitButt,
-        ))
-        .with_children(|btn| {
-            btn.spawn(TextBundle {
-                text: Text::from_section("Exit Game", butt_textstyle.clone()),
-                ..Default::default()
-            });
-        })
-        .id();
-
-    commands
-        .entity(menu)
-        .push_children(&[butt_enter, butt_levels, butt_exit]);
 }

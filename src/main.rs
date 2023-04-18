@@ -8,7 +8,6 @@ mod config;
 mod game;
 mod level_select;
 mod main_menu;
-mod main_menu2;
 mod settings;
 mod sim;
 mod ui;
@@ -24,7 +23,7 @@ use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::window::{close_on_esc, PresentMode};
 use bevy_heterogeneous_texture_atlas_loader::*;
-use main_menu2::MainMenuPlugin;
+use main_menu::MainMenuPlugin;
 use merlin_pick_backend::MerlinSpriteBackend;
 use sim::run::SimRunPlugin;
 use sim::save_load::SimLoadPlugin;
@@ -93,27 +92,15 @@ fn main() {
         .add_plugin(crate::config::SettingsPlugin)
         .add_plugin(crate::settings::SettingsMenuPlugin)
         // menu setup (state enter) systems
-        .add_system(main_menu::setup_menu.in_schedule(OnEnter(GameState::MainMenu)))
         .add_system(level_select::setup.in_schedule(OnEnter(GameState::LevelsMenu)))
         .add_system(game::setup_screen.in_schedule(OnEnter(GameState::InGame)))
         // menu cleanup (state exit) systems
-        .add_system(despawn_with::<main_menu::MainMenu>.in_schedule(OnExit(GameState::MainMenu)))
         .add_system(
             despawn_with::<level_select::LevelsMenu>.in_schedule(OnExit(GameState::LevelsMenu)),
         )
         // game cleanup (state exit) systems
         .add_system(despawn_with::<game::GameRoot>.in_schedule(OnExit(GameState::InGame)))
         // menu stuff
-        .add_systems(
-            (
-                close_on_esc,
-                main_menu::butt_interact_visual,
-                main_menu::butt_exit.run_if(main_menu::on_butt_interact::<main_menu::ExitButt>),
-                main_menu::butt_game.run_if(main_menu::on_butt_interact::<main_menu::EnterButt>),
-                main_menu::butt_levels.run_if(main_menu::on_butt_interact::<main_menu::LevelsButt>),
-            )
-                .distributive_run_if(in_state(GameState::MainMenu)),
-        )
         // in-game stuff
         .add_systems((back_to_menu_on_esc,).distributive_run_if(in_state(GameState::InGame)))
         // Levels menu

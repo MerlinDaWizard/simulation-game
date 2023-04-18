@@ -137,7 +137,6 @@ fn main_panels(
         .resizable(true)
         .show(egui_ctx.ctx_mut(), |ui| {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                ui.label("Lololollololll");
                 let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(100.0, 100.0)).frame(true);
                 let start_test = ui.add(button);
                 if start_test.clicked() {
