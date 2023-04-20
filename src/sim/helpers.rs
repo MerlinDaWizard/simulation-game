@@ -1,11 +1,12 @@
 use bevy::{prelude::{UVec2, Vec2, Commands, Entity, Transform, Name}, reflect::{FromReflect, Reflect}, sprite::{SpriteSheetBundle, TextureAtlasSprite}};
+use bevy_mod_picking::{events::EventListener, prelude::PointerClick};
 use enum_map::Enum;
 use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
 
 use crate::{game::{GRID_CELL_SIZE, GameRoot}, components::placement::GridLink, MainTextureAtlas};
 
-use super::model::{DummyComponent};
+use super::{model::{DummyComponent}, interactions::GridComponentClick};
 
 #[derive(Clone, Copy, Debug, EnumIter, Enum, PartialEq, Eq, Reflect, FromReflect, Serialize, Deserialize)]
 pub enum Side {
@@ -129,6 +130,7 @@ pub fn spawn_component_sprite(commands: &mut Commands, sprite: TextureAtlasSprit
                 "Component - {}",
                 dummy_component.get_sprite_name()
             )),
+            EventListener::<PointerClick>::new_forward_event::<GridComponentClick>()
         ))
         .id()
 }

@@ -9,7 +9,7 @@ use crate::sim::model::{
     CellState, Component as SimComponent, DummyComponent as DummySimComponent, SimulationData,
 };
 use crate::sim::port_grid::PortGrid;
-use crate::sim::save_load::LevelData;
+use crate::sim::save_load::SaveData;
 use crate::{GameState, MainTextureAtlas};
 use bevy::prelude::*;
 pub struct ComponentSetupPlugin;
@@ -20,31 +20,11 @@ impl Plugin for ComponentSetupPlugin {
             .init_resource::<SimulationData>()
             .init_resource::<GridSize>()
             .register_type::<SimulationData>()
-            .add_system(setup_grid.in_schedule(OnEnter(GameState::InGame)))
             .add_system(clear_grid.in_schedule(OnExit(GameState::InGame)))
             .add_system(placement_event.run_if(in_state(GameState::InGame)));
     }
 }
 
-fn setup_grid(
-    level: Res<CurrentLevel>,
-
-    mut sim_data: ResMut<SimulationData>,
-    mut grid_size: ResMut<GridSize>,
-) {
-    let mut s = String::new();
-    File::open(format!("data/levels/{}.json", { level.0.unwrap() }))
-        .expect("Could not find level file")
-        .read_to_string(&mut s)
-        .unwrap();
-    let level_data: LevelData = serde_json::from_str(&s).expect("Could not parse level");
-    let size = level_data.grid_size;
-    //occupation_grid.0 = OccupationGrid::empty_grid_from_size(&size);
-    sim_data.grid.grid = vec![vec![CellState::Empty; size.0[1]]; size.0[0]];
-    sim_data.port_grid = PortGrid::new_with_size(size.0[0], size.0[1]);
-    grid_size.0 = size.0;
-    //grid_size.0 = [level_data.grid_width, level_data.grid_height];
-}
 
 fn clear_grid(mut simulation_grid: ResMut<SimulationData>) {
     for i in simulation_grid.grid.grid.iter_mut() {

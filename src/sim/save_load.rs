@@ -1,28 +1,30 @@
-use std::{path::PathBuf, fs::File, io::{Read, Write, BufReader}};
+use std::{path::PathBuf, fs::File, io::{Write, BufReader}};
 use base64::{write::EncoderWriter, read::DecoderReader};
 use bevy::{prelude::*, ecs::system::SystemState};
 use flate2::{write::ZlibEncoder, Compression, bufread::ZlibDecoder};
 use serde::{Deserialize, Serialize};
 use crate::{game::{GridSize, PlacementGridEntity}, MainTextureAtlas, components::placement::{Size, GridLink}, GameState};
-use super::{run::SimState, model::{SimulationData, ComponentGrid, CellState}, port_grid::PortGrid};
+use super::{run::SimState, model::{SimulationData, ComponentGrid, CellState}, port_grid::PortGrid, levels::{LevelData, load_level_listener, LoadLevelEvent}};
 pub struct SimLoadPlugin;
 
 impl Plugin for SimLoadPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<SaveEvent>()
         .add_event::<LoadEvent>()
+        .add_event::<LoadLevelEvent>()
         .add_system(save_listener.run_if(in_state(GameState::InGame)))
-        .add_system(load_listener.run_if(in_state(GameState::InGame)));
+        .add_system(load_listener.run_if(in_state(GameState::InGame)))
+        .add_system(load_level_listener.run_if(in_state(GameState::InGame)));
     }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct LevelData {
+pub struct SaveData {
     pub grid_size: GridSize,
     pub component_grid: ComponentGrid,
 }
 
-impl FromWorld for LevelData {
+impl FromWorld for SaveData {
     fn from_world(world: &mut World) -> Self {
         let sim_state = world.get_resource::<State<SimState>>().unwrap().0;
         if sim_state != SimState::Halted {
@@ -32,19 +34,19 @@ impl FromWorld for LevelData {
         let sim_data = world.get_resource::<SimulationData>().expect("Cant find SimulationData to save");
         let component_grid = sim_data.grid.clone();
 
-        LevelData {
+        SaveData {
             grid_size: world.get_resource::<GridSize>().unwrap().clone(),
             component_grid: component_grid,
         }
     }
 }
 
-impl LevelData {
-    pub fn create_world(mut self, commands: &mut Commands, atlas: &TextureAtlas, main_atlas: &MainTextureAtlas, placement_grid: &Query<(&Sprite, &Transform, &Size), With<PlacementGridEntity>>) -> (SimulationData, GridSize) {
+impl SaveData {
+    pub fn create_world(self, commands: &mut Commands, atlas: &TextureAtlas, main_atlas: &MainTextureAtlas, placement_grid: &Query<(&Sprite, &Transform, &Size), With<PlacementGridEntity>>) -> (SimulationData, GridSize) {
         let grid = placement_grid.single();
         let size = grid.2;
         let grid_bottom_left = grid.1.translation.truncate() - (size.0.as_vec2() * 0.5);
-        
+
         let grid_size = self.grid_size;
         let mut sim_data = SimulationData {
             grid: ComponentGrid { grid: vec![vec![ CellState::Empty; grid_size.0[1]]; grid_size.0[0]] },
@@ -77,7 +79,7 @@ fn save_listener(
     }
     
     for path in paths {
-        let data = LevelData::from_world(world);
+        let data = SaveData::from_world(world);
         let vec = serde_json::to_vec(&data).expect("Couldn't write to file :(");
         let mut uncompressed_file = File::create("data/levels/uncompressed.json").expect("Cannot create / recreate file");
         uncompressed_file.write(&vec).expect("Could not write file");
@@ -109,7 +111,7 @@ fn load_listener(
         // Then use that with Zlib to decode that into the json
         let reader = ZlibDecoder::new(BufReader::new(DecoderReader::new(file, &base64::prelude::BASE64_STANDARD_NO_PAD)));
 
-        let level_data: LevelData = serde_json::from_reader(reader).expect("Could not parse level");
+        let level_data: SaveData = serde_json::from_reader(reader).expect("Could not parse level");
         // Recreate [SimulationData] etc.
         let (new_sim_data, new_size) = level_data.create_world(&mut commands, atlases.get(&main_atlas.handle).unwrap(), main_atlas.as_ref(), &placement_grid);
         *sim_data = new_sim_data;

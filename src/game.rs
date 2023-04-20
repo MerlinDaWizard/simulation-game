@@ -1,5 +1,8 @@
+use std::path::PathBuf;
+
 use crate::components::placement::Size;
 use crate::level_select::CurrentLevel;
+use crate::sim::levels::LoadLevelEvent;
 use crate::{ui, MainTextureAtlas};
 use bevy::prelude::*;
 use serde::{Serialize, Deserialize};
@@ -29,10 +32,11 @@ pub struct PlacementGridEntity;
 pub fn setup_screen(
     mut commands: Commands,
     ass: Res<AssetServer>,
-    _level: Res<CurrentLevel>,
+    level: Res<CurrentLevel>,
 
     atlases: Res<Assets<TextureAtlas>>,
     main_atlas: Res<MainTextureAtlas>,
+    mut load_level: EventWriter<LoadLevelEvent>,
 ) {
     // At the moment `CurrentLevel` actually refers to the level to load
     commands.spawn((
@@ -63,6 +67,8 @@ pub fn setup_screen(
 
     ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A1", GameRoot);
     ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A2", GameRoot);
+
+    load_level.send(LoadLevelEvent(PathBuf::from(format!("data/levels/{}.json", level.0.unwrap()))));
 }
 
 /// Unit component to mark an entity as interactable for the click_system

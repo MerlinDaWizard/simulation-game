@@ -91,6 +91,7 @@ fn main() {
         .add_plugin(crate::ui::egui::theming::EguiThemingPlugin)
         .add_plugin(crate::config::SettingsPlugin)
         .add_plugin(crate::settings::SettingsMenuPlugin)
+        .add_plugin(crate::sim::interactions::GridComponentInteractionPlugin)
         // menu setup (state enter) systems
         .add_system(level_select::setup.in_schedule(OnEnter(GameState::LevelsMenu)))
         .add_system(game::setup_screen.in_schedule(OnEnter(GameState::InGame)))

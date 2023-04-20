@@ -10,7 +10,7 @@ use bevy::{
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}}, level_select::CurrentLevel};
+use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::SelectedComponent}, level_select::CurrentLevel};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
@@ -35,6 +35,7 @@ fn main_panels(
     mut save_menu_state: ResMut<SaveMenuState>,
     mut save_writer: EventWriter<SaveEvent>,
     mut load_writer: EventWriter<LoadEvent>,
+    selected_component: ResMut<SelectedComponent>
 ) {
     let sim_halted = sim_state.0 == SimState::Halted;
     // At the moment `CurrentLevel` actually refers to the level to load
@@ -127,8 +128,20 @@ fn main_panels(
     });
 
     egui::SidePanel::left("left_panel")
-        .default_width(200.0)
+        .default_width(250.0)
+        .exact_width(250.0)
+        .resizable(false)
         .show(egui_ctx.ctx_mut(), |ui| {
+            match &selected_component.0 {
+                // No component selected. should display problem description
+                None => {
+                    
+                },
+                // Should display a brief explanation of the component, a delete button & any options for it
+                Some(grid_pos) => {
+
+                }
+            }
         });
 
     TopBottomPanel::bottom("bottom_panel")
