@@ -76,7 +76,6 @@ impl GridComponent for Wire {
     }
 
     fn show_ui(&mut self, ui: &mut egui::Ui) {
-        ui.label("Test");
         let mut connected_sides = sides_to_sprite_name(&self.connected_sides, "", ", ");
         if connected_sides.is_empty() {
             connected_sides = String::from("None");
@@ -85,6 +84,15 @@ impl GridComponent for Wire {
             ui.label("Connected sides: ");
             ui.label(RichText::new(connected_sides).code());
         });
+
+        for (side, mut state) in &mut self.disabled_sides {
+            if ui.checkbox(&mut (*state == EnabledOrDisabled::Enabled), side.as_str()).changed() {
+                *state = match *state {
+                    EnabledOrDisabled::Disabled => EnabledOrDisabled::Enabled,
+                    EnabledOrDisabled::Enabled => EnabledOrDisabled::Disabled,
+                };
+            }
+        }
     }
 }
 

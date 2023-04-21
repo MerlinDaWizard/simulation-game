@@ -122,7 +122,7 @@ impl DummySimComponent {
 
     pub fn desc(&self) -> &'static str {
         match self {
-            DummySimComponent::WirePiece => "Wires transmit data instantly in an analogue manner.\n Sides can be disabled in their menu",
+            DummySimComponent::WirePiece => "Wires transmit data instantly in an analogue manner.\nSides can be disabled in their menu",
             DummySimComponent::GateNot => "Inverts a given input.",
             DummySimComponent::GateAnd => "Checks if two signals are equal to 255, if so outputs 255.",
             DummySimComponent::SignalCopy => "Duplicates a signal acrosss two wires.",
