@@ -2,9 +2,11 @@ use std::path::PathBuf;
 
 use crate::components::placement::Size;
 use crate::level_select::CurrentLevel;
+use crate::sim::interactions::SelectedComponentIndicator;
 use crate::sim::levels::LoadLevelEvent;
 use crate::{ui, MainTextureAtlas};
 use bevy::prelude::*;
+use bevy_prototype_lyon::prelude::*;
 use serde::{Serialize, Deserialize};
 
 pub const GRID_CELL_SIZE: usize = 32;
@@ -67,6 +69,23 @@ pub fn setup_screen(
 
     ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A1", GameRoot);
     ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A2", GameRoot);
+
+    let shape = shapes::Rectangle {
+        extents: Vec2::new(100., 100.),
+        origin: RectangleOrigin::BottomLeft,
+    };
+
+    commands.spawn((
+        ShapeBundle {
+            path: GeometryBuilder::build_as(&shape),
+            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 100.0)),
+            visibility: Visibility::Hidden,
+            ..default()
+        },
+        Stroke::new(Color::RED, 2.0),
+        GameRoot,
+        SelectedComponentIndicator,
+    ));
 
     load_level.send(LoadLevelEvent(PathBuf::from(format!("data/levels/{}.json", level.0.unwrap()))));
 }

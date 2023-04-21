@@ -2,9 +2,9 @@ use std::{fs::File, path::PathBuf};
 
 use bevy::{prelude::{Resource, Res, ResMut, Commands, Entity, Transform, Query, Assets, With, DespawnRecursiveExt, EventReader}, reflect::Reflect, utils::HashMap, sprite::{TextureAtlas, Sprite}};
 use serde::{Deserialize, Serialize};
-use crate::{level_select::CurrentLevel, game::{GridSize, PlacementGridEntity}, MainTextureAtlas, components::placement::{GridLink, Size}};
+use crate::{game::{GridSize, PlacementGridEntity}, MainTextureAtlas, components::placement::{GridLink, Size}};
 
-use super::{model::{ComponentGrid, SimulationData, CellState}, port_grid::PortGrid, save_load::SaveData};
+use super::{model::{ComponentGrid, SimulationData, CellState}, port_grid::PortGrid};
 
 /// Stores the relevant level state, these should be kept when levels are loaded.\
 /// As opposed to [LevelData], this stores also the start positions & grid size
@@ -57,7 +57,6 @@ pub fn load_level_listener(
     atlases: Res<Assets<TextureAtlas>>,
     main_atlas: Res<MainTextureAtlas>,
     despawns: Query<Entity, With<GridLink>>,
-    level: Res<CurrentLevel>,
 ) {
     for event in listener.iter() {
 

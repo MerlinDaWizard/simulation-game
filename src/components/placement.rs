@@ -1,15 +1,9 @@
-use std::fs::File;
-use std::io::Read;
-
 use crate::game::{GridSize, PlacementGridEntity};
-use crate::level_select::CurrentLevel;
 use crate::sim::components::*;
 use crate::sim::helpers::Side;
 use crate::sim::model::{
     CellState, Component as SimComponent, DummyComponent as DummySimComponent, SimulationData,
 };
-use crate::sim::port_grid::PortGrid;
-use crate::sim::save_load::SaveData;
 use crate::{GameState, MainTextureAtlas};
 use bevy::prelude::*;
 pub struct ComponentSetupPlugin;

@@ -4,7 +4,7 @@ use bevy::{prelude::*, ecs::system::SystemState};
 use flate2::{write::ZlibEncoder, Compression, bufread::ZlibDecoder};
 use serde::{Deserialize, Serialize};
 use crate::{game::{GridSize, PlacementGridEntity}, MainTextureAtlas, components::placement::{Size, GridLink}, GameState};
-use super::{run::SimState, model::{SimulationData, ComponentGrid, CellState}, port_grid::PortGrid, levels::{LevelData, load_level_listener, LoadLevelEvent}};
+use super::{run::SimState, model::{SimulationData, ComponentGrid, CellState}, port_grid::PortGrid, levels::{load_level_listener, LoadLevelEvent}};
 pub struct SimLoadPlugin;
 
 impl Plugin for SimLoadPlugin {

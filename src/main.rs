@@ -23,6 +23,7 @@ use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::diagnostic::LogDiagnosticsPlugin;
 use bevy::window::{close_on_esc, PresentMode};
 use bevy_heterogeneous_texture_atlas_loader::*;
+use bevy_prototype_lyon::prelude::ShapePlugin;
 use main_menu::MainMenuPlugin;
 use merlin_pick_backend::MerlinSpriteBackend;
 use sim::run::SimRunPlugin;
@@ -63,6 +64,7 @@ fn main() {
         .insert_resource(level_select::CurrentLevel(Some(1))) // TODO: Change to none + working level select
         // Plugins (foreign)
         .add_plugin(PixelCameraPlugin)
+        .add_plugin(ShapePlugin)
         .add_plugin(PixelBorderPlugin {
             color: Color::rgb(0.1, 0.1, 0.1),
         })

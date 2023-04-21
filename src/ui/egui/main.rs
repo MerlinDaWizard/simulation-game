@@ -10,7 +10,7 @@ use bevy::{
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::SelectedComponent}, level_select::CurrentLevel};
+use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::SelectedComponent, levels::LevelData}, level_select::CurrentLevel};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
@@ -35,7 +35,8 @@ fn main_panels(
     mut save_menu_state: ResMut<SaveMenuState>,
     mut save_writer: EventWriter<SaveEvent>,
     mut load_writer: EventWriter<LoadEvent>,
-    selected_component: ResMut<SelectedComponent>
+    selected_component: ResMut<SelectedComponent>,
+    level_data: Option<Res<LevelData>>,
 ) {
     let sim_halted = sim_state.0 == SimState::Halted;
     // At the moment `CurrentLevel` actually refers to the level to load
@@ -135,7 +136,13 @@ fn main_panels(
             match &selected_component.0 {
                 // No component selected. should display problem description
                 None => {
-                    
+                    if let Some(level_data) = level_data {
+                        ui.label(RichText::new(format!("Level: {}", cur_level.0.unwrap())).size(25.0).strong().italics());
+                        ui.separator();
+                        ui.label(RichText::new(level_data.name.clone()).size(20.0).strong());
+                        ui.separator();
+                        ui.label(level_data.desc.clone());
+                    }
                 },
                 // Should display a brief explanation of the component, a delete button & any options for it
                 Some(grid_pos) => {
