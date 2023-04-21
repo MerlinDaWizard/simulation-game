@@ -153,7 +153,7 @@ fn main_panels(
                         ui.separator();
                         ui.label(RichText::new(dummy.desc()).size(12.0).weak());
                         ui.separator();
-                        component.show_ui(ui);
+                        component.gui_options(ui);
                     }
                 }
             }
