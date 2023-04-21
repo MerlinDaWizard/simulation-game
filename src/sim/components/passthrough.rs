@@ -51,6 +51,11 @@ impl GridComponent for SignalPassthrough {
         }
         Err(())
     }
+
+    fn show_ui(&mut self, ui: &mut egui::Ui) {
+        ui.label("Test");
+    }
+    
 }
 
 impl SignalPassthrough {

@@ -19,6 +19,7 @@ use crate::{
     components::placement::GridLink, sim::components::*, MainTextureAtlas,
 };
 use bevy::{prelude::*, sprite::Anchor};
+use egui::Ui;
 use enum_dispatch::enum_dispatch;
 use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
@@ -80,7 +81,7 @@ impl SimulationData {
         let dummy_component = component.dummy();
         let mut sprite = match &component {
             Component::WirePiece(w) => {
-                let sprite_name = super::components::wire::sides_to_sprite_name(&w.connected_sides);
+                let sprite_name = super::components::wire::sides_to_sprite_name(&w.connected_sides, "wire_", "_");
                 let index = atlas.get_texture_index(&Handle::weak(sprite_name.into())).expect("Could not find correct wire varient");
                 TextureAtlasSprite::new(index)
             }
@@ -270,6 +271,8 @@ pub trait GridComponent {
     fn ports(&self) -> Vec<&([usize; 2], Side)>;
 
     fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),() >;
+
+    fn show_ui(&mut self, ui: &mut Ui);
 }
 
 

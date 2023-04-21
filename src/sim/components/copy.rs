@@ -51,6 +51,11 @@ impl GridComponent for SignalCopy {
         }
         Err(())
     }
+
+    fn show_ui(&mut self, ui: &mut egui::Ui) {
+        ui.label("Test");
+    }
+    
 }
 
 impl SignalCopy {

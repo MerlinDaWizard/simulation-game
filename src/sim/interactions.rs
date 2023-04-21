@@ -60,7 +60,7 @@ impl GridComponentClick {
 pub struct SelectedComponent(pub Option<[usize; 2]>);
 
 fn show_activated_icon(
-    sim_data: Res<SimulationData>,
+    sim_data: Res<SimulationData>, 
     selected_component: ResMut<SelectedComponent>,
     placement_grid: Query<(&Sprite, &Transform, &SizeComponent), With<PlacementGridEntity>>,
     mut outline: Query<(&mut Transform, &mut Path, &mut Visibility), (With<SelectedComponentIndicator>, Without<PlacementGridEntity>)>,

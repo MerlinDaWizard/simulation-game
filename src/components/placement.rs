@@ -49,9 +49,7 @@ impl DummySimComponent {
             Self::GateNot => SimComponent::GateNot(GateNot::default()),
             Self::GateAnd => SimComponent::GateAnd(GateAnd::default()),
             Self::SignalCopy => SimComponent::SignalCopy(SignalCopy::default()),
-            Self::SignalPassthrough => {
-                SimComponent::SignalPassthrough(SignalPassthrough::default())
-            }
+            Self::SignalPassthrough => SimComponent::SignalPassthrough(SignalPassthrough::default()),
             Self::Counter => SimComponent::Counter(Counter::default()),
         }
     }
@@ -105,15 +103,32 @@ impl DummySimComponent {
             DummySimComponent::WirePiece => crate::sim::components::Wire::CONST_PORTS.values(),
             DummySimComponent::GateNot => crate::sim::components::GateNot::CONST_PORTS.values(),
             DummySimComponent::GateAnd => crate::sim::components::GateAnd::CONST_PORTS.values(),
-            DummySimComponent::SignalCopy => {
-                crate::sim::components::SignalCopy::CONST_PORTS.values()
-            }
-            DummySimComponent::SignalPassthrough => {
-                crate::sim::components::SignalPassthrough::CONST_PORTS.values()
-            }
+            DummySimComponent::SignalCopy => crate::sim::components::SignalCopy::CONST_PORTS.values(),
+            DummySimComponent::SignalPassthrough => crate::sim::components::SignalPassthrough::CONST_PORTS.values(),
             DummySimComponent::Counter => crate::sim::components::Counter::CONST_PORTS.values(),
+        }.collect()
+    }
+    
+    pub fn name(&self) -> &'static str {
+        match self {
+            DummySimComponent::WirePiece => "Wire",
+            DummySimComponent::GateNot => "NOT gate",
+            DummySimComponent::GateAnd => "AND gate",
+            DummySimComponent::SignalCopy => "Signal splitter",
+            DummySimComponent::SignalPassthrough => "Signal passthrough",
+            DummySimComponent::Counter => "Counter",
         }
-        .collect()
+    }
+
+    pub fn desc(&self) -> &'static str {
+        match self {
+            DummySimComponent::WirePiece => "Wires transmit data instantly in an analogue manner.\n Sides can be disabled in their menu",
+            DummySimComponent::GateNot => "Inverts a given input.",
+            DummySimComponent::GateAnd => "Checks if two signals are equal to 255, if so outputs 255.",
+            DummySimComponent::SignalCopy => "Duplicates a signal acrosss two wires.",
+            DummySimComponent::SignalPassthrough => "Passthoughs a signal, can be used for delays.",
+            DummySimComponent::Counter => "Counts the amount of logic HIGHs on the input when there is also a HIGH on the clock signal.",
+        }
     }
 }
 

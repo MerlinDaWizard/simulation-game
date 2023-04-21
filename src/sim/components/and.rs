@@ -57,6 +57,10 @@ impl GridComponent for GateAnd {
         }
         Err(())
     }
+
+    fn show_ui(&mut self, ui: &mut egui::Ui) {
+        ui.label("Test");
+    }
 }
 
 impl GateAnd {

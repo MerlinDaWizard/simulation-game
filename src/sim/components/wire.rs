@@ -14,6 +14,8 @@ use bevy::{
     reflect::{FromReflect, Reflect},
     sprite::{TextureAtlas, TextureAtlasSprite},
 };
+use egui::{TextFormat, RichText};
+use egui::text::LayoutJob;
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
 
@@ -55,7 +57,7 @@ impl GridComponent for Wire {
                 *state = true;
             }
         }
-        let sprite_name = sides_to_sprite_name(&sides);
+        let sprite_name = sides_to_sprite_name(&sides, "wire_", "_");
         //debug!("{:?}",&sides);
         //debug!("{}",&sprite_name);
         let idx = atlas
@@ -71,6 +73,18 @@ impl GridComponent for Wire {
 
     fn set_port(&mut self, _: [usize; 2], _: Side, _: Arc<AtomicU8>) -> Result<(),()> {
         Err(())
+    }
+
+    fn show_ui(&mut self, ui: &mut egui::Ui) {
+        ui.label("Test");
+        let mut connected_sides = sides_to_sprite_name(&self.connected_sides, "", ", ");
+        if connected_sides.is_empty() {
+            connected_sides = String::from("None");
+        }
+        ui.horizontal(|ui| {
+            ui.label("Connected sides: ");
+            ui.label(RichText::new(connected_sides).code());
+        });
     }
 }
 
@@ -105,15 +119,15 @@ fn check_for_wire(pos: &[usize; 2], grid: &ComponentGrid) -> bool {
     check_for_wire_option(pos, grid).is_some()
 }
 
-pub fn sides_to_sprite_name(map: &EnumMap<Side, bool>) -> String {
-    let mut path = "wire_".to_string();
+pub fn sides_to_sprite_name(map: &EnumMap<Side, bool>, starter: &str, seperator: &str) -> String {
+    let mut path = starter.to_string();
     let mut sides = Vec::with_capacity(4);
     for (side, state) in map {
-        if state == &true {
+        if *state == true {
             sides.push(side.as_str())
         }
     }
 
-    path.push_str(&sides.join("_"));
+    path.push_str(&sides.join(seperator));
     path
 }

@@ -10,7 +10,7 @@ use bevy::{
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::SelectedComponent, levels::LevelData}, level_select::CurrentLevel};
+use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::SelectedComponent, levels::LevelData, model::{SimulationData, CellState, GridComponent}}, level_select::CurrentLevel};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
@@ -36,6 +36,7 @@ fn main_panels(
     mut save_writer: EventWriter<SaveEvent>,
     mut load_writer: EventWriter<LoadEvent>,
     mut selected_component: ResMut<SelectedComponent>,
+    mut sim_data: ResMut<SimulationData>,
     level_data: Option<Res<LevelData>>,
 ) {
     let sim_halted = sim_state.0 == SimState::Halted;
@@ -129,8 +130,8 @@ fn main_panels(
     });
 
     egui::SidePanel::left("left_panel")
-        .default_width(250.0)
-        .exact_width(250.0)
+        .default_width(270.0)
+        .exact_width(270.0)
         .resizable(false)
         .show(egui_ctx.ctx_mut(), |ui| {
             match &selected_component.0 {
@@ -146,7 +147,14 @@ fn main_panels(
                 },
                 // Should display a brief explanation of the component, a delete button & any options for it
                 Some(grid_pos) => {
-
+                    if let CellState::Real(_, component) = &mut sim_data.grid.grid[grid_pos[0]][grid_pos[1]] {
+                        let dummy = component.dummy();
+                        ui.label(RichText::new(dummy.name()).size(25.0).strong().monospace());
+                        ui.separator();
+                        ui.label(RichText::new(dummy.desc()).size(12.0).weak());
+                        ui.separator();
+                        component.show_ui(ui);
+                    }
                 }
             }
         });
