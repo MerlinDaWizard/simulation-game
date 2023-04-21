@@ -6,6 +6,7 @@ use bevy::{
     reflect::{FromReflect, Reflect},
     sprite::{TextureAtlas, TextureAtlasSprite}, prelude::World,
 };
+use egui::RichText;
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
 use std::sync::{atomic::AtomicU8, Arc};
@@ -59,7 +60,12 @@ impl GridComponent for Counter {
         Err(())
     }
 
-    fn gui_options(&mut self, _: &mut egui::Ui, _: bool) {}
+    fn gui_options(&mut self, ui: &mut egui::Ui, _: bool) {
+        ui.horizontal(|ui| {
+            ui.label("Current Count: ");
+            ui.label(RichText::new(self.count.to_string()).code());
+        });
+    }
 }
 
 impl Counter {

@@ -11,7 +11,6 @@ use crate::components::placement::GridLink;
 use crate::components::placement::Size as SizeComponent;
 use super::helpers::calc_grid_pos;
 use super::model::{SimulationData, CellState};
-use super::run::SimState;
 
 pub struct GridComponentInteractionPlugin;
 
@@ -44,7 +43,6 @@ impl GridComponentClick {
         mut close: EventReader<GridComponentClick>,
         grid_component: Query<(Entity, &GridLink)>,
         mut selected_component: ResMut<SelectedComponent>,
-        sim_state: Res<State<SimState>>,
     ) {
         for event in close.iter() {
             if let Ok((_, link)) = grid_component.get(event.entity) {
