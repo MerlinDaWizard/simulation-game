@@ -3,10 +3,10 @@ use bevy_mod_picking::{events::EventListener, prelude::PointerClick};
 use enum_map::Enum;
 use serde::{Serialize, Deserialize};
 use strum_macros::EnumIter;
-
 use crate::{game::{GRID_CELL_SIZE, GameRoot}, components::placement::GridLink, MainTextureAtlas};
-
 use super::{model::{DummyComponent}, interactions::GridComponentClick};
+
+pub const UI_DISABLED_MSG: &'static str = "Disabled due to simulation";
 
 #[derive(Clone, Copy, Debug, EnumIter, Enum, PartialEq, Eq, Reflect, FromReflect, Serialize, Deserialize)]
 pub enum Side {

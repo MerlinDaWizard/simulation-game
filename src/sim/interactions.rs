@@ -47,10 +47,8 @@ impl GridComponentClick {
         sim_state: Res<State<SimState>>,
     ) {
         for event in close.iter() {
-            if sim_state.0 == SimState::Halted { // Only allow selection if Sim halted.
-                if let Ok((_, link)) = grid_component.get(event.entity) {
-                    selected_component.0 = Some(link.0);
-                }
+            if let Ok((_, link)) = grid_component.get(event.entity) {
+                selected_component.0 = Some(link.0);
             }
         }
     }
@@ -60,7 +58,7 @@ impl GridComponentClick {
 pub struct SelectedComponent(pub Option<[usize; 2]>);
 
 fn show_activated_icon(
-    sim_data: Res<SimulationData>, 
+    sim_data: Res<SimulationData>,
     selected_component: ResMut<SelectedComponent>,
     placement_grid: Query<(&Sprite, &Transform, &SizeComponent), With<PlacementGridEntity>>,
     mut outline: Query<(&mut Transform, &mut Path, &mut Visibility), (With<SelectedComponentIndicator>, Without<PlacementGridEntity>)>,

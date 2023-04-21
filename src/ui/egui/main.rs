@@ -153,7 +153,7 @@ fn main_panels(
                         ui.separator();
                         ui.label(RichText::new(dummy.desc()).size(12.0).weak());
                         ui.separator();
-                        component.gui_options(ui);
+                        component.gui_options(ui, sim_halted);
                     }
                 }
             }
@@ -170,7 +170,7 @@ fn main_panels(
                 if start_test.clicked() {
                     commands.insert_resource(NextState(Some(SimState::Building)));
                     commands.insert_resource(RunType::Step(100));
-                    selected_component.0 = None;
+                    // selected_component.0 = None;
                 }
                 let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(50.0, 50.0)).frame(true);
                 let save = ui.add(button);

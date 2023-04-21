@@ -75,24 +75,29 @@ impl GridComponent for Wire {
         Err(())
     }
 
-    fn gui_options(&mut self, ui: &mut egui::Ui) {
+    fn gui_options(&mut self, ui: &mut egui::Ui, sim_halted: bool) {
         let mut connected_sides = sides_to_sprite_name(&self.connected_sides, "", ", ");
         if connected_sides.is_empty() {
             connected_sides = String::from("None");
         }
+
         ui.horizontal(|ui| {
             ui.label("Connected sides: ");
             ui.label(RichText::new(connected_sides).code());
         });
+
         ui.heading("Enabled sides:");
-        for (side, state) in &mut self.disabled_sides {
-            if ui.checkbox(&mut (*state == EnabledOrDisabled::Enabled), side.as_str()).changed() {
-                *state = match *state {
-                    EnabledOrDisabled::Disabled => EnabledOrDisabled::Enabled,
-                    EnabledOrDisabled::Enabled => EnabledOrDisabled::Disabled,
-                };
+        ui.add_enabled_ui(sim_halted, |ui| {
+            for (side, state) in &mut self.disabled_sides {
+                let btn = ui.checkbox(&mut (*state == EnabledOrDisabled::Enabled), side.as_str()).on_disabled_hover_text(helpers::UI_DISABLED_MSG);
+                if btn.changed() {
+                    *state = match *state {
+                        EnabledOrDisabled::Disabled => EnabledOrDisabled::Enabled,
+                        EnabledOrDisabled::Enabled => EnabledOrDisabled::Disabled,
+                    };
+                }
             }
-        }
+        });
     }
 }
 

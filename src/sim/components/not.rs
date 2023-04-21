@@ -53,7 +53,7 @@ impl GridComponent for GateNot {
         Err(())
     }
 
-    fn gui_options(&mut self, _: &mut egui::Ui) {}
+    fn gui_options(&mut self, _: &mut egui::Ui, _: bool) {}
 }
 
 impl GateNot {

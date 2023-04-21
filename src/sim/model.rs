@@ -272,7 +272,7 @@ pub trait GridComponent {
 
     fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),() >;
 
-    fn gui_options(&mut self, ui: &mut Ui);
+    fn gui_options(&mut self, ui: &mut Ui, sim_halted: bool);
 }
 
 
