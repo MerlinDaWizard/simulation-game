@@ -35,7 +35,7 @@ fn main_panels(
     mut save_menu_state: ResMut<SaveMenuState>,
     mut save_writer: EventWriter<SaveEvent>,
     mut load_writer: EventWriter<LoadEvent>,
-    selected_component: ResMut<SelectedComponent>,
+    mut selected_component: ResMut<SelectedComponent>,
     level_data: Option<Res<LevelData>>,
 ) {
     let sim_halted = sim_state.0 == SimState::Halted;
@@ -162,6 +162,7 @@ fn main_panels(
                 if start_test.clicked() {
                     commands.insert_resource(NextState(Some(SimState::Building)));
                     commands.insert_resource(RunType::Step(100));
+                    selected_component.0 = None;
                 }
                 let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(50.0, 50.0)).frame(true);
                 let save = ui.add(button);

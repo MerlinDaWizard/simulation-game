@@ -2,10 +2,12 @@ use std::path::PathBuf;
 
 use crate::components::placement::Size;
 use crate::level_select::CurrentLevel;
-use crate::sim::interactions::SelectedComponentIndicator;
+use crate::sim::interactions::{SelectedComponentIndicator, GridComponentClick, GridClick};
 use crate::sim::levels::LoadLevelEvent;
 use crate::{ui, MainTextureAtlas};
 use bevy::prelude::*;
+use bevy_mod_picking::events::EventListener;
+use bevy_mod_picking::prelude::PointerClick;
 use bevy_prototype_lyon::prelude::*;
 use serde::{Serialize, Deserialize};
 
@@ -61,6 +63,7 @@ pub fn setup_screen(
         GameRoot,
         Name::new("Placement Grid"),
         PlacementGridEntity,
+        EventListener::<PointerClick>::new_forward_event::<GridClick>(),
         Size(UVec2::new(
             (GRID_CELL_SIZE * GRID_CELL_AMOUNT_WIDTH as usize) as u32,
             (GRID_CELL_SIZE * GRID_CELL_AMOUNT_HEIGHT as usize) as u32,
