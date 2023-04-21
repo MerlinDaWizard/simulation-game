@@ -5,10 +5,12 @@ use bevy_prototype_lyon::prelude::Path;
 use bevy_prototype_lyon::prelude::ShapePath;
 use bevy_prototype_lyon::shapes;
 use bevy_prototype_lyon::shapes::RectangleOrigin;
+use crate::MainTextureAtlas;
 use crate::game::PlacementGridEntity;
 use crate::GameState;
 use crate::components::placement::GridLink;
 use crate::components::placement::Size as SizeComponent;
+use super::helpers;
 use super::helpers::calc_grid_pos;
 use super::model::{SimulationData, CellState};
 
@@ -18,11 +20,13 @@ impl Plugin for GridComponentInteractionPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<GridComponentClick>()
         .add_event::<GridClick>()
+        .add_event::<UpdateComponentEvent>()
         .init_resource::<SelectedComponent>()
         .add_systems((
             GridComponentClick::handle_events,
             show_activated_icon,
             grid_click_disable,
+            update_component_listener,
         ).distributive_run_if(in_state(GameState::InGame)));
     }
 }
@@ -107,5 +111,37 @@ fn grid_click_disable(
 ) {
     for _ in events.iter() {
         selected_component.0 = None;
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct UpdateComponentEvent {
+    pub pos: [usize; 2],
+    pub surround: bool,
+}
+
+fn update_component_listener (
+    mut listener: EventReader<UpdateComponentEvent>,
+    mut sim_data: ResMut<SimulationData>,
+    mut component_sprites: Query<&mut TextureAtlasSprite, With<GridLink>>,
+    atlases: Res<Assets<TextureAtlas>>,
+    main_atlas: Res<MainTextureAtlas>,
+) {
+    let atlas = atlases.get(&main_atlas.handle).unwrap();
+    for event in listener.iter() {
+        // Update itself.
+        sim_data.update_component(&event.pos, &mut component_sprites, atlas);
+        if event.surround { // Get positions of surroundings
+            let adjacent = {
+                let cell = &mut sim_data.grid.grid[event.pos[0]][event.pos[1]];
+                if let CellState::Real(_, c) = cell {
+                        helpers::get_adjacent(&event.pos, &c.dummy().get_grid_size())
+                } else {error!("Attempted to update event on none real"); return}
+            };
+            // Update surroundings
+            for component in adjacent {
+                sim_data.update_component(&component, &mut component_sprites, atlas);
+            }
+        }
     }
 }

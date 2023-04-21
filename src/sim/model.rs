@@ -13,7 +13,7 @@ use std::sync::{Arc, atomic::{AtomicU8, Ordering}};
 // This means that instead of going through every component for ports we just go through the ones which are adjacent
 use super::{
     helpers::{self, Side, spawn_component_sprite},
-    port_grid::{{Port as PortGridPort}, PortGrid},
+    port_grid::{{Port as PortGridPort}, PortGrid}, interactions::UpdateComponentEvent,
 };
 use crate::{
     components::placement::GridLink, sim::components::*, MainTextureAtlas,
@@ -272,7 +272,7 @@ pub trait GridComponent {
 
     fn set_port(&mut self, offset: [usize; 2], side: Side, set_to: Arc<AtomicU8>) -> Result<(),() >;
 
-    fn gui_options(&mut self, ui: &mut Ui, sim_halted: bool);
+    fn gui_options(&mut self, ui: &mut Ui, sim_halted: bool, dummy: DummyComponent, pos: &[usize; 2], updates: &mut EventWriter<UpdateComponentEvent>);
 }
 
 

@@ -1,10 +1,10 @@
 use crate::sim::{
     helpers::Side,
-    model::{AudioEvent, GridComponent, SimulationData, VisualEvent, ComponentPortData},
+    model::{AudioEvent, GridComponent, SimulationData, VisualEvent, ComponentPortData, DummyComponent}, interactions::UpdateComponentEvent,
 };
 use bevy::{
     reflect::{FromReflect, Reflect},
-    sprite::{TextureAtlas, TextureAtlasSprite}, prelude::World,
+    sprite::{TextureAtlas, TextureAtlasSprite}, prelude::{World, EventWriter},
 };
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
@@ -58,7 +58,7 @@ impl GridComponent for GateAnd {
         Err(())
     }
 
-    fn gui_options(&mut self, _: &mut egui::Ui, _: bool) {}
+    fn gui_options(&mut self, _: &mut egui::Ui, _: bool, _: DummyComponent, _: &[usize; 2], _: &mut EventWriter<UpdateComponentEvent>) {}
 }
 
 impl GateAnd {

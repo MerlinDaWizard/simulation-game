@@ -1,10 +1,10 @@
 use crate::sim::{
     helpers::Side,
-    model::{AudioEvent, GridComponent, SimulationData, VisualEvent, ComponentPortData},
+    model::{AudioEvent, GridComponent, SimulationData, VisualEvent, ComponentPortData, DummyComponent}, interactions::UpdateComponentEvent,
 };
 use bevy::{
     reflect::{FromReflect, Reflect},
-    sprite::{TextureAtlas, TextureAtlasSprite}, prelude::World,
+    sprite::{TextureAtlas, TextureAtlasSprite}, prelude::{World, EventWriter},
 };
 use egui::RichText;
 use enum_map::{Enum, EnumMap};
@@ -60,7 +60,7 @@ impl GridComponent for Counter {
         Err(())
     }
 
-    fn gui_options(&mut self, ui: &mut egui::Ui, _: bool) {
+    fn gui_options(&mut self, ui: &mut egui::Ui, _: bool, _: DummyComponent, _: &[usize; 2], _: &mut EventWriter<UpdateComponentEvent>) {
         ui.horizontal(|ui| {
             ui.label("Current Count: ");
             ui.label(RichText::new(self.count.to_string()).code());

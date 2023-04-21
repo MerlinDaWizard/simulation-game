@@ -5,17 +5,17 @@ use crate::sim::helpers;
 use crate::sim::{
     helpers::Side,
     model::{
-        AudioEvent, CellState, Component, ComponentGrid, GridComponent, SimulationData, VisualEvent,
+        AudioEvent, CellState, Component, ComponentGrid, GridComponent, SimulationData, VisualEvent, DummyComponent
     },
+    interactions::UpdateComponentEvent,
 };
-use bevy::prelude::World;
+use bevy::prelude::{World, EventWriter};
 use bevy::{
     prelude::{debug, Handle},
     reflect::{FromReflect, Reflect},
     sprite::{TextureAtlas, TextureAtlasSprite},
 };
-use egui::{TextFormat, RichText};
-use egui::text::LayoutJob;
+use egui::RichText;
 use enum_map::{Enum, EnumMap};
 use serde::{Deserialize, Serialize};
 
@@ -75,7 +75,7 @@ impl GridComponent for Wire {
         Err(())
     }
 
-    fn gui_options(&mut self, ui: &mut egui::Ui, sim_halted: bool) {
+    fn gui_options(&mut self, ui: &mut egui::Ui, sim_halted: bool, _: DummyComponent, pos: &[usize; 2], updates: &mut EventWriter<UpdateComponentEvent>) {
         let mut connected_sides = sides_to_sprite_name(&self.connected_sides, "", ", ");
         if connected_sides.is_empty() {
             connected_sides = String::from("None");
@@ -88,14 +88,20 @@ impl GridComponent for Wire {
 
         ui.heading("Enabled sides:");
         ui.add_enabled_ui(sim_halted, |ui| {
+            let mut side_change = false;
             for (side, state) in &mut self.disabled_sides {
                 let btn = ui.checkbox(&mut (*state == EnabledOrDisabled::Enabled), side.as_str()).on_disabled_hover_text(helpers::UI_DISABLED_MSG);
                 if btn.changed() {
+                    side_change = true;
                     *state = match *state {
                         EnabledOrDisabled::Disabled => EnabledOrDisabled::Enabled,
                         EnabledOrDisabled::Enabled => EnabledOrDisabled::Disabled,
                     };
                 }
+            }
+
+            if side_change {
+                updates.send(UpdateComponentEvent{pos: pos.clone(), surround: true});
             }
         });
     }

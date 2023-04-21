@@ -10,7 +10,7 @@ use bevy::{
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::SelectedComponent, levels::LevelData, model::{SimulationData, CellState, GridComponent}}, level_select::CurrentLevel};
+use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::{SelectedComponent, UpdateComponentEvent}, levels::LevelData, model::{SimulationData, CellState, GridComponent}}, level_select::CurrentLevel};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
@@ -35,6 +35,7 @@ fn main_panels(
     mut save_menu_state: ResMut<SaveMenuState>,
     mut save_writer: EventWriter<SaveEvent>,
     mut load_writer: EventWriter<LoadEvent>,
+    mut update_component_writer: EventWriter<UpdateComponentEvent>,
     mut selected_component: ResMut<SelectedComponent>,
     mut sim_data: ResMut<SimulationData>,
     level_data: Option<Res<LevelData>>,
@@ -153,7 +154,7 @@ fn main_panels(
                         ui.separator();
                         ui.label(RichText::new(dummy.desc()).size(12.0).weak());
                         ui.separator();
-                        component.gui_options(ui, sim_halted);
+                        component.gui_options(ui, sim_halted, dummy, grid_pos, &mut update_component_writer);
                     }
                 }
             }
