@@ -52,8 +52,8 @@ impl GridComponent for Wire {
                 continue;
             }
             debug!("{:?}", &a);
-            debug!("{:?}", check_for_wire(&a.unwrap(), &sim_data.grid));
-            if check_for_wire(&a.unwrap(), &sim_data.grid) {
+            debug!("{:?}", check_for_wire_link(&a.unwrap(), &sim_data.grid, side.reverse()));
+            if check_for_wire_link(&a.unwrap(), &sim_data.grid, side.reverse()) {
                 *state = true;
             }
         }
@@ -113,18 +113,22 @@ pub enum EnabledOrDisabled {
 }
 
 /// I just did this so I could use ?, its kinda weird
-fn check_for_wire_option(pos: &[usize; 2], grid: &ComponentGrid) -> Option<()> {
+fn check_for_wire_option(pos: &[usize; 2], grid: &ComponentGrid, origin_side: Side) -> Option<()> {
     let cell = grid.grid.get(pos[0])?.get(pos[1])?;
     if let CellState::Real(_, a) = cell {
-        if let Component::WirePiece(_) = a {
-            return Some(());
+        if let Component::WirePiece(w) = a { // Check the side is enabled to prevent wire connection missmatch
+            if w.disabled_sides[origin_side] == EnabledOrDisabled::Enabled {
+                return Some(());
+            }
         }
     }
     None
 }
 
-fn check_for_wire(pos: &[usize; 2], grid: &ComponentGrid) -> bool {
-    check_for_wire_option(pos, grid).is_some()
+/// Check for a wire link at this position.\
+/// Origin side is relative to the checked position.
+fn check_for_wire_link(pos: &[usize; 2], grid: &ComponentGrid, origin_side: Side) -> bool {
+    check_for_wire_option(pos, grid, origin_side).is_some()
 }
 
 pub fn sides_to_sprite_name(map: &EnumMap<Side, bool>, starter: &str, seperator: &str) -> String {
