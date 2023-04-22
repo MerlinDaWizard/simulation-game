@@ -107,6 +107,7 @@ fn main_panels(
 
                 if save_dropdown_changed {
                     if let Some(path) = &ui_state.selected_file {
+                        selected_component.0 = None;
                         load_writer.send(LoadEvent(path.clone()));
                         save_menu_state.open = false;
                     }

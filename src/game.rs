@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::components::placement::Size;
 use crate::level_select::CurrentLevel;
-use crate::sim::interactions::{SelectedComponentIndicator, GridComponentClick, GridClick};
+use crate::sim::interactions::{SelectedComponentIndicator, GridComponentClick, GridClick, SelectedComponent};
 use crate::sim::levels::LoadLevelEvent;
 use crate::{ui, MainTextureAtlas};
 use bevy::prelude::*;
@@ -40,6 +40,7 @@ pub fn setup_screen(
 
     atlases: Res<Assets<TextureAtlas>>,
     main_atlas: Res<MainTextureAtlas>,
+    mut selected_component: ResMut<SelectedComponent>,
     mut load_level: EventWriter<LoadLevelEvent>,
 ) {
     // At the moment `CurrentLevel` actually refers to the level to load
@@ -90,6 +91,7 @@ pub fn setup_screen(
         SelectedComponentIndicator,
     ));
 
+    selected_component.0 = None;
     load_level.send(LoadLevelEvent(PathBuf::from(format!("data/levels/{}.json", level.0.unwrap()))));
 }
 
