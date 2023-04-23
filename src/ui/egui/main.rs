@@ -28,8 +28,6 @@ fn main_panels(
     mut commands: Commands,
     mut ui_state: ResMut<UiState>,
     mut egui_ctx: EguiContexts,
-    mut rendered_texture_id: Local<egui::TextureId>,
-    mut is_initialized: Local<bool>,
     images: Local<Images>,
     sim_state: Res<State<SimState>>,
     cur_level: Res<CurrentLevel>,
@@ -44,11 +42,11 @@ fn main_panels(
 ) {
     let sim_halted = sim_state.0 == SimState::Halted;
     // At the moment `CurrentLevel` actually refers to the level to load
-    if !*is_initialized {
-        *is_initialized = true;
-        *rendered_texture_id = egui_ctx.add_image(images.bevy_icon.clone_weak());
-    }
-    
+    let img_bevy = egui_ctx.add_image(images.bevy_icon.clone_weak());
+    let img_back = egui_ctx.add_image(images.back_button.clone_weak());
+    let img_save = egui_ctx.add_image(images.save_button.clone_weak());
+    let img_load = egui_ctx.add_image(images.load_button.clone_weak());
+
     let mut panel = egui::SidePanel::right("right_panel")
         .exact_width(250.0)
         // .frame(if sim_halted {Frame::none()} else {Frame::default()})
@@ -69,7 +67,7 @@ fn main_panels(
     egui::TopBottomPanel::top("top_panel").show(egui_ctx.ctx_mut(), |ui| {
         ui.horizontal_centered(|ui| {
             let exit_button = ui.add(egui::widgets::ImageButton::new(
-                *rendered_texture_id,
+                img_back,
                 [32.0, 32.0],
             ));
             if exit_button.clicked() {
@@ -78,12 +76,12 @@ fn main_panels(
 
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                 let save_button = ui.add_enabled(sim_halted, egui::widgets::ImageButton::new(
-                    *rendered_texture_id,
+                    img_save,
                     [32.0, 32.0],
                 ));
 
                 let load_button = ui.add_enabled(sim_halted && ui_state.selected_file.is_some(), egui::widgets::ImageButton::new(
-                    *rendered_texture_id,
+                    img_load,
                     [32.0, 32.0],
                 ));
 
@@ -180,20 +178,20 @@ fn main_panels(
         .resizable(true)
         .show(egui_ctx.ctx_mut(), |ui| {
             ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
-                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(100.0, 100.0)).frame(true);
+                let button = egui::ImageButton::new(img_bevy, Vec2::new(100.0, 100.0)).frame(true);
                 let start_test = ui.add(button);
                 if start_test.clicked() {
                     commands.insert_resource(NextState(Some(SimState::Building)));
                     commands.insert_resource(RunType::Step(100));
                     // selected_component.0 = None;
                 }
-                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(50.0, 50.0)).frame(true);
+                let button = egui::ImageButton::new(img_bevy, Vec2::new(50.0, 50.0)).frame(true);
                 let save = ui.add(button);
                 if save.clicked() {
                     save_writer.send(SaveEvent(PathBuf::from("data/levels/test.json")))
                 }
 
-                let button = egui::ImageButton::new(*rendered_texture_id, Vec2::new(50.0, 50.0)).frame(true);
+                let button = egui::ImageButton::new(img_bevy, Vec2::new(50.0, 50.0)).frame(true);
                 let load = ui.add_enabled(true, button);
                 if load.clicked() {
                     load_writer.send(LoadEvent(PathBuf::from("data/levels/test.json")))
@@ -238,6 +236,7 @@ pub struct Images {
     bevy_icon: Handle<BevyImage>,
     back_button: Handle<BevyImage>,
     save_button: Handle<BevyImage>,
+    load_button: Handle<BevyImage>,
 }
 
 impl FromWorld for Images {
@@ -245,8 +244,9 @@ impl FromWorld for Images {
         let asset_server = world.get_resource_mut::<AssetServer>().unwrap();
         Self {
             bevy_icon: asset_server.load("bavy.png"),
-            back_button: asset_server.load("egui/back.png"),
+            back_button: asset_server.load("exit_button.png"),
             save_button: asset_server.load("egui/save_button.png"),
+            load_button: asset_server.load("egui/load_button.png"),
         }
     }
 }
