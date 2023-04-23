@@ -198,6 +198,8 @@ pub enum DummyComponent {
     SignalCopy,
     SignalPassthrough,
     Counter,
+    Observer,
+    Provider,
 }
 
 #[derive(Debug, Clone, Reflect, FromReflect, Serialize, Deserialize)]
@@ -226,6 +228,8 @@ pub enum Component {
     SignalCopy(SignalCopy),
     SignalPassthrough(SignalPassthrough),
     Counter(Counter),
+    Observer(Observer),
+    Provider(Provider),
 }
 
 /// A struct to contain any (for player only) visual events to help with understanding whats happening\

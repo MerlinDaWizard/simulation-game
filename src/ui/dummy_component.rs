@@ -20,7 +20,7 @@ fn enter_system(
     main_atlas: Res<MainTextureAtlas>,
 ) {
     let atlas = atlases.get(&main_atlas.handle).unwrap();
-    let mut current_down = -150.0;
+    let mut current_down = -175.0;
     for comp in DummyComponent::iter() {
         let size = comp.get_size();
         //let texture: Handle<Image> = ass.load(comp.get_path());
@@ -51,7 +51,7 @@ fn enter_system(
             Size(comp.get_size().as_uvec2()),
             ComponentLink(comp),
         ));
-        current_down += size.y + 10.0;
+        current_down += size.y + 2.0;
     }
 }
 

@@ -75,10 +75,10 @@ impl SimIOPadded {
             self.output_pointer += 1;
 
             if val == expected {
-                self.observed_outputs.get_mut(id).unwrap().push(Some((expected, ResultType::Correct)));
+                self.observed_outputs.get_mut(id).unwrap().push(Some((val, ResultType::Correct)));
             } else {
                 self.correct_so_far = false;
-                self.observed_outputs.get_mut(id).unwrap().push(Some((expected, ResultType::Incorrect)));
+                self.observed_outputs.get_mut(id).unwrap().push(Some((val, ResultType::Incorrect)));
             }
 
         } else {

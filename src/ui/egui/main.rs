@@ -31,7 +31,6 @@ fn main_panels(
     mut rendered_texture_id: Local<egui::TextureId>,
     mut is_initialized: Local<bool>,
     images: Local<Images>,
-    // time: Res<Time>,
     sim_state: Res<State<SimState>>,
     cur_level: Res<CurrentLevel>,
     mut save_menu_state: ResMut<SaveMenuState>,
@@ -48,8 +47,8 @@ fn main_panels(
     if !*is_initialized {
         *is_initialized = true;
         *rendered_texture_id = egui_ctx.add_image(images.bevy_icon.clone_weak());
-        
     }
+    
     let mut panel = egui::SidePanel::right("right_panel")
         .exact_width(250.0)
         // .frame(if sim_halted {Frame::none()} else {Frame::default()})
@@ -199,7 +198,7 @@ fn main_panels(
                 if load.clicked() {
                     load_writer.send(LoadEvent(PathBuf::from("data/levels/test.json")))
                 }
-                let sin: plot::PlotPoints = (0..5.0f32.floor() as usize)
+                let sin: plot::PlotPoints = (0..4.0f64.floor() as usize)
                     .flat_map(|i| {
                         //let x = i as f64 * 0.01;
                         let n = i as f64 * 0.05;
@@ -350,7 +349,8 @@ fn draw_table(ui: &mut Ui, level_data: &LevelData, io_data: &SimIOPadded) {
     })
     .body(|body| {
         body.rows(row_height, max_length, |idx, mut row| {
-            fn to_row(row: &mut TableRow, val: Option<u8>) {
+            // dbg!(&io_data);
+            fn to_cell(row: &mut TableRow, val: Option<u8>) {
                 let text = match val {
                     Some(num) => num.to_string(),
                     None => String::from("-"),
@@ -359,24 +359,26 @@ fn draw_table(ui: &mut Ui, level_data: &LevelData, io_data: &SimIOPadded) {
             }
 
             for values in level_data.provided_inputs.values() {
+                // println!("provided");
                 let val = values.get(idx).copied();
-                to_row(&mut row, val);
+                to_cell(&mut row, val);
             }
 
             for values in io_data.expected_outputs.values() {
+                // println!("expected");
                 let val = values.get(idx).and_then(|a| a.clone());
-                to_row(&mut row, val);
+                to_cell(&mut row, val);
             }
 
-            for values in io_data.observed_outputs.values(){
+            for values in io_data.observed_outputs.values() {
+                // println!("Obserrved");
                 let val = values.get(idx).and_then(|a| a.clone());
                 match val {
                     Some((num, err)) => {
                         match err {
-                            ResultType::Incorrect => {row.col(|ui| {ui.label(RichText::new(num.to_string()).color(Color32::DARK_RED));});},
-                            ResultType::Correct => {row.col(|ui| {ui.label(RichText::new(num.to_string()).color(Color32::DARK_GREEN));});},
+                            ResultType::Incorrect => {row.col(|ui| {ui.label(RichText::new(num.to_string()).color(Color32::RED).strong());});},
+                            ResultType::Correct => {row.col(|ui| {ui.label(RichText::new(num.to_string()).color(Color32::GREEN).strong());});},
                         }
-                        row.col(|ui| {ui.label(RichText::new(num.to_string()).color(Color32::DARK_RED));});
                     },
                     None => {
                         row.col(|ui| {ui.label(RichText::new("-"));});

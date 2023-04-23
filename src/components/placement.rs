@@ -38,6 +38,8 @@ impl SimComponent {
             SimComponent::SignalCopy(_) => DummySimComponent::SignalCopy,
             SimComponent::SignalPassthrough(_) => DummySimComponent::SignalPassthrough,
             SimComponent::Counter(_) => DummySimComponent::Counter,
+            SimComponent::Observer(_) => DummySimComponent::Observer,
+            SimComponent::Provider(_) => DummySimComponent::Provider,
         }
     }
 }
@@ -51,6 +53,8 @@ impl DummySimComponent {
             Self::SignalCopy => SimComponent::SignalCopy(SignalCopy::default()),
             Self::SignalPassthrough => SimComponent::SignalPassthrough(SignalPassthrough::default()),
             Self::Counter => SimComponent::Counter(Counter::default()),
+            Self::Observer => SimComponent::Observer(Observer::default()),
+            Self::Provider => SimComponent::Provider(Provider::default()),
         }
     }
 
@@ -72,6 +76,8 @@ impl DummySimComponent {
             Self::SignalCopy => "signal_copy",
             Self::SignalPassthrough => "signal_passthrough",
             Self::Counter => "signal_copy", // TODO: Make sprite for counter
+            Self::Observer => "observer",
+            Self::Provider => "provider",
         };
         s
     }
@@ -84,6 +90,8 @@ impl DummySimComponent {
             Self::SignalCopy => Vec2::new(32.0, 64.0),
             Self::SignalPassthrough => Vec2::splat(32.0),
             Self::Counter => Vec2::new(32.0, 64.0),
+            Self::Observer => Vec2::splat(32.0),
+            Self::Provider => Vec2::splat(32.0),
         }
     }
 
@@ -95,6 +103,8 @@ impl DummySimComponent {
             Self::SignalCopy => [1, 2],
             Self::SignalPassthrough => [1, 1],
             Self::Counter => [1, 2],
+            Self::Observer => [1, 1],
+            Self::Provider => [1, 1],
         }
     }
 
@@ -106,6 +116,8 @@ impl DummySimComponent {
             DummySimComponent::SignalCopy => crate::sim::components::SignalCopy::CONST_PORTS.values(),
             DummySimComponent::SignalPassthrough => crate::sim::components::SignalPassthrough::CONST_PORTS.values(),
             DummySimComponent::Counter => crate::sim::components::Counter::CONST_PORTS.values(),
+            DummySimComponent::Observer => crate::sim::components::Observer::CONST_PORTS.values(),
+            DummySimComponent::Provider => crate::sim::components::Provider::CONST_PORTS.values(),
         }.collect()
     }
     
@@ -117,6 +129,9 @@ impl DummySimComponent {
             DummySimComponent::SignalCopy => "Signal splitter",
             DummySimComponent::SignalPassthrough => "Signal passthrough",
             DummySimComponent::Counter => "Counter",
+            DummySimComponent::Observer => "Observer",
+            DummySimComponent::Provider => "Provider",
+            
         }
     }
 
@@ -128,6 +143,8 @@ impl DummySimComponent {
             DummySimComponent::SignalCopy => "Duplicates a signal acrosss two wires.",
             DummySimComponent::SignalPassthrough => "Passthoughs a signal, can be used for delays.",
             DummySimComponent::Counter => "Counts the amount of logic HIGHs on the input when there is also a HIGH on the clock signal.",
+            DummySimComponent::Observer => "Watches the input and records the test data.",
+            DummySimComponent::Provider => "Publishes test data into your circuit.",
         }
     }
 }
