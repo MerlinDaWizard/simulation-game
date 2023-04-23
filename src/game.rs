@@ -71,8 +71,8 @@ pub fn setup_screen(
         )),
     ));
 
-    ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A1", GameRoot);
-    ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A2", GameRoot);
+    // ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A1", GameRoot);
+    // ui::textbox::ProgramBox::new(&mut commands, &ass, &atlases, &main_atlas, "A2", GameRoot);
 
     let shape = shapes::Rectangle {
         extents: Vec2::new(100., 100.),

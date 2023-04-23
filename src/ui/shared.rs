@@ -3,6 +3,7 @@ use crate::components::placement::{PlaceComponentEvent, Size};
 use crate::game::{
     PlacementGridEntity, GRID_CELL_AMOUNT_HEIGHT, GRID_CELL_AMOUNT_WIDTH, GRID_CELL_SIZE,
 };
+use crate::sim::run::SimState;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 use bevy_pixel_camera::PixelProjection;
@@ -62,6 +63,7 @@ pub fn drag_v2(
         Without<PlacementGridEntity>,
     >,
     placement_grid: Query<(&Sprite, &Transform, With<PlacementGridEntity>)>,
+    sim_state: Res<State<SimState>>
 ) {
     let grid = placement_grid.get_single().unwrap();
     //let bottom_left_corner = grid.1.translation.truncate() + Vec2::new(-112.0,-112.0);
@@ -70,6 +72,7 @@ pub fn drag_v2(
     let pixel_zoom = camera_query.single().zoom as f32;
 
     for start in drag_start_events.iter() {
+        if sim_state.0 != SimState::Halted {continue}
         let (_, mut sprite, mut draggable, transform, opacity, must_return, gridlock, size, _) =
             match draggable_entity.get_mut(start.target()) {
                 Ok(b) => b,
@@ -114,6 +117,7 @@ pub fn drag_v2(
     }
 
     for dragging in drag_events.iter() {
+        if sim_state.0 != SimState::Halted {continue}
         let pointer_entity = pointers.get_entity(dragging.pointer_id()).unwrap();
         let pointer_location = locations.get(pointer_entity).unwrap().location().unwrap();
         let pointer_position = pointer_location.position;
@@ -158,6 +162,7 @@ pub fn drag_v2(
     }
 
     for end in drag_end_events.iter() {
+        if sim_state.0 != SimState::Halted {continue}
         let (_, mut sprite, _, mut transform, opacity, must_return, gridlock, _, places) =
             match draggable_entity.get_mut(end.target()) {
                 Ok(b) => b,

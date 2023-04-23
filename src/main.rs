@@ -86,7 +86,7 @@ fn main() {
         )
         .add_collection_to_loading_state::<_, MainTextureAtlas>(GameState::Loading)
         // Own plugins
-        .add_plugin(crate::ui::textbox::TextboxPlugin)
+        // .add_plugin(crate::ui::textbox::TextboxPlugin)
         .add_plugin(crate::ui::dummy_component::ComponentTrayPlugin)
         .add_plugin(crate::components::placement::ComponentSetupPlugin)
         .add_plugin(crate::ui::egui::main::LeftPanelPlugin)

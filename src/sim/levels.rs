@@ -1,6 +1,6 @@
 use std::{fs::File, path::PathBuf};
 
-use bevy::{prelude::{Resource, Res, ResMut, Commands, Entity, Transform, Query, Assets, With, DespawnRecursiveExt, EventReader}, reflect::Reflect, utils::HashMap, sprite::{TextureAtlas, Sprite}};
+use bevy::{prelude::{Resource, Res, ResMut, Commands, Entity, Transform, Query, Assets, With, DespawnRecursiveExt, EventReader}, reflect::{Reflect, FromReflect}, utils::HashMap, sprite::{TextureAtlas, Sprite}};
 use serde::{Deserialize, Serialize};
 use crate::{game::{GridSize, PlacementGridEntity}, MainTextureAtlas, components::placement::{GridLink, Size}};
 
@@ -37,13 +37,64 @@ pub struct LevelData {
     pub expected_outputs: HashMap<String, Vec<u8>>,
 }
 
+#[derive(Debug, Clone, Copy, Reflect, FromReflect)]
+pub enum ResultType {
+    Incorrect,
+    Correct,
+}
+
+#[derive(Debug, Clone, Resource, Reflect, Default)]
+pub struct SimIOPadded {
+    pub output_pointer: usize,
+    pub correct_so_far: bool,
+    pub expected_outputs: HashMap<String, Vec<Option<u8>>>,
+    pub observed_outputs: HashMap<String, Vec<Option<(u8, ResultType)>>>,
+}
+
+impl SimIOPadded {
+    pub fn from_level_data(level_data: &mut LevelData) -> SimIOPadded {
+        let mut expected = HashMap::new();
+        let mut observed = HashMap::new();
+        for (k, _) in &level_data.expected_outputs {
+            expected.insert_unique_unchecked(k.clone(), Vec::new());
+            observed.insert_unique_unchecked(k.clone(), Vec::new());
+        }
+    
+        SimIOPadded {
+            output_pointer: 0,
+            correct_so_far: true,
+            expected_outputs: expected,
+            observed_outputs: observed,
+        }
+    }
+
+    pub fn add_output(&mut self, level_data: &mut LevelData, _: usize, id: &str, val: Option<u8>) {
+        if let Some(val) = val {
+            let expected = level_data.expected_outputs[id][self.output_pointer];
+            self.expected_outputs.get_mut(id).unwrap().push(Some(expected));
+            self.output_pointer += 1;
+
+            if val == expected {
+                self.observed_outputs.get_mut(id).unwrap().push(Some((expected, ResultType::Correct)));
+            } else {
+                self.correct_so_far = false;
+                self.observed_outputs.get_mut(id).unwrap().push(Some((expected, ResultType::Incorrect)));
+            }
+
+        } else {
+            self.expected_outputs.get_mut(id).unwrap().push(None);
+            self.observed_outputs.get_mut(id).unwrap().push(None);
+        }
+    }
+}
+
 impl LevelData {
     pub fn from_load(load: LevelDataLoad) -> LevelData {
         LevelData {
             name: load.name,
             desc: load.desc,
             provided_inputs: load.provided_inputs,
-            expected_outputs: load.expected_outputs
+            expected_outputs: load.expected_outputs,
         }
     }
 }
@@ -88,10 +139,11 @@ pub fn load_level_listener(
             }
         }
 
-        let level_data = LevelData::from_load(level_data_load);
-
+        let mut level_data = LevelData::from_load(level_data_load);
+        let sim_io = SimIOPadded::from_level_data(&mut level_data);
         *sim_data_res = sim_data;
         commands.insert_resource(level_data);
+        commands.insert_resource(sim_io);
     }
 }
 

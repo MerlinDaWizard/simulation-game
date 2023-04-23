@@ -10,6 +10,7 @@ use crate::game::PlacementGridEntity;
 use crate::GameState;
 use crate::components::placement::GridLink;
 use crate::components::placement::Size as SizeComponent;
+use crate::ui::shared::drag_v2;
 use super::helpers;
 use super::helpers::calc_grid_pos;
 use super::model::{SimulationData, CellState};
@@ -23,6 +24,7 @@ impl Plugin for GridComponentInteractionPlugin {
         .add_event::<UpdateComponentEvent>()
         .init_resource::<SelectedComponent>()
         .add_systems((
+            drag_v2,
             GridComponentClick::handle_events,
             show_activated_icon,
             grid_click_disable,

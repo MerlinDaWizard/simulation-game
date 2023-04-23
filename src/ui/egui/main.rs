@@ -1,4 +1,5 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, cmp};
+use egui_extras::{TableBuilder, Column, TableRow};
 use glob::glob;
 use bevy::{
     prelude::{
@@ -10,13 +11,14 @@ use bevy::{
 use bevy_egui::EguiContexts;
 use egui::{plot::Plot, *};
 
-use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::{SelectedComponent, UpdateComponentEvent}, levels::LevelData, model::{SimulationData, CellState, GridComponent}}, level_select::CurrentLevel};
+use crate::{GameState, sim::{run::{SimState, RunType}, save_load::{SaveEvent, LoadEvent}, interactions::{SelectedComponent, UpdateComponentEvent}, levels::{LevelData, SimIOPadded, ResultType}, model::{SimulationData, CellState, GridComponent}}, level_select::CurrentLevel};
 pub struct LeftPanelPlugin;
 
 impl Plugin for LeftPanelPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiState>()
             .init_resource::<SaveMenuState>()
+            .init_resource::<SimIOPadded>()
             .add_system(main_panels.run_if(in_state(GameState::InGame)))
             .add_system(window_popup.run_if(in_state(GameState::InGame)));
     }
@@ -29,7 +31,7 @@ fn main_panels(
     mut rendered_texture_id: Local<egui::TextureId>,
     mut is_initialized: Local<bool>,
     images: Local<Images>,
-    time: Res<Time>,
+    // time: Res<Time>,
     sim_state: Res<State<SimState>>,
     cur_level: Res<CurrentLevel>,
     mut save_menu_state: ResMut<SaveMenuState>,
@@ -39,6 +41,7 @@ fn main_panels(
     mut selected_component: ResMut<SelectedComponent>,
     mut sim_data: ResMut<SimulationData>,
     level_data: Option<Res<LevelData>>,
+    io_data: Option<Res<SimIOPadded>>,
 ) {
     let sim_halted = sim_state.0 == SimState::Halted;
     // At the moment `CurrentLevel` actually refers to the level to load
@@ -47,12 +50,23 @@ fn main_panels(
         *rendered_texture_id = egui_ctx.add_image(images.bevy_icon.clone_weak());
         
     }
-    egui::SidePanel::right("right_panel")
+    let mut panel = egui::SidePanel::right("right_panel")
         .exact_width(250.0)
-        .frame(Frame::none())
-        .resizable(false)
-        .show(egui_ctx.ctx_mut(), |ui| {});
+        // .frame(if sim_halted {Frame::none()} else {Frame::default()})
+        .resizable(false);
 
+    if sim_halted {panel = panel.frame(Frame::none());};
+
+    let got_data = io_data.is_some() && level_data.is_some();
+    if got_data && sim_halted == false {
+        let level_data = level_data.as_ref().unwrap();
+        let sim_io = io_data.as_ref().unwrap();
+        panel.show(egui_ctx.ctx_mut(), |ui| {
+            draw_table(ui,level_data.as_ref(), sim_io.as_ref())
+        });
+    } else {
+        panel.show(egui_ctx.ctx_mut(), |_| {});
+    }
     egui::TopBottomPanel::top("top_panel").show(egui_ctx.ctx_mut(), |ui| {
         ui.horizontal_centered(|ui| {
             let exit_button = ui.add(egui::widgets::ImageButton::new(
@@ -185,7 +199,7 @@ fn main_panels(
                 if load.clicked() {
                     load_writer.send(LoadEvent(PathBuf::from("data/levels/test.json")))
                 }
-                let sin: plot::PlotPoints = (0..time.elapsed_seconds_f64().floor() as usize)
+                let sin: plot::PlotPoints = (0..5.0f32.floor() as usize)
                     .flat_map(|i| {
                         //let x = i as f64 * 0.01;
                         let n = i as f64 * 0.05;
@@ -293,4 +307,83 @@ fn window_popup(
 #[derive(Resource, Debug, Default)]
 struct SaveMenuState {
     open: bool,
+}
+
+fn draw_table(ui: &mut Ui, level_data: &LevelData, io_data: &SimIOPadded) {
+    let column_amount = level_data.provided_inputs.len() + level_data.expected_outputs.len() * 2;
+
+    let text_style = egui::TextStyle::Body;
+    let row_height = ui.text_style_height(&text_style);
+
+    // Get the values of each type and their lengths
+    let provided_in_len = level_data.provided_inputs.values().map(|vec| {vec.len()}).max().unwrap();
+    let expected_out_len = io_data.expected_outputs.values().map(|vec| {vec.len()}).max().unwrap();
+    let observed_out_len = io_data.observed_outputs.values().map(|vec| {vec.len()}).max().unwrap();
+    // Combine all the iterators together into one.
+    // Get the maximum length
+    let max_length = cmp::max(cmp::max(provided_in_len, expected_out_len), observed_out_len);
+
+    let table = TableBuilder::new(ui)
+        .striped(true)
+        .cell_layout(Layout::left_to_right(Align::Center))
+        .vscroll(true)
+        .columns(Column::remainder().clip(true), column_amount);
+
+    table.header(20.0, |mut header| {
+        for i in level_data.provided_inputs.keys() {
+            header.col(|ui| {
+                ui.label(i.as_str());
+            });
+        }
+
+        for i in io_data.expected_outputs.keys() {
+            header.col(|ui| {
+                ui.label(format!("Ex: {}", i.as_str()));
+            });
+        }
+
+        for i in io_data.observed_outputs.keys() {
+            header.col(|ui| {
+                ui.label(format!("Ob: {}", i));
+            });
+        }
+    })
+    .body(|body| {
+        body.rows(row_height, max_length, |idx, mut row| {
+            fn to_row(row: &mut TableRow, val: Option<u8>) {
+                let text = match val {
+                    Some(num) => num.to_string(),
+                    None => String::from("-"),
+                };
+                row.col(|ui| {ui.label(text);});
+            }
+
+            for values in level_data.provided_inputs.values() {
+                let val = values.get(idx).copied();
+                to_row(&mut row, val);
+            }
+
+            for values in io_data.expected_outputs.values() {
+                let val = values.get(idx).and_then(|a| a.clone());
+                to_row(&mut row, val);
+            }
+
+            for values in io_data.observed_outputs.values(){
+                let val = values.get(idx).and_then(|a| a.clone());
+                match val {
+                    Some((num, err)) => {
+                        match err {
+                            ResultType::Incorrect => {row.col(|ui| {ui.label(RichText::new(num.to_string()).color(Color32::DARK_RED));});},
+                            ResultType::Correct => {row.col(|ui| {ui.label(RichText::new(num.to_string()).color(Color32::DARK_GREEN));});},
+                        }
+                        row.col(|ui| {ui.label(RichText::new(num.to_string()).color(Color32::DARK_RED));});
+                    },
+                    None => {
+                        row.col(|ui| {ui.label(RichText::new("-"));});
+                    },
+                };
+            }
+        })
+    });
+
 }

@@ -33,6 +33,7 @@ glob = "0.3.1"
 sanitize-filename = "0.4.0"
 bevy_prototype_lyon = "0.8.0"
 leafwing-input-manager = { version = "0.9.2", features = ["egui"]}
+egui_extras = "0.21.0"
 # Enable a small amount of optimization in debug mode
 
 [profile.dev]
